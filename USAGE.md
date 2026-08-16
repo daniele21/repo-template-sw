@@ -4,33 +4,195 @@ This guide explains how to use `repo-template-sw` with a brand-new repository, a
 
 `repo-template-sw` is a **bootstrap, audit and migration source**. It is not a runtime dependency and should not be consulted for every ordinary coding task after a project has adopted the baseline.
 
+The current baseline also defines a common project operating model. The rule is **same semantics, native implementation**: repositories share the same conceptual setup/run/check/test/build/smoke/package/cleanup lifecycle without being forced onto the same build system.
+
 ## Mental model
 
 ```text
 repo-template-sw
       |
+      +--> STANDARD.md             engineering invariants
+      +--> OPERATING-CONTRACT.md   command/build/artifact/runtime semantics
+      +--> template/               adoptable baseline
+      +--> profiles/               stack-specific mapping
+      |
       +--> new repository      -> bootstrap and specialize
-      |
       +--> existing repository -> audit, preserve, align
-      |
       +--> adopted repository  -> explicit baseline migration
 
 After adoption:
 
 project repository
       |
-      +--> AGENTS.md      -> routing and durable invariants
-      +--> local Skills   -> recurring development workflows
-      +--> active plan    -> only current coordinated work
-      +--> durable docs   -> how the system works now
-      +--> scripts / CI   -> deterministic enforcement
+      +--> AGENTS.md                    routing and durable invariants
+      +--> .engineering/commands.json  canonical project operations
+      +--> local Skills                 recurring development workflows
+      +--> active plan                  only current coordinated work
+      +--> durable docs                 how the system works now
+      +--> scripts / CI                 deterministic enforcement
 ```
 
-The goal is not to make repositories look identical. The goal is to make them converge on a common set of engineering invariants while remaining self-contained and adapted to their stack and product.
+The goal is not to make repositories look identical. The goal is to make them converge on common engineering and operational invariants while remaining self-contained and adapted to their stack and product.
 
 ---
 
-# 1. Starting a repository from zero
+# 1. The common operating model
+
+Every adopted application/runtime repository declares the applicable intents in `.engineering/commands.json`:
+
+```text
+setup
+  -> prepare the supported environment
+
+doctor
+  -> diagnose toolchain/device/runtime readiness
+
+dev
+  -> start the canonical development runtime
+
+check
+  -> broad cheap validation
+
+test
+  -> behavioral validation
+
+build
+  -> create a uniquely identified runnable/build artifact
+
+smoke
+  -> exercise the built/running artifact through a minimal real path
+
+package
+  -> create a distributable artifact when applicable
+
+stop
+  -> stop project-owned runtimes/processes when applicable
+
+clean
+  -> remove only project-owned generated state
+```
+
+An intent may be `n/a` when genuinely irrelevant. Do **not** add Make, Docker, Python wrappers or another task runner solely to make command strings look the same.
+
+Examples:
+
+```text
+Android
+  check   -> Gradle lint/static/unit gates
+  build   -> Gradle debug/internal build
+  smoke   -> install + launch built APK on target
+
+macOS
+  build   -> Xcode/Swift/Python-native .app build
+  smoke   -> launch the built .app, not only source/dev mode
+  package -> DMG/PKG/archive when relevant
+
+Python localhost server
+  dev     -> native server command in foreground
+  smoke   -> start -> ready -> request -> stop -> verify clean
+
+TypeScript
+  check   -> package-manager lint/typecheck
+  build   -> production build
+  smoke   -> serve/run built output and exercise minimal path
+```
+
+## Build identity
+
+A material build always gets a new build identity even if the product version and source revision are unchanged.
+
+Recommended artifact shape:
+
+```text
+<Product>-<ProductVersion>-<BuildId>-<SourceRevision>[-dirty].<ext>
+```
+
+Example:
+
+```text
+ClosedRoom-1.3.0-b0042-a81fc92.dmg
+```
+
+Product version and build ID are separate. A rebuild of product version `1.3.0` becomes a new build, not a fake product-version bump.
+
+## Artifact lifecycle
+
+Successful artifacts are immutable. Use:
+
+```text
+staging
+ -> build
+ -> validate
+ -> promote successful artifact
+ -> build-manifest.json
+ -> BUILD_CHANGELOG.md
+ -> SHA-256
+ -> retention
+ -> verify clean
+```
+
+A failed/partial build stays in staging or is cleaned; it must not look like a valid artifact.
+
+Default storage policy:
+
+```text
+local successful artifacts
+  -> latest 2 per comparable lineage
+
+PR/CI artifacts
+  -> GitHub Actions Artifacts or equivalent
+  -> explicit bounded retention
+
+release artifacts
+  -> GitHub Releases or equivalent durable immutable release store
+
+packages/containers
+  -> package/container registry only when genuinely consumed that way
+```
+
+Local `dist/` is convenience storage, not the durable release registry.
+
+## Build changelog / build delta
+
+Every successful material build generates a build delta against the previous successful comparable build in the same lineage.
+
+`BUILD_CHANGELOG.md` is not the product `CHANGELOG.md`.
+
+It should cover applicable changes in:
+
+```text
+source
++ dependencies
++ toolchain/SDK/runtime
++ configuration/build flags
++ compatibility/migrations
++ artifact size/hash
++ validation evidence
+```
+
+A Git log alone is not sufficient because two builds of the same commit may differ through toolchain, dependencies or configuration.
+
+## Local runtime and zero residue
+
+For projects that open localhost servers, helpers, sockets or listeners:
+
+```text
+bind default    -> loopback
+port            -> configurable + collision checked
+startup         -> foreground by default
+readiness       -> explicit
+shutdown        -> graceful + bounded
+cleanup         -> success/failure/timeout/cancel/interrupt
+post-condition  -> no project-owned listener/process remains
+```
+
+TCP `TIME_WAIT` is not an open application listener. The invariant is that no project-owned process is still listening after the owning operation finishes.
+
+Temporary processes, locks, PID files, workspaces, test databases, logs, caches, generated secrets and other ephemeral resources need owner-aware deterministic cleanup.
+
+---
+
+# 2. Starting a repository from zero
 
 Use this path when the product repository is new or contains no meaningful engineering structure yet.
 
@@ -39,40 +201,41 @@ Use this path when the product repository is new or contains no meaningful engin
 ```text
 Bootstrap <TARGET_REPOSITORY> using daniele21/repo-template-sw at the current stable baseline.
 
-Use the adopt-engineering-standard workflow.
+Use adopt-engineering-standard.
 
 Before implementing product features:
-1. identify the product/runtime, languages, platforms, persistence, network and security boundaries;
-2. select only the applicable profiles from repo-template-sw;
+1. identify product/runtime, languages, platforms, persistence, network/security and build/distribution boundaries;
+2. select only the applicable profiles;
 3. adopt and specialize the universal baseline;
-4. create a project-specific AGENTS.md with real ownership, routing and validation guidance;
-5. configure stack-specific formatting, linting, tests, build and CI gates;
-6. record the adopted standard version and selected profiles in .engineering/baseline.json;
-7. run repository, documentation and agent-context validation;
-8. report the resulting maturity level truthfully.
+4. create a project-specific AGENTS.md with real ownership/routing;
+5. map .engineering/commands.json to the repository's native tooling;
+6. implement applicable build identity, artifact lifecycle/build-delta and local-runtime/zero-residue behavior;
+7. configure stack-specific formatting, linting, tests, build, smoke and CI gates;
+8. record standard version/profiles in .engineering/baseline.json;
+9. run repository, operating-contract, documentation and agent-context validation;
+10. report resulting maturity truthfully.
 
-Do not leave generic placeholders. Do not add stack profiles or abstractions that the project does not need.
+Do not leave generic placeholders. Do not add wrappers, profiles or abstractions that the project does not need.
 ```
 
 ## What the agent should take from the template
 
-The universal baseline under `template/` provides the starting structure for:
+The universal baseline under `template/` provides:
 
 - `AGENTS.md`;
 - `CONTRIBUTING.md`;
 - `SECURITY.md`;
 - `.engineering/baseline.json`;
 - `.engineering/documentation-policy.json`;
-- architecture, current-state, feature, ADR and workstream documentation;
-- the five project-local core Skills;
-- repository/documentation/agent-context health checks;
-- a baseline pull-request template and health workflow.
+- `.engineering/commands.json`;
+- architecture/current-state/feature/ADR/workstream structure;
+- project-local core Skills;
+- repository/operations/documentation/agent-context validators;
+- baseline PR and repository-health workflow.
 
-The agent must **specialize** these files. A copied generic `AGENTS.md` is not a completed adoption.
+The agent must **specialize** these files. Copying placeholders or leaving fake commands is not completed adoption.
 
 ## Select profiles deliberately
-
-Profiles under `profiles/` are optional deltas, not packages that must all be installed.
 
 Examples:
 
@@ -93,11 +256,11 @@ TypeScript web application
 -> core + typescript
 ```
 
-Only adopt requirements that protect a real invariant for the target project.
+Profiles map the common operating semantics to native stack behavior; they are not extra frameworks.
 
-## Expected result
+## Expected responsibilities
 
-A new project should end bootstrap with a repository similar in responsibilities to:
+A new project should end bootstrap with responsibilities similar to:
 
 ```text
 project/
@@ -107,42 +270,34 @@ project/
 ├── SECURITY.md
 ├── .engineering/
 │   ├── baseline.json
-│   └── documentation-policy.json
+│   ├── documentation-policy.json
+│   └── commands.json
 ├── docs/
-│   ├── README.md
 │   ├── architecture.md
 │   ├── current-state.md
 │   ├── adr/
 │   ├── features/
 │   └── workstreams/
 ├── skills/
-│   ├── plan-workstream/
-│   ├── structured-change/
-│   ├── validate-change/
-│   ├── finalize-workstream/
-│   └── review-reference-quality/
 ├── scripts/
 │   ├── verify_repository.py
+│   ├── verify_operations.py
 │   ├── verify_docs.py
 │   └── verify_agent_context.py
 └── project-specific source, tests and CI
 ```
 
-The exact folder layout may differ when a stronger project-specific structure already exists or the stack requires something else.
+The exact folder layout may differ when a stronger project-specific structure or stack constraint justifies it.
 
-## Important maturity rule
-
-Copying the baseline does **not** make a repository L1 or L2.
-
-Bootstrap establishes structure and engineering expectations. Production or reference-grade maturity requires real implementation and evidence: tests, failure behavior, resource bounds, security controls, observability, performance evidence and other applicable gates from `STANDARD.md`.
+Copying the baseline does **not** make a repository L1/L2. Real tests, cleanup behavior, artifact/runtime evidence, security, observability and performance evidence still matter.
 
 ---
 
-# 2. Aligning an existing repository
+# 3. Aligning an existing repository
 
-Use this path when the project already has code, tests, documentation, CI or its own agent instructions.
+Use this path when the project already has code, scripts, build tooling, tests, documentation, CI or agent instructions.
 
-**Do not copy `template/` over the repository.** Existing repositories must be audited first.
+**Do not copy `template/` over the repository. Audit first.**
 
 ## Recommended first request: audit only
 
@@ -151,177 +306,152 @@ Audit <TARGET_REPOSITORY> against the current stable baseline of daniele21/repo-
 
 Use adopt-engineering-standard, but do not modify the repository yet.
 
-For every relevant baseline concern classify the current project as:
-- KEEP: existing mechanism is equal or stronger;
-- ADAPT: good mechanism that should be aligned without losing local value;
-- ADD: meaningful gap;
-- N/A: not applicable;
-- CONFLICT: existing behavior contradicts a required invariant.
+For every relevant concern classify the project as KEEP / ADAPT / ADD / N/A / CONFLICT.
+
+Inspect specifically:
+- architecture/ownership;
+- AGENTS.md/Skills/docs;
+- current setup/dev/check/test/build/package/clean commands;
+- build/version/artifact naming and identity;
+- artifact storage, local retention, CI retention and releases;
+- whether builds generate a delta/changelog from the previous comparable build;
+- localhost servers, ports, helper processes and shutdown behavior;
+- temp files, locks, test stores, caches/logs and stale-run recovery;
+- CI/testing/reproducibility;
+- security/data lifecycle;
+- resource/memory/concurrency/failure behavior.
 
 Return:
-- current estimated maturity: L0 / L1 / L2;
-- architecture and ownership gaps;
-- memory/resource/concurrency/failure gaps where applicable;
-- security and data-lifecycle gaps;
-- CI/testing/reproducibility gaps;
-- AGENTS.md and coding-agent context quality;
-- documentation entropy and duplicated/obsolete plans;
-- repository hygiene issues;
+- estimated L0/L1/L2 maturity;
+- KEEP / ADAPT / ADD / N/A / CONFLICT matrix;
 - what should explicitly NOT be changed;
+- highest-value gaps;
 - a small dependency-aware adoption DAG;
 - tasks that can safely run in parallel.
 ```
 
-This audit is the most important step. It prevents the template from replacing stronger practices merely for visual consistency.
+The audit prevents standardization from destroying better native workflows.
 
-## Recommended second request: implement the adoption
-
-After reviewing the audit:
+## Recommended second request: implement
 
 ```text
 Implement the approved repo-template-sw adoption plan for <TARGET_REPOSITORY>.
 
-Preserve all items classified KEEP.
-Adapt rather than overwrite project-specific AGENTS.md, CI, architecture and Skills.
-Add only justified baseline gaps.
-Keep the adoption workstream bounded and parallelize independent tasks where safe.
-Run project-specific validation plus the adopted repository health checks.
-At completion, transfer durable knowledge to the appropriate current docs and delete the temporary adoption plan unless it has independent audit value.
+Preserve KEEP items and native tooling.
+Map existing commands semantically into .engineering/commands.json instead of replacing them unnecessarily.
+Implement only justified gaps in build identity, artifacts/build delta, runtime/cleanup and validation.
+Parallelize independent work with non-overlapping write boundaries.
+Run project-specific validation plus repository/operating-contract health checks.
+For runtime/build changes execute an applicable build/smoke/stop cycle and verify no project-owned process/listener/temp residue remains.
+Finalize durable docs and delete the temporary adoption workstream unless it has independent audit value.
 ```
 
-## Typical adoption decisions
-
-Examples:
+Typical decisions:
 
 ```text
-Existing strong test suite
+Strong existing Gradle/Xcode build pipeline
+-> KEEP + expose through command contract
+
+Existing native script named run_local.sh
+-> KEEP/ADAPT as the dev implementation
+
+No unique build identity
+-> ADD
+
+Builds overwrite app.dmg/app.apk
+-> ADD immutable identity/promotion
+
+Hundreds of local builds retained
+-> ADAPT bounded retention
+
+CI artifact storage already bounded
 -> KEEP
 
-Large but useful AGENTS.md with too much domain detail
--> ADAPT into root routing + scoped guides
+Release binaries only local
+-> ADD durable release store
 
-No SECURITY.md
--> ADD
+Server shutdown leaves port/process alive
+-> CONFLICT with zero-residue invariant; fix explicitly
 
-Existing architecture document stronger than template placeholder
--> KEEP and link it as canonical owner
+Existing artifact manifest/checksum stronger than baseline
+-> KEEP
 
-Existing project-specific Skill that enforces stronger change discipline
--> KEEP or MERGE
-
-Completed implementation plans still treated as current truth
--> ADAPT: transfer durable facts, then delete/archive only when justified
-
-No resource lifecycle contract in a local-AI runtime
--> ADD
+No BUILD_CHANGELOG per build
+-> ADD generated build delta
 ```
 
-## Adoption is complete when
-
-- the repository is self-contained;
-- project-specific ownership and routing are explicit;
-- copied placeholders are gone;
-- stronger local practices were preserved;
-- `.engineering/baseline.json` records the adopted version and profiles;
-- relevant baseline checks run successfully;
-- project-specific CI/test/build gates remain authoritative;
-- temporary adoption planning has been finalized and removed by default.
+Adoption is complete when the repository is self-contained, real commands are declared, stronger local mechanisms are preserved, operating-contract checks pass, and the behavior promised by the command/build/artifact/runtime contract actually exists.
 
 ---
 
-# 3. Normal development after adoption
+# 4. Normal development after adoption
 
 After adoption, **do not use `repo-template-sw` for every feature or bug fix**.
 
-Normal work should be driven entirely from the target repository:
+Normal work uses only the target repository:
 
 ```text
 user request
     |
     v
-project AGENTS.md
+AGENTS.md
     |
-    +--> closest scoped AGENTS.md when needed
-    |
-    +--> project-local Skill when the workflow requires it
-    |
-    +--> focused code, tests and durable docs
+    +--> closest scoped guide if needed
+    +--> .engineering/commands.json when operational commands matter
+    +--> local Skill when workflow requires it
+    +--> focused code/tests/docs
 ```
 
-A normal request should be small, for example:
+A normal request can stay small:
 
 ```text
 Implement memory-aware eviction.
 Parallelize independent work where safe.
 ```
 
-The repository's own `AGENTS.md` and Skills should provide the recurring engineering procedure. The user should not need to restate the whole standard in every prompt.
+The agent should already know how to check/test/build/smoke/clean from the repository contract.
 
-## When to create an active workstream
-
-Use `plan-workstream` only when the change has meaningful coordination, dependencies, parallel lanes or multiple acceptance gates.
-
-Do not create a plan for every small change.
-
-A workstream should be a compact execution DAG, not a development diary.
-
-```text
-ID | scope | depends on | parallel | state | acceptance
-```
-
-At completion:
-
-```text
-plan
- -> implement
- -> validate
- -> transfer durable knowledge
- -> delete plan
-```
-
-Git remains the implementation history.
+Use `plan-workstream` only when meaningful dependencies/parallel lanes/multiple acceptance gates require coordination. At completion transfer durable truth and delete the temporary plan by default.
 
 ---
 
-# 4. Updating a repository to a newer baseline
+# 5. Updating an adopted repository
 
-Use `repo-template-sw` again when the engineering standard itself changes materially.
+Do not automatically sync template commits into all projects.
 
-Do not automatically sync every template commit into every project.
-
-## Recommended request
+Recommended request:
 
 ```text
 Migrate <TARGET_REPOSITORY> from its recorded repo-template-sw baseline to <TARGET_VERSION>.
 
 Use update-engineering-standard.
-
-Read the project's .engineering/baseline.json and compare its recorded version with repo-template-sw VERSION and CHANGELOG.
-Classify every relevant delta as APPLY, MERGE, N/A, DEFER or CONFLICT.
-Preserve local customizations and stronger project-specific mechanisms.
-Do not replace customized Skills or AGENTS.md wholesale.
-Implement only the relevant semantic changes, run affected validation, then update baseline metadata.
+Read baseline.json, commands.json and local customizations.
+Compare VERSION/CHANGELOG plus relevant standard/contract deltas.
+Classify every delta APPLY / MERGE / N/A / DEFER / CONFLICT.
+Preserve native tooling and stronger local behavior.
+Apply semantic changes, validate them, then update baseline/command-contract metadata.
 ```
 
-## Recommended migration policy
+For **0.1.x -> 0.2.0**, explicitly evaluate:
 
-Projects do not need to stay on exactly the same baseline version at all times.
+- common command routing;
+- unique build identity;
+- artifact lineage/immutability/staging-promotion;
+- manifests/checksums;
+- local latest-two retention default;
+- CI vs release storage;
+- generated build delta;
+- local server/process/port cleanup;
+- temp/lock/test-store/log/cache cleanup;
+- `verify_operations.py` in CI.
 
-A healthy state may look like:
+A metadata-only bump is not a valid migration.
 
-```text
-project-a -> baseline 0.1.0
-project-b -> baseline 0.2.0
-project-c -> baseline 0.2.0 + customized structured-change Skill
-```
-
-Upgrade when the newer baseline contains relevant improvements, not merely because the template has a newer commit.
+Projects may intentionally remain on different baseline versions while migrations are evaluated.
 
 ---
 
-# 5. Using the standard as an audit tool
-
-`repo-template-sw` can also be used without adoption or modification.
+# 6. Using the standard as an audit tool
 
 Recommended request:
 
@@ -329,27 +459,22 @@ Recommended request:
 Review <TARGET_REPOSITORY> against daniele21/repo-template-sw.
 Do not change code.
 
-Return a repository health assessment across:
-- architecture and ownership;
-- complexity and dependencies;
-- memory/resources and concurrency where applicable;
-- failure handling;
-- security/privacy/data lifecycle;
-- observability;
-- testing and reproducibility;
-- performance evidence;
-- repository hygiene;
-- documentation lifecycle;
-- coding-agent operability and estimated context cost.
+Assess architecture, ownership, complexity, resources/concurrency/failure, security/data lifecycle, observability, tests, performance, reproducibility, repository hygiene, documentation and agent operability.
 
-Estimate current L0/L1/L2 maturity and rank the highest-value gaps.
+Also assess:
+- canonical command coverage;
+- build identity and reproducibility;
+- artifact lineage/retention/release storage;
+- manifest/checksum/build-delta quality;
+- localhost/process/port ownership;
+- zero-residue cleanup/repeatability.
+
+Estimate current L0/L1/L2 maturity and rank the highest-value evidence-backed gaps.
 ```
-
-This is useful before large refactors, releases or architecture hardening work.
 
 ---
 
-# 6. Promoting lessons back into `repo-template-sw`
+# 7. Promoting lessons back into `repo-template-sw`
 
 The flow is bidirectional:
 
@@ -358,66 +483,56 @@ repo-template-sw -> projects
 projects -> real-world lessons -> repo-template-sw
 ```
 
-Do not promote every project-specific improvement into the universal baseline.
+Promote a project practice only when it is genuinely cross-project, protects a meaningful invariant/recurring workflow, has proven useful in reality, does not force unnecessary architecture/dependencies, and reduces more future risk/context cost than the complexity it adds.
 
-A good default filter is:
-
-1. Is the practice genuinely cross-project rather than product-specific?
-2. Does it protect a meaningful invariant or recurring workflow?
-3. Has it proven useful in real implementation rather than only in theory?
-4. Can it be expressed without forcing an unnecessary dependency or architecture?
-5. Does adding it reduce future risk/context cost more than it increases template complexity?
-
-Prefer evidence from at least two different project contexts for non-obvious practices before making them universal.
+Prefer evidence from at least two different project contexts for non-obvious universal additions.
 
 ---
 
-# 7. What belongs where
-
-Use this rule when deciding whether information belongs in the template or a project:
+# 8. What belongs where
 
 | Concern | Canonical owner |
 | --- | --- |
 | Universal engineering invariant | `repo-template-sw/STANDARD.md` |
+| Universal command/build/artifact/runtime semantics | `repo-template-sw/OPERATING-CONTRACT.md` |
 | Universal adoption/update procedure | `repo-template-sw/skills/` |
-| Optional stack/domain baseline | `repo-template-sw/profiles/` |
-| Project routing and invariants | project `AGENTS.md` |
+| Optional stack/domain mapping | `repo-template-sw/profiles/` |
+| Project command implementation/policy mapping | project `.engineering/commands.json` |
+| Project routing/invariants | project `AGENTS.md` |
 | Recurring project development procedure | project `skills/` |
 | Current coordinated implementation | project active workstream |
 | Current system behavior | project feature/architecture docs |
 | Durable architecture decision | project ADR |
 | Implementation history | Git |
+| Per-build exact delta | artifact `BUILD_CHANGELOG.md` |
 | Deterministic enforceable rule | scripts / CI |
 
-A useful heuristic is:
-
-> If a machine can enforce the rule deterministically, prefer code/CI over spending coding-agent tokens explaining it repeatedly.
+> If a machine can enforce a rule deterministically, prefer code/CI over spending coding-agent tokens explaining it repeatedly.
 
 ---
 
-# 8. Quick reference
+# 9. Quick reference
 
 ## New repository
 
 ```text
-repo-template-sw
- -> adopt-engineering-standard
- -> select profiles
- -> specialize template
- -> configure project validation
- -> record baseline
+select profiles
+ -> specialize baseline
+ -> map commands.json to native tooling
+ -> implement operating lifecycle
+ -> validate
  -> start product work
 ```
 
 ## Existing repository
 
 ```text
-repo-template-sw
- -> audit KEEP / ADAPT / ADD / N/A / CONFLICT
- -> review adoption DAG
- -> migrate incrementally
+audit KEEP/ADAPT/ADD/N/A/CONFLICT
+ -> preserve native strengths
+ -> map commands
+ -> migrate real gaps
+ -> build/smoke/cleanup evidence
  -> validate
- -> finalize/delete adoption workstream
 ```
 
 ## Ordinary development
@@ -425,21 +540,20 @@ repo-template-sw
 ```text
 project only
  -> AGENTS.md
+ -> commands.json when operational
  -> local Skill when needed
- -> code/tests
- -> validate
- -> durable docs only
+ -> code/tests/build/smoke as applicable
 ```
 
 ## Baseline upgrade
 
 ```text
-baseline.json
- -> VERSION + CHANGELOG comparison
- -> APPLY / MERGE / N/A / DEFER / CONFLICT
+baseline.json + commands.json
+ -> VERSION/CHANGELOG/contract delta
+ -> APPLY/MERGE/N/A/DEFER/CONFLICT
  -> focused migration
- -> validation
- -> baseline metadata update
+ -> validate
+ -> metadata update
 ```
 
-The intended outcome is simple: **use `repo-template-sw` to establish and evolve the engineering system, then let each project operate independently inside that system.**
+The intended outcome is simple: **use `repo-template-sw` to establish and evolve the engineering system, then let each project operate independently with the same clear semantics and its own native implementation.**
