@@ -1,16 +1,22 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.1.0
+Version: 0.2.0
 
 ## Purpose
 
-This standard defines the minimum engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for software correctness, operational simplicity, bounded resource use, change safety, reproducibility, and low context cost.
+This standard defines the minimum engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for software correctness, operational simplicity, bounded resource use, change safety, reproducibility, clean lifecycle behavior and low context cost.
 
 The central rule is:
 
 > Make ownership, limits, failures and costs explicit, using the simplest solution that preserves the required invariants.
 
-The standard is intentionally not a framework. A project should adopt only the mechanisms justified by its real requirements.
+The operational corollary is:
+
+> Every operation must be identifiable, owned, bounded, reversible and leave no unintended residue.
+
+The standard is intentionally not a framework. A project should adopt only the mechanisms justified by its real requirements. Common semantics do not require common build tools.
+
+Detailed operational semantics live in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md).
 
 ## Operating principles
 
@@ -30,9 +36,15 @@ Success, invalid input, partial failure, timeout, cancellation, shutdown and cle
 
 For every significant resource, define owner, acquisition, lifetime, maximum cardinality, budget, concurrency, backpressure, timeout, cancellation, release, cleanup, idle/pressure behavior and observability. OOM is not a resource-management strategy.
 
+Processes, listeners, ports, locks, temp directories, build staging areas, test databases, logs and caches are resources too. Temporary does not mean ownerless.
+
+### Clean lifecycle is a contract
+
+A successful, failed, timed-out, cancelled or interrupted operation must restore all applicable project-owned temporary state. Repeated runs should not behave differently because previous runs left processes, listeners, locks, stale artifacts, temp data or incompatible caches behind.
+
 ### Machines enforce what machines can check
 
-Do not spend agent context reminding a model about rules that deterministic tooling can enforce. Formatting, architecture boundaries, document budgets, token budgets, tests, generated-artifact bans and similar invariants belong in scripts and CI where practical.
+Do not spend agent context reminding a model about rules that deterministic tooling can enforce. Formatting, architecture boundaries, document budgets, token budgets, command-contract shape, tests, generated-artifact bans and similar invariants belong in scripts and CI where practical.
 
 ### Git is history; docs describe the system that exists
 
@@ -52,7 +64,11 @@ Required before a project is considered engineering-grade:
 - explicit architecture/ownership map;
 - root `AGENTS.md` with bounded context and routing;
 - pinned/locked dependencies and reproducible setup where applicable;
+- a project-local operating command contract mapping canonical intents to native tooling;
 - formatting, lint/static checks, tests and build validation appropriate to the stack;
+- material builds have unique build/source identity and do not silently overwrite prior builds;
+- local generated/build artifacts are bounded and do not accumulate indefinitely;
+- local runtimes/processes/listeners and other ephemeral resources have deterministic cleanup where applicable;
 - CI on pull requests and protected canonical branches;
 - explicit configuration and no committed secrets;
 - bounded resources, queues and caches where applicable;
@@ -74,6 +90,8 @@ L0 plus:
 - performance and resource budgets for important paths;
 - observability sufficient to answer what is running, why, how long, resource use and failure cause;
 - release procedure, rollback strategy and operational runbooks;
+- successful distributable artifacts have manifests/checksums and durable release storage appropriate to the project;
+- build deltas are generated for material comparable builds when artifacts are distributed/tested across runs;
 - dependency/security scanning appropriate to the threat model;
 - real environment evidence for behavior that cannot be truthfully validated in CI.
 
@@ -85,8 +103,9 @@ L1 plus:
 - resource and memory regression tests;
 - performance regression gates for critical paths where stable measurement is possible;
 - pressure/fault-injection coverage for important lifecycle boundaries;
+- repeatability/cleanliness evidence for important dev/test/build/smoke/runtime lifecycles;
 - representative device/hardware evidence when hardware materially changes behavior;
-- machine-enforced documentation and agent-context budgets;
+- machine-enforced documentation, agent-context and operating-contract checks;
 - explicit complexity/dependency review for meaningful additions;
 - reproducible benchmark/evidence identity where results influence engineering decisions;
 - automated repository policy/health validation;
@@ -122,7 +141,7 @@ Dependencies are liabilities as well as capabilities. Pin and lock them. Avoid d
 
 ## Resource lifecycle contract
 
-For every significant resource — model, tokenizer, KV cache, audio/video buffer, worker, thread, process, socket, HTTP client, database connection, temporary file, cache, job queue or similar — define as applicable:
+For every significant resource — model, tokenizer, KV cache, audio/video buffer, worker, thread, process, socket, HTTP client, database connection, temporary file, cache, job queue, build workspace, lock or similar — define as applicable:
 
 - Owner
 - Acquisition
@@ -141,15 +160,59 @@ For every significant resource — model, tokenizer, KV cache, audio/video buffe
 
 No unbounded queue/list/cache is acceptable on an unbounded input path. Admission should happen before expensive allocation when resource exhaustion is predictable. Active/pinned resources must be protected from incompatible eviction or unload.
 
+Temporary resources must be cleaned on success, failure, timeout, cancellation, interrupt and partial initialization. Cleanup may remove only resources whose ownership is established.
+
 ## Concurrency and backpressure
 
 Define maxima for requests, workers and expensive operations. Define what happens at capacity: queue, reject, wait, degrade or evict. Do not spawn indefinitely. Queue capacity and timeout semantics must be explicit and observable.
+
+Parallel dev/test/build runs should use isolated run identities/workspaces when shared mutable temporary state would otherwise collide.
 
 ## Failure and recovery
 
 Critical workflows should define behavior for success, invalid input, partial initialization, dependency failure, timeout, cancellation, process/app shutdown and restart/recovery where applicable.
 
-Test failure at the owning boundary. Useful scenarios include partial load, corrupt input, disk full, interrupted write, process death, cancellation during work and shutdown during active work.
+Test failure at the owning boundary. Useful scenarios include partial load, corrupt input, disk full, interrupted write, process death, cancellation during work, shutdown during active work, stale PID/lock/temp state and failed build/package staging.
+
+Partial or failed build artifacts must not be promoted to locations where they can be mistaken for valid outputs.
+
+## Project operating contract
+
+Each adopted repository declares its actual operational mapping in `.engineering/commands.json`. The common vocabulary is:
+
+`setup -> doctor -> dev -> check -> test -> build -> smoke -> package -> stop -> clean`
+
+Not every intent is applicable to every project; genuinely irrelevant commands may be declared `n/a`. Do not introduce a generic wrapper merely to force identical command syntax. The project should map these intents to its native Gradle, Xcode, Swift, Python, Node, shell or other established tooling.
+
+The detailed normative behavior for commands, build identity, artifact lineage/lifecycle, build deltas, local runtimes, ports/processes and zero-residue cleanup is defined in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md).
+
+### Build identity
+
+A material build receives a unique build ID even when rebuilding the same source revision. Product/release version is distinct from build identity.
+
+Artifact identity should include or carry product version, build ID and source revision, plus platform/architecture/channel/variant lineage where applicable. Dirty source state must be distinguishable when local builds permit it.
+
+A new build must not silently overwrite a previous successful build.
+
+### Artifact lifecycle
+
+Successful artifacts are immutable. Build/package output is produced in staging, validated, then promoted. Durable binary/package artifacts include a machine-readable build manifest and SHA-256 checksum where applicable.
+
+The default local retention is the latest two successful builds per comparable artifact lineage. CI artifacts are temporary evidence with explicit bounded retention. Durable releases belong in GitHub Releases or an equivalent release/artifact store; package/container registries are used when the output is genuinely consumed as a package/container.
+
+### Build delta
+
+Every successful material build should generate a `BUILD_CHANGELOG.md` or equivalent delta against the previous successful comparable build in the same lineage.
+
+The delta covers source, dependencies, toolchain, configuration, compatibility/migrations, artifact metrics and validation where applicable. A generic Git log is insufficient because rebuilds can differ without source changes.
+
+### Local runtime and zero residue
+
+Local servers bind to loopback by default unless external exposure is intentional. Ports are configurable and collision-checked. Project-owned processes/listeners have explicit shutdown ownership.
+
+After `stop`, smoke-test cleanup, timeout, failure or interrupt, no project-owned application listener or orphan process may remain. Normal kernel states such as TCP `TIME_WAIT` are not considered an open project listener.
+
+Dev/test/build/smoke/package tooling must also clean owned locks, temp files/directories, test databases, run-scoped logs, reservations and other ephemeral resources.
 
 ## Data lifecycle and security
 
@@ -157,16 +220,19 @@ For each meaningful data category define creation, storage location, owner, encr
 
 Defaults should minimize exposure. Remote/network access must be explicit when local-only behavior is expected. Never silently fall back to cloud processing. Secrets, private user paths and sensitive content do not belong in source control or normal telemetry.
 
+Build/test tooling must not leak generated credentials, signing material or private data into logs, caches or distributed artifacts.
+
 ## Observability
 
 Operational evidence should answer:
 
 - what is the system doing;
 - why is it doing it;
-- which operation/request/job owns the work;
+- which operation/request/job/run owns the work;
 - how long has it taken;
 - what resources are consumed;
-- why did it fail or degrade.
+- why did it fail or degrade;
+- which build/artifact/runtime identity is involved when relevant.
 
 Use truthful metric names, units and sources. Unavailable data remains unavailable rather than becoming zero. Keep correlation identifiers privacy-safe. For local AI systems, consider resident models, memory/VRAM or unified memory, queue depth, active jobs, load time, time-to-first-token, throughput, cache hits and eviction reason when applicable.
 
@@ -182,7 +248,10 @@ Examples:
 - a proposed financial/import record is not canonical before required review;
 - cloud processing is never implicit;
 - backup/export round trips preserve required data;
-- repeated lifecycle operations do not leak resident resources.
+- repeated lifecycle operations do not leak resident resources;
+- start -> smoke -> stop leaves no project-owned listener/process/temp residue;
+- failed builds are not promoted as successful artifacts;
+- local artifact retention remains bounded.
 
 Use the narrowest useful test loop while iterating, then expand validation according to change scope.
 
@@ -190,13 +259,19 @@ Use the narrowest useful test loop while iterating, then expand validation accor
 
 Important projects should define measurable budgets appropriate to their product: startup, idle and peak memory, latency/percentiles, throughput, shutdown, binary size, storage growth or queue wait. Measure before optimizing and avoid performance claims without representative evidence.
 
+Artifact/build deltas should surface meaningful size/performance changes when they materially affect product quality.
+
 ## Reproducibility
 
-A clean checkout should have a documented path to setup, test and run. Pin toolchains where practical, commit lockfiles, validate configuration and avoid environment-specific hidden state. Benchmark/evidence artifacts used for decisions should include enough identity to be reproduced.
+A clean checkout should have a documented path to setup, test, build and run. Pin toolchains where practical, commit lockfiles, validate configuration and avoid environment-specific hidden state. Benchmark/evidence artifacts used for decisions should include enough identity to be reproduced.
+
+Material build manifests should identify source revision and enough toolchain/configuration context to diagnose why two builds differ. Local/global environment pollution should be avoided; prefer project-scoped environments and explicit configuration.
 
 ## Repository hygiene
 
 Git should contain source, tests, configuration, small fixtures, durable documentation and small durable assets. Prefer release assets, artifact storage or LFS when justified for large binaries/media. Generated bundles, build output, model weights, logs, caches, private data and temporary evidence should not accumulate in normal source history.
+
+Local artifact directories are bounded convenience stores, not release registries. `clean` removes only project-owned generated state. Cache/log retention is bounded where material.
 
 ## Documentation lifecycle
 
@@ -215,13 +290,13 @@ A completed workstream follows:
 
 `plan -> implement -> validate -> transfer durable knowledge -> delete plan`
 
-Do not create a document solely to record that a PR or isolated implementation step completed.
+Do not create a document solely to record that a PR or isolated implementation step completed. Generated per-build deltas are artifact metadata/evidence, not active project-planning documentation.
 
 ## Agent-operability
 
 ### Root guide
 
-`AGENTS.md` is a routing layer, not a repository encyclopedia. It contains only durable repository-wide invariants, ownership/routing, task reading rules and validation selection.
+`AGENTS.md` is a routing layer, not a repository encyclopedia. It contains only durable repository-wide invariants, ownership/routing, task reading rules and validation selection. It points to `.engineering/commands.json` for canonical operational commands rather than duplicating them.
 
 ### Scoped guides
 
@@ -264,20 +339,24 @@ Project-specific Skills are justified only for recurring domain workflows that c
 
 A meaningful change progresses through applicable levels:
 
-`CODE COMPLETE -> INTEGRATION COMPLETE -> FAILURE COMPLETE -> RESOURCE COMPLETE -> OBSERVABILITY COMPLETE -> EVIDENCE COMPLETE -> PRODUCT COMPLETE`
+`CODE COMPLETE -> INTEGRATION COMPLETE -> FAILURE COMPLETE -> RESOURCE COMPLETE -> OPERATIONS COMPLETE -> OBSERVABILITY COMPLETE -> EVIDENCE COMPLETE -> PRODUCT COMPLETE`
 
 Not every change needs every level, but no applicable level should be silently skipped.
 
-A change is not complete merely because code exists. The owning tests, integration behavior, failure/resource semantics, documentation and evidence must agree with the claim being made.
+`OPERATIONS COMPLETE` means applicable canonical commands, build/artifact identity, build delta, runtime shutdown and ephemeral cleanup agree with the behavior being claimed.
+
+A change is not complete merely because code exists. The owning tests, integration behavior, failure/resource semantics, operational lifecycle, documentation and evidence must agree with the claim being made.
 
 ## Branch and delivery policy
 
 Projects should define a canonical integration/stable path appropriate to their release model. Protect canonical branches, require pull requests and required checks, prevent force pushes/deletion except explicit administration, and keep feature branches focused and short-lived.
 
+Release workflows should promote already-identified/validated artifacts rather than silently rebuilding or mutating an existing build identity unless the release process explicitly treats the rebuild as a new build.
+
 ## Adoption philosophy
 
-For a new project, copy the smallest applicable core and selected profiles, then specialize all project-specific placeholders.
+For a new project, copy the smallest applicable core and selected profiles, then specialize all project-specific placeholders including `.engineering/commands.json`.
 
-For an existing project, audit before copying. Preserve good existing practices, identify conflicts and gaps, and migrate incrementally. Never overwrite project-specific architecture, CI or documentation blindly.
+For an existing project, audit before copying. Preserve good existing practices, native build tooling and stronger local mechanisms; identify conflicts and gaps and migrate incrementally. Never overwrite project-specific architecture, CI, command tooling or documentation blindly.
 
 A project is self-contained after adoption. Template updates are explicit migrations, not runtime dependencies.
