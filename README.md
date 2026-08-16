@@ -4,6 +4,11 @@ Agent-native reference engineering baseline for software repositories maintained
 
 `repo-template-sw` is not an application framework and is not intended to become a universal build system. It is the canonical source for a small engineering standard, a reusable project bootstrap, coding-agent Skills, documentation/context governance, and deterministic repository health checks.
 
+## Start here
+
+- [`USAGE.md`](USAGE.md) — practical guide for using this repository with a brand-new project, an existing repository, ordinary coding-agent development, audits and baseline upgrades.
+- [`STANDARD.md`](STANDARD.md) — canonical L0/L1/L2 engineering standard.
+
 ## What it optimizes for
 
 - software correctness and explicit ownership;
@@ -20,6 +25,7 @@ The design principle is: **make ownership, limits, failures and costs explicit, 
 ## Repository layout
 
 - [`STANDARD.md`](STANDARD.md) — canonical L0/L1/L2 engineering standard.
+- [`USAGE.md`](USAGE.md) — practical adoption and operating guide.
 - [`template/`](template/) — universal files that can be adopted into a project and then specialized locally.
 - [`template/skills/`](template/skills/) — core project-local coding-agent Skills.
 - [`profiles/`](profiles/) — optional stack/domain guidance; profiles add only what is genuinely specific.
@@ -39,7 +45,7 @@ Scripts/CI       -> deterministic enforcement
 
 ## Use with a new project
 
-1. Read `STANDARD.md`.
+1. Read [`USAGE.md`](USAGE.md) and `STANDARD.md`.
 2. Copy the universal `template/` baseline into the repository.
 3. Select only the profiles that apply.
 4. Replace project placeholders and generate a project-specific ownership/routing map.
@@ -53,13 +59,15 @@ The `adopt-engineering-standard` Skill describes the complete workflow.
 
 Do not copy blindly. First audit the existing architecture, docs, CI, tests, security, resources and agent guidance. Preserve stronger existing practices, identify gaps/conflicts, build a small adoption DAG, then migrate incrementally.
 
+See [`USAGE.md`](USAGE.md) for the recommended audit-first workflow and ready-to-use coding-agent prompts.
+
 The goal is convergence on invariants, not identical repository layouts.
 
 ## Updating an adopted project
 
 Projects remain self-contained. They do not depend on this repository at runtime or during ordinary coding-agent tasks.
 
-When this baseline changes, compare the project's recorded standard version with the desired version, identify relevant deltas, preserve local customizations, and apply a focused migration. See `skills/update-engineering-standard`.
+When this baseline changes, compare the project's recorded standard version with the desired version, identify relevant deltas, preserve local customizations, and apply a focused migration. See `skills/update-engineering-standard` and [`USAGE.md`](USAGE.md).
 
 ## Documentation lifecycle
 
