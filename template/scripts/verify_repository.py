@@ -25,6 +25,7 @@ REQUIRED = (
     ".gitignore",
     ".engineering/baseline.json",
     ".engineering/documentation-policy.json",
+    ".engineering/commands.json",
     ".github/pull_request_template.md",
     ".github/workflows/repository-health.yml",
     "docs/README.md",
@@ -33,6 +34,7 @@ REQUIRED = (
     "docs/features/README.md",
     "docs/adr/README.md",
     "docs/workstreams/README.md",
+    "scripts/verify_operations.py",
 )
 
 PLACEHOLDER_MARKERS = (

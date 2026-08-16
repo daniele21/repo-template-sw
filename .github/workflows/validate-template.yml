@@ -18,6 +18,8 @@ jobs:
           python-version: "3.12"
       - name: Verify template repository baseline
         run: python3 template/scripts/verify_repository.py --root template --template-mode
+      - name: Verify template operating contract
+        run: python3 template/scripts/verify_operations.py --root template --template-mode
       - name: Verify template documentation budgets
         run: python3 template/scripts/verify_docs.py --root template --template-mode
       - name: Verify template agent context

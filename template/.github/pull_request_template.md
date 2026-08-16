@@ -8,11 +8,15 @@
 
 ## Invariants / risk
 
-<!-- Public contracts, data, resource, failure, security or migration implications. Write N/A when truly not applicable. -->
+<!-- Public contracts, data, resource, failure, security, migration or operating-lifecycle implications. Write N/A when truly not applicable. -->
+
+## Build / runtime / artifact lifecycle
+
+<!-- If applicable: canonical command intents affected; build identity; artifact manifest/checksum/build delta/retention; localhost/process/port/temp cleanup. Otherwise N/A. -->
 
 ## Validation
 
-<!-- Exact automated/manual/device/hardware checks executed. Never claim evidence not run. -->
+<!-- Exact check/test/build/smoke/manual/device/hardware checks executed. Never claim evidence not run. -->
 
 ## Documentation lifecycle
 

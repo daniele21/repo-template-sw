@@ -16,3 +16,18 @@ Minimum additions:
 - metrics may include resident models, memory/VRAM/unified memory, active jobs, queue depth, load time, TTFT, throughput, cache hits and eviction reason;
 - performance/resource claims require representative hardware evidence;
 - benchmark/test results include durable model, dataset, configuration and code identity sufficient for reproduction.
+
+## Operating-contract mapping
+
+The common project operating contract also applies to model runtimes and local inference servers.
+
+- `doctor` should report model/backend/hardware prerequisites truthfully without treating unavailable resource telemetry as zero;
+- `dev`/`smoke` must own model-server processes, helper processes, sockets, ports, temporary model/session state and reservations;
+- expensive model loads must not begin before required admission/compatibility checks;
+- `stop`, cancellation, timeout, startup failure and interrupt must release listeners, reservations, sessions and resident resources owned by the run;
+- post-stop verification must distinguish an actually closed project listener/process from normal kernel states;
+- build/runtime artifacts and benchmarks must preserve both software build identity and model/dataset/configuration identity.
+
+For model caches, distinguish durable user-selected model storage from ephemeral build/test/runtime cache. Do not delete durable model artifacts during generic `clean`; only clean resources whose project/run ownership is explicit.
+
+When a local-AI project produces distributable application/server artifacts, use the standard artifact lifecycle: unique build identity, immutable successful artifact, manifest/SHA-256, build delta, bounded local retention and durable release storage.

@@ -8,7 +8,8 @@ Always read this guide. Then read only:
 
 1. the closest scoped `AGENTS.md`, when one exists for the target subtree;
 2. the canonical architecture/feature/workstream source required by the task;
-3. the owning implementation, direct consumers and nearby tests.
+3. `.engineering/commands.json` when setup/dev/test/build/package/runtime/cleanup behavior is relevant;
+4. the owning implementation, direct consumers and nearby tests.
 
 Do not load every plan or all documentation for a local change.
 
@@ -20,7 +21,7 @@ Do not load every plan or all documentation for a local change.
 
 <REPLACE_WITH_PROJECT_SPECIFIC_DURABLE_INVARIANTS>
 
-Keep this list short. Do not copy generic advice already enforced by `STANDARD.md`, Skills or CI unless the project needs a local specialization.
+Keep this list short. Do not copy generic advice already enforced by the standard, Skills or CI unless the project needs a local specialization.
 
 ## Ownership and routing
 
@@ -32,6 +33,21 @@ Keep this list short. Do not copy generic advice already enforced by `STANDARD.m
 | <UI/transport adapter> | <owner path> | <owning domain contract/tests> |
 
 Add scoped `AGENTS.md` files only for subtrees with meaningful local invariants, hazards, ownership or validation commands.
+
+## Project operating commands
+
+Canonical repository-level command routing lives in `.engineering/commands.json`.
+
+Use the declared intent rather than inventing a second command path:
+
+- `check` for broad cheap validation while iterating;
+- `test` for behavioral validation;
+- `build` when runnable/build output is affected;
+- `smoke` when runtime/built-artifact behavior must be proven;
+- `package` only when distributable output is relevant;
+- `stop`/`clean` for project-owned runtime/generated state.
+
+The underlying command remains native to this repository. When build/runtime behavior is affected, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup required by the local operating contract.
 
 ## Core change workflow
 
@@ -47,7 +63,7 @@ Add scoped `AGENTS.md` files only for subtrees with meaningful local invariants,
 
 ## Validation routing
 
-<REPLACE_WITH_PROJECT_SPECIFIC_TARGETED_AND_FULL_VALIDATION_COMMANDS>
+Run `python3 scripts/verify_operations.py` with the other repository-health checks. Use `.engineering/commands.json` for project-specific targeted/full command routing instead of duplicating command strings here.
 
 A missing real-device/hardware run must be reported as pending; never promote emulator/synthetic evidence into a stronger claim.
 
@@ -61,7 +77,7 @@ A missing real-device/hardware run must be reported as pending; never promote em
 - Completed plans are deleted after durable behavior/decisions are transferred. Archive only with independent audit/regulatory/release/historical justification.
 - Git history owns implementation history.
 
-Do not create plan/progress/status documents that duplicate the same workstream.
+Do not create plan/progress/status documents that duplicate the same workstream. Generated per-build `BUILD_CHANGELOG.md` files are artifact evidence, not project-status docs.
 
 ## Agent context discipline
 
@@ -71,4 +87,4 @@ Keep this guide within the configured budget in `.engineering/documentation-poli
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, or claim evidence that was not executed.
+Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass the canonical command/build/artifact lifecycle, or claim evidence that was not executed.
