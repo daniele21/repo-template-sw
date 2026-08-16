@@ -17,9 +17,16 @@ CORE_SKILLS = (
 )
 
 REQUIRED = (
+    "README.md",
     "AGENTS.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    ".editorconfig",
+    ".gitignore",
     ".engineering/baseline.json",
     ".engineering/documentation-policy.json",
+    ".github/pull_request_template.md",
+    ".github/workflows/repository-health.yml",
     "docs/README.md",
     "docs/architecture.md",
     "docs/current-state.md",
@@ -92,12 +99,13 @@ def main() -> int:
                 if not isinstance(entry.get("customized"), bool):
                     errors.append(f"skill {name} customized must be boolean")
 
+    candidate_files = [
+        root / "README.md",
+        root / "AGENTS.md",
+        root / "docs/architecture.md",
+        root / "SECURITY.md",
+    ]
     if not args.template_mode:
-        candidate_files = [
-            root / "AGENTS.md",
-            root / "docs/architecture.md",
-            root / "SECURITY.md",
-        ]
         for path in candidate_files:
             if not path.is_file():
                 continue
@@ -110,6 +118,9 @@ def main() -> int:
     present = [name for name in common_generated if (root / name).exists()]
     if present:
         warnings.append("generated/local directories present in worktree: " + ", ".join(present))
+
+    if not any((root / name).is_file() for name in ("LICENSE", "LICENSE.md", "LICENSE.txt")):
+        warnings.append("no project license file detected; select an explicit license before public distribution")
 
     print("Repository baseline check")
     print(f"root: {root}")
