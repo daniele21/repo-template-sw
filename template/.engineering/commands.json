@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "contract_version": "0.2.0",
+  "commands": {
+    "setup": {"status": "required", "run": "<REPLACE_WITH_SETUP_COMMAND>"},
+    "doctor": {"status": "recommended", "run": "<REPLACE_WITH_DOCTOR_COMMAND_OR_NA>"},
+    "dev": {"status": "recommended", "run": "<REPLACE_WITH_DEV_COMMAND_OR_NA>"},
+    "check": {"status": "required", "run": "<REPLACE_WITH_CHECK_COMMAND>"},
+    "test": {"status": "required", "run": "<REPLACE_WITH_TEST_COMMAND>"},
+    "build": {"status": "required", "run": "<REPLACE_WITH_BUILD_COMMAND>"},
+    "smoke": {"status": "recommended", "run": "<REPLACE_WITH_SMOKE_COMMAND_OR_NA>"},
+    "package": {"status": "optional", "run": "<REPLACE_WITH_PACKAGE_COMMAND_OR_NA>"},
+    "stop": {"status": "optional", "run": "<REPLACE_WITH_STOP_COMMAND_OR_NA>"},
+    "clean": {"status": "required", "run": "<REPLACE_WITH_CLEAN_COMMAND>"}
+  },
+  "build_identity": {
+    "unique_per_build": true,
+    "source_revision_required": true,
+    "dirty_state_required": true,
+    "lineage_fields": ["project", "platform", "architecture", "channel", "variant"],
+    "artifact_name_fields": ["product", "product_version", "build_id", "source_revision"]
+  },
+  "artifact_lifecycle": {
+    "immutable_successful_artifacts": true,
+    "promote_only_after_success": true,
+    "manifest_required": true,
+    "manifest_name": "build-manifest.json",
+    "checksum_algorithm": "sha256",
+    "local_keep_successful_per_lineage": 2,
+    "ci_store": "github-actions-or-equivalent",
+    "ci_retention_days": 7,
+    "release_store": "github-releases-or-equivalent",
+    "release_artifacts_immutable": true
+  },
+  "build_delta": {
+    "required": true,
+    "compare_to": "previous-successful-comparable-build",
+    "output": "BUILD_CHANGELOG.md",
+    "bundle_with_artifact": true,
+    "dimensions": [
+      "source",
+      "dependencies",
+      "toolchain",
+      "configuration",
+      "compatibility_migrations",
+      "artifact_metrics",
+      "validation"
+    ]
+  },
+  "local_runtime": {
+    "applicable": false,
+    "bind_default": "loopback",
+    "port_strategy": "configurable-with-collision-check",
+    "foreground_default": true,
+    "readiness_required": true,
+    "graceful_shutdown_required": true,
+    "verify_no_project_listener_after_stop": true
+  },
+  "ephemeral_resources": {
+    "run_identity": true,
+    "isolated_workspace": true,
+    "cleanup_paths": ["success", "failure", "timeout", "cancellation", "interrupt", "partial-initialization"],
+    "stale_resource_recovery": true,
+    "ownership_required_before_cleanup": true,
+    "post_cleanup_verification": true
+  }
+}
