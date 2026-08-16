@@ -1,6 +1,6 @@
 ---
 name: adopt-engineering-standard
-description: Align a new or existing repository with repo-template-sw without blindly overwriting stronger project-specific architecture, CI, documentation or agent guidance. Audit first, select applicable profiles, create a bounded adoption DAG, then install/specialize the smallest useful baseline.
+description: Align a new or existing repository with repo-template-sw without blindly overwriting stronger project-specific architecture, CI, documentation, operating commands or agent guidance. Audit first, select applicable profiles, create a bounded adoption DAG, then install/specialize the smallest useful baseline.
 ---
 
 # Adopt Engineering Standard
@@ -11,14 +11,16 @@ Make a repository self-contained and aligned with the Agent-Native Reference Eng
 
 ## New repository path
 
-1. Identify product/runtime, languages/platforms, persistence/network/security boundaries and expected deployment environment.
+1. Identify product/runtime, languages/platforms, persistence/network/security boundaries, build/distribution shape and expected deployment environment.
 2. Copy the universal `template/` baseline.
 3. Select only applicable profiles from `profiles/` and adapt their requirements into project-local configuration/agent guidance.
-4. Specialize `AGENTS.md`, `docs/architecture.md`, `SECURITY.md`, validation commands and ownership maps. Remove all unresolved placeholders before calling adoption complete.
-5. Record standard version, profiles and local Skill customization in `.engineering/baseline.json`.
-6. Configure stack-specific formatter/lint/static/test/build CI gates and branch protection.
-7. Run repository/docs/agent-context validation.
-8. Report current maturity truthfully; bootstrap alone normally establishes structure, not L1/L2 evidence.
+4. Specialize `AGENTS.md`, `docs/architecture.md`, `SECURITY.md`, ownership maps and `.engineering/commands.json`. Remove all unresolved placeholders before calling adoption complete.
+5. Map the common command intents (`setup`, `doctor`, `dev`, `check`, `test`, `build`, `smoke`, `package`, `stop`, `clean`) to the repository's native tooling; mark only genuinely inapplicable intents `n/a`.
+6. Implement the applicable project operating contracts: unique build identity, artifact lineage/retention/manifest/checksum, generated build delta, localhost/runtime cleanup and ephemeral-resource cleanup.
+7. Record standard version, profiles and local Skill customization in `.engineering/baseline.json`.
+8. Configure stack-specific formatter/lint/static/test/build/smoke CI gates and branch protection.
+9. Run repository/operating-contract/docs/agent-context validation.
+10. Report current maturity truthfully; bootstrap alone normally establishes structure, not L1/L2 evidence.
 
 ## Existing repository path
 
@@ -28,7 +30,10 @@ Inspect:
 
 - existing `AGENTS.md`/agent instructions and Skills;
 - README/architecture/ADRs/current plans;
+- current setup/dev/test/build/package/clean commands and scripts;
 - CI, branch/release policy and package/build configuration;
+- build/version naming, artifact storage/retention and release flow;
+- local servers, ports, helper processes, PID/lock/temp state and shutdown paths;
 - tests/integration/device evidence;
 - security/privacy/data lifecycle;
 - resource/memory/concurrency ownership;
@@ -44,15 +49,17 @@ For each baseline concern mark:
 - `N/A` — not applicable to this project;
 - `CONFLICT` — existing practice contradicts a required invariant and needs an explicit decision.
 
-Never replace a stronger existing mechanism merely to make repositories look identical.
+Never replace a stronger existing mechanism merely to make repositories look identical. The command contract standardizes semantics, not the underlying build tool.
 
 ### 3. Build an adoption DAG
 
 Create a temporary workstream only when migration spans multiple coordinated changes. Prioritize:
 
 - safety/ownership/conflict resolution;
-- agent routing and canonical docs;
+- canonical command routing and agent guidance;
 - deterministic validation/CI;
+- build/artifact identity and release/retention gaps;
+- runtime/process/port/ephemeral cleanup gaps;
 - resource/failure/data gaps;
 - cleanup/duplicate plan removal.
 
@@ -60,15 +67,18 @@ Expose dependencies and non-conflicting parallel lanes.
 
 ### 4. Install/specialize
 
-Copy only missing/useful universal files and core Skills. Merge project-specific `AGENTS.md`, CI, SECURITY and docs semantically. Add scoped guides only where local complexity justifies them.
+Copy only missing/useful universal files and core Skills. Merge project-specific `AGENTS.md`, CI, SECURITY and docs semantically. Preserve native Gradle/Xcode/Python/Node/etc. workflows behind the common command intents rather than wrapping them in unnecessary frameworks.
+
+For existing artifact/build systems, migrate identity/retention/delta behavior incrementally. Do not invalidate or delete historical release artifacts merely to conform to the new layout.
 
 ### 5. Validate and finalize
 
-Run project tests plus baseline health checks. Transfer durable changes, delete adoption workstream by default, and leave the repository self-contained.
+Run project tests plus baseline health and operating-contract checks. For runtime/build migrations, execute an applicable real `build`/`smoke`/`stop` cycle and verify no project-owned process/listener/temp residue remains. Transfer durable changes, delete adoption workstream by default, and leave the repository self-contained.
 
 ## Non-goals
 
-- forcing identical folder layouts across unrelated stacks;
+- forcing identical folder layouts or build tools across unrelated stacks;
+- introducing Make/Docker/Python wrappers solely to normalize command names;
 - introducing frameworks/services/dependencies solely for compliance aesthetics;
 - claiming production/reference readiness without evidence;
 - keeping the template repository as a runtime dependency.
