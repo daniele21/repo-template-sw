@@ -10,13 +10,23 @@
 
 See [`docs/architecture.md`](docs/architecture.md) for current boundaries and ownership. Keep this README focused on purpose, setup and public usage rather than implementation history.
 
+## Project commands
+
+The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.engineering/commands.json`](.engineering/commands.json). It exposes the common intents `setup`, `doctor`, `dev`, `check`, `test`, `build`, `smoke`, `package`, `stop` and `clean` while keeping this project's native tooling underneath.
+
+Do not add a second undocumented command path for the same intent.
+
 ## Setup
 
-<REPLACE_WITH_REPRODUCIBLE_SETUP_STEPS_AND_PINNED_TOOLCHAIN_REQUIREMENTS>
+Use the command declared as `setup` in `.engineering/commands.json`, then `doctor` when environment diagnostics are needed.
 
 ## Run
 
-<REPLACE_WITH_THE_SMALLEST_SUPPORTED_RUN_COMMANDS>
+Use the declared `dev` command when applicable. Local servers/processes must follow the repository's runtime/cleanup contract and leave no project-owned listeners/processes after stop.
+
+## Build and artifacts
+
+Use the declared `build`/`package` commands. Material builds use a unique build identity, immutable successful artifacts, manifests/checksums, bounded local retention and a generated build delta against the previous successful comparable build.
 
 ## Validate
 
@@ -24,11 +34,12 @@ Start with the repository engineering checks:
 
 ```bash
 python3 scripts/verify_repository.py
+python3 scripts/verify_operations.py
 python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-Then run the stack-specific format/lint/static/test/build commands documented in `CONTRIBUTING.md` and `AGENTS.md`.
+Then use the declared `check`, `test`, `build` and `smoke` intents according to the change's blast radius.
 
 ## Security and data
 
