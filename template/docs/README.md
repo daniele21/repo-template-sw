@@ -12,6 +12,8 @@ Use progressive disclosure. Start from `AGENTS.md`, add the closest scoped agent
 | Why was a durable architectural choice made? | `adr/` |
 | What substantial implementation is active now? | `workstreams/` |
 | How should an agent perform a recurring procedure? | `skills/`, not docs |
+| How does this repository setup/run/check/test/build/smoke/package/stop/clean? | `.engineering/commands.json`, not docs |
+| What changed between two concrete build artifacts? | generated artifact `BUILD_CHANGELOG.md`, not project-status docs |
 | What happened historically during implementation? | Git history |
 
 ## Lifecycle
@@ -23,6 +25,8 @@ Active workstream documents are disposable:
 `plan -> implement -> validate -> transfer durable knowledge -> delete plan`
 
 Keep a completed plan only when it has independent audit, regulatory, release or historical value; move such exceptional material to an explicitly historical location and never treat it as current truth.
+
+Generated build manifests/deltas are artifact evidence and follow artifact retention, not active documentation retention.
 
 ## Before creating a document
 
