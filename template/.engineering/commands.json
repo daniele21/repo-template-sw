@@ -1,17 +1,27 @@
 {
   "schema_version": 1,
-  "contract_version": "0.2.0",
+  "contract_version": "0.3.0",
   "commands": {
     "setup": {"status": "required", "run": "<REPLACE_WITH_SETUP_COMMAND>"},
     "doctor": {"status": "recommended", "run": "<REPLACE_WITH_DOCTOR_COMMAND_OR_NA>"},
     "dev": {"status": "recommended", "run": "<REPLACE_WITH_DEV_COMMAND_OR_NA>"},
     "check": {"status": "required", "run": "<REPLACE_WITH_CHECK_COMMAND>"},
     "test": {"status": "required", "run": "<REPLACE_WITH_TEST_COMMAND>"},
+    "e2e": {"status": "recommended", "run": "<REPLACE_WITH_E2E_COMMAND_OR_NA>"},
     "build": {"status": "required", "run": "<REPLACE_WITH_BUILD_COMMAND>"},
     "smoke": {"status": "recommended", "run": "<REPLACE_WITH_SMOKE_COMMAND_OR_NA>"},
     "package": {"status": "optional", "run": "<REPLACE_WITH_PACKAGE_COMMAND_OR_NA>"},
     "stop": {"status": "optional", "run": "<REPLACE_WITH_STOP_COMMAND_OR_NA>"},
     "clean": {"status": "required", "run": "<REPLACE_WITH_CLEAN_COMMAND>"}
+  },
+  "end_to_end": {
+    "recommended_when_full_workflow_boundary_exists": true,
+    "critical_journeys_prioritized": true,
+    "lower_level_tests_remain_primary": true,
+    "use_stack_native_tooling": true,
+    "run_against_built_artifact_when_material": true,
+    "failure_evidence_bounded": true,
+    "zero_residue_required": true
   },
   "build_identity": {
     "unique_per_build": true,

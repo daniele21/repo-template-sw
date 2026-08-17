@@ -14,6 +14,7 @@ COMMANDS = (
     "dev",
     "check",
     "test",
+    "e2e",
     "build",
     "smoke",
     "package",
@@ -41,6 +42,15 @@ REQUIRED_DELTA_DIMENSIONS = {
     "artifact_metrics",
     "validation",
 }
+REQUIRED_E2E_FLAGS = (
+    "recommended_when_full_workflow_boundary_exists",
+    "critical_journeys_prioritized",
+    "lower_level_tests_remain_primary",
+    "use_stack_native_tooling",
+    "run_against_built_artifact_when_material",
+    "failure_evidence_bounded",
+    "zero_residue_required",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -101,6 +111,13 @@ def main() -> int:
             for marker in PLACEHOLDER_MARKERS:
                 if marker in run:
                     errors.append(f"unresolved command placeholder in commands.{name}.run")
+
+    e2e = data.get("end_to_end")
+    if not isinstance(e2e, dict):
+        errors.append("end_to_end must be an object")
+        e2e = {}
+    for key in REQUIRED_E2E_FLAGS:
+        expect_true(e2e, key, errors, "end_to_end")
 
     identity = data.get("build_identity")
     if not isinstance(identity, dict):
