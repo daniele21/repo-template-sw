@@ -4,7 +4,7 @@ This guide explains how to use `repo-template-sw` with a brand-new repository, a
 
 `repo-template-sw` is a **bootstrap, audit and migration source**. It is not a runtime dependency and should not be consulted for every ordinary coding task after a project has adopted the baseline.
 
-The current baseline also defines a common project operating model. The rule is **same semantics, native implementation**: repositories share the same conceptual setup/run/check/test/build/smoke/package/cleanup lifecycle without being forced onto the same build system.
+The operating model is **same semantics, native implementation**: repositories share the same conceptual setup/run/check/test/E2E/build/smoke/package/cleanup lifecycle without being forced onto the same build system or E2E framework.
 
 ## Mental model
 
@@ -12,7 +12,7 @@ The current baseline also defines a common project operating model. The rule is 
 repo-template-sw
       |
       +--> STANDARD.md             engineering invariants
-      +--> OPERATING-CONTRACT.md   command/build/artifact/runtime semantics
+      +--> OPERATING-CONTRACT.md   command/test/E2E/build/artifact/runtime semantics
       +--> template/               adoptable baseline
       +--> profiles/               stack-specific mapping
       |
@@ -54,7 +54,10 @@ check
   -> broad cheap validation
 
 test
-  -> behavioral validation
+  -> unit/integration/contract behavioral validation
+
+e2e
+  -> complete critical user/system workflow validation
 
 build
   -> create a uniquely identified runnable/build artifact
@@ -72,32 +75,100 @@ clean
   -> remove only project-owned generated state
 ```
 
-An intent may be `n/a` when genuinely irrelevant. Do **not** add Make, Docker, Python wrappers or another task runner solely to make command strings look the same.
+An intent may be `n/a` when genuinely irrelevant. Do **not** add Make, Docker, Python wrappers, Playwright or another tool solely to make repositories look the same.
 
-Examples:
+## Test vs E2E vs smoke
+
+Keep the validation layers distinct:
 
 ```text
-Android
-  check   -> Gradle lint/static/unit gates
-  build   -> Gradle debug/internal build
-  smoke   -> install + launch built APK on target
-
-macOS
-  build   -> Xcode/Swift/Python-native .app build
-  smoke   -> launch the built .app, not only source/dev mode
-  package -> DMG/PKG/archive when relevant
-
-Python localhost server
-  dev     -> native server command in foreground
-  smoke   -> start -> ready -> request -> stop -> verify clean
-
-TypeScript
-  check   -> package-manager lint/typecheck
-  build   -> production build
-  smoke   -> serve/run built output and exercise minimal path
+unit/component
+   ↓
+integration/contract
+   ↓
+end-to-end
+   ↓
+smoke of built/running artifact
 ```
 
-## Build identity
+- `test` owns the fast behavioral layers;
+- `e2e` proves a complete critical workflow across the assembled application;
+- `smoke` proves minimum viability of the built/running artifact.
+
+Do not move all tests into E2E. Prefer the cheapest deterministic level capable of proving the claim.
+
+A repository should use E2E when it has critical workflows whose final outcome cannot be adequately established from unit/integration tests alone. Keep the E2E set small and high-value.
+
+Typical candidates:
+
+```text
+first launch / onboarding
+primary create/use/save/reopen flow
+persistence/restart
+import/export
+critical destructive/recovery flow
+representative failure/retry path
+complete AI/audio/vision pipeline
+```
+
+## E2E tooling by stack
+
+The baseline does not mandate one framework.
+
+```text
+Browser / web
+  -> prefer Playwright unless an equally strong established solution already exists
+
+Android
+  -> Compose UI Test / Espresso / UI Automator / established native equivalent
+
+macOS native
+  -> XCTest / XCUITest / established native equivalent
+
+Python/API/local server
+  -> real process + public API/protocol client
+
+CLI
+  -> real executable/subprocess + externally visible assertions
+
+Browser-rendered desktop
+  -> Playwright may be appropriate when it can reliably exercise the real runtime/package
+```
+
+When the product claim depends on packaged/distributable behavior, run E2E against the built/package artifact when technically practical.
+
+## E2E evidence and cleanup
+
+A failed E2E may produce useful evidence:
+
+```text
+trace
+screenshot
+video
+logs
+request/response diagnostics
+```
+
+These are **bounded CI/test artifacts**, not permanent repository content. They should carry build/run/environment identity and remain privacy-safe.
+
+E2E inherits the zero-residue contract. A failed assertion must not leave behind:
+
+```text
+servers/listeners
+browser/helper processes
+browser profiles/contexts
+device/emulator state owned by the run
+test databases/storage
+sessions/accounts that are explicitly disposable
+downloads/uploads
+temp workspaces
+locks/PID files
+unbounded traces/screenshots/videos/logs
+```
+
+---
+
+# 2. Build identity, artifacts and cleanup
 
 A material build always gets a new build identity even if the product version and source revision are unchanged.
 
@@ -139,7 +210,7 @@ Default storage policy:
 local successful artifacts
   -> latest 2 per comparable lineage
 
-PR/CI artifacts
+PR / CI / E2E evidence artifacts
   -> GitHub Actions Artifacts or equivalent
   -> explicit bounded retention
 
@@ -167,7 +238,7 @@ source
 + configuration/build flags
 + compatibility/migrations
 + artifact size/hash
-+ validation evidence
++ validation evidence, including E2E when relevant
 ```
 
 A Git log alone is not sufficient because two builds of the same commit may differ through toolchain, dependencies or configuration.
@@ -188,11 +259,11 @@ post-condition  -> no project-owned listener/process remains
 
 TCP `TIME_WAIT` is not an open application listener. The invariant is that no project-owned process is still listening after the owning operation finishes.
 
-Temporary processes, locks, PID files, workspaces, test databases, logs, caches, generated secrets and other ephemeral resources need owner-aware deterministic cleanup.
+Temporary processes, browser/device sessions, locks, PID files, workspaces, test databases, logs, caches, generated secrets and other ephemeral resources need owner-aware deterministic cleanup.
 
 ---
 
-# 2. Starting a repository from zero
+# 3. Starting a repository from zero
 
 Use this path when the product repository is new or contains no meaningful engineering structure yet.
 
@@ -209,13 +280,15 @@ Before implementing product features:
 3. adopt and specialize the universal baseline;
 4. create a project-specific AGENTS.md with real ownership/routing;
 5. map .engineering/commands.json to the repository's native tooling;
-6. implement applicable build identity, artifact lifecycle/build-delta and local-runtime/zero-residue behavior;
-7. configure stack-specific formatting, linting, tests, build, smoke and CI gates;
-8. record standard version/profiles in .engineering/baseline.json;
-9. run repository, operating-contract, documentation and agent-context validation;
-10. report resulting maturity truthfully.
+6. decide E2E applicability and identify only critical whole-system journeys that lower-level tests cannot prove;
+7. preserve stack-native E2E tooling; for new browser/web E2E prefer Playwright unless an equally strong solution already exists;
+8. implement applicable build identity, artifact lifecycle/build-delta and local-runtime/zero-residue behavior;
+9. configure stack-specific formatting, linting, unit/integration/E2E, build, smoke and CI gates;
+10. record standard version/profiles in .engineering/baseline.json;
+11. run repository, operating-contract, documentation and agent-context validation;
+12. report resulting maturity truthfully.
 
-Do not leave generic placeholders. Do not add wrappers, profiles or abstractions that the project does not need.
+Do not leave generic placeholders. Do not add wrappers, profiles, E2E frameworks or abstractions that the project does not need.
 ```
 
 ## What the agent should take from the template
@@ -256,44 +329,13 @@ TypeScript web application
 -> core + typescript
 ```
 
-Profiles map the common operating semantics to native stack behavior; they are not extra frameworks.
+Profiles map common operating/E2E semantics to native stack behavior; they are not extra frameworks.
 
-## Expected responsibilities
-
-A new project should end bootstrap with responsibilities similar to:
-
-```text
-project/
-├── AGENTS.md
-├── README.md
-├── CONTRIBUTING.md
-├── SECURITY.md
-├── .engineering/
-│   ├── baseline.json
-│   ├── documentation-policy.json
-│   └── commands.json
-├── docs/
-│   ├── architecture.md
-│   ├── current-state.md
-│   ├── adr/
-│   ├── features/
-│   └── workstreams/
-├── skills/
-├── scripts/
-│   ├── verify_repository.py
-│   ├── verify_operations.py
-│   ├── verify_docs.py
-│   └── verify_agent_context.py
-└── project-specific source, tests and CI
-```
-
-The exact folder layout may differ when a stronger project-specific structure or stack constraint justifies it.
-
-Copying the baseline does **not** make a repository L1/L2. Real tests, cleanup behavior, artifact/runtime evidence, security, observability and performance evidence still matter.
+Copying the baseline does **not** make a repository L1/L2. Real tests, E2E where justified, cleanup behavior, artifact/runtime evidence, security, observability and performance evidence still matter.
 
 ---
 
-# 3. Aligning an existing repository
+# 4. Aligning an existing repository
 
 Use this path when the project already has code, scripts, build tooling, tests, documentation, CI or agent instructions.
 
@@ -311,12 +353,15 @@ For every relevant concern classify the project as KEEP / ADAPT / ADD / N/A / CO
 Inspect specifically:
 - architecture/ownership;
 - AGENTS.md/Skills/docs;
-- current setup/dev/check/test/build/package/clean commands;
+- current setup/dev/check/test/E2E/build/package/clean commands;
+- critical workflows and whether lower-level tests prove the complete outcome;
+- existing E2E framework, suite size, flakiness and CI cadence;
+- E2E failure traces/screenshots/videos/logs and retention;
 - build/version/artifact naming and identity;
 - artifact storage, local retention, CI retention and releases;
 - whether builds generate a delta/changelog from the previous comparable build;
 - localhost servers, ports, helper processes and shutdown behavior;
-- temp files, locks, test stores, caches/logs and stale-run recovery;
+- temp files, locks, browser/device state, test stores, caches/logs and stale-run recovery;
 - CI/testing/reproducibility;
 - security/data lifecycle;
 - resource/memory/concurrency/failure behavior.
@@ -339,16 +384,32 @@ Implement the approved repo-template-sw adoption plan for <TARGET_REPOSITORY>.
 
 Preserve KEEP items and native tooling.
 Map existing commands semantically into .engineering/commands.json instead of replacing them unnecessarily.
+Preserve a strong existing E2E framework; add E2E only for critical complete workflows not adequately proven below that level.
 Implement only justified gaps in build identity, artifacts/build delta, runtime/cleanup and validation.
 Parallelize independent work with non-overlapping write boundaries.
 Run project-specific validation plus repository/operating-contract health checks.
-For runtime/build changes execute an applicable build/smoke/stop cycle and verify no project-owned process/listener/temp residue remains.
+For relevant changes execute test/E2E/build/smoke/stop at the required evidence level and verify no project-owned process/listener/browser/device/temp residue remains.
 Finalize durable docs and delete the temporary adoption workstream unless it has independent audit value.
 ```
 
 Typical decisions:
 
 ```text
+Strong existing Playwright/Cypress/XCUITest/Espresso suite
+-> KEEP, map to e2e
+
+No critical full-workflow gap
+-> e2e may be N/A or remain small
+
+Hundreds of brittle UI tests duplicating unit behavior
+-> ADAPT toward smaller critical-journey E2E
+
+Browser project needs new E2E framework
+-> prefer Playwright
+
+API-only server
+-> real process/API E2E, not Playwright
+
 Strong existing Gradle/Xcode build pipeline
 -> KEEP + expose through command contract
 
@@ -367,24 +428,18 @@ Hundreds of local builds retained
 CI artifact storage already bounded
 -> KEEP
 
-Release binaries only local
--> ADD durable release store
-
 Server shutdown leaves port/process alive
 -> CONFLICT with zero-residue invariant; fix explicitly
-
-Existing artifact manifest/checksum stronger than baseline
--> KEEP
 
 No BUILD_CHANGELOG per build
 -> ADD generated build delta
 ```
 
-Adoption is complete when the repository is self-contained, real commands are declared, stronger local mechanisms are preserved, operating-contract checks pass, and the behavior promised by the command/build/artifact/runtime contract actually exists.
+Adoption is complete when the repository is self-contained, real commands are declared, stronger local mechanisms are preserved, operating-contract checks pass, and the behavior promised by the command/test/E2E/build/artifact/runtime contract actually exists.
 
 ---
 
-# 4. Normal development after adoption
+# 5. Normal development after adoption
 
 After adoption, **do not use `repo-template-sw` for every feature or bug fix**.
 
@@ -402,20 +457,15 @@ AGENTS.md
     +--> focused code/tests/docs
 ```
 
-A normal request can stay small:
+The agent should already know how to check/test/E2E/build/smoke/clean from the repository contract.
 
-```text
-Implement memory-aware eviction.
-Parallelize independent work where safe.
-```
-
-The agent should already know how to check/test/build/smoke/clean from the repository contract.
+Use the narrowest sufficient validation while iterating. Run `e2e` only when the change or final claim crosses a critical whole-system workflow boundary; do not pay the E2E cost for every local edit.
 
 Use `plan-workstream` only when meaningful dependencies/parallel lanes/multiple acceptance gates require coordination. At completion transfer durable truth and delete the temporary plan by default.
 
 ---
 
-# 5. Updating an adopted repository
+# 6. Updating an adopted repository
 
 Do not automatically sync template commits into all projects.
 
@@ -432,26 +482,25 @@ Preserve native tooling and stronger local behavior.
 Apply semantic changes, validate them, then update baseline/command-contract metadata.
 ```
 
-For **0.1.x -> 0.2.0**, explicitly evaluate:
+For **0.2.x -> 0.3.x**, explicitly evaluate:
 
-- common command routing;
-- unique build identity;
-- artifact lineage/immutability/staging-promotion;
-- manifests/checksums;
-- local latest-two retention default;
-- CI vs release storage;
-- generated build delta;
-- local server/process/port cleanup;
-- temp/lock/test-store/log/cache cleanup;
-- `verify_operations.py` in CI.
+- whether critical complete workflows require E2E evidence;
+- canonical `e2e` command mapping or truthful `n/a`;
+- existing E2E framework to KEEP/ADAPT;
+- critical-journey scope and flakiness;
+- built/package artifact execution where the claim requires it;
+- E2E cleanup of servers, browser/device sessions, downloads and test state;
+- trace/screenshot/video/log retention;
+- appropriate CI cadence;
+- Playwright preference only when adding new browser/web E2E tooling.
 
-A metadata-only bump is not a valid migration.
+A metadata-only version bump is not a valid migration.
 
 Projects may intentionally remain on different baseline versions while migrations are evaluated.
 
 ---
 
-# 6. Using the standard as an audit tool
+# 7. Using the standard as an audit tool
 
 Recommended request:
 
@@ -459,10 +508,12 @@ Recommended request:
 Review <TARGET_REPOSITORY> against daniele21/repo-template-sw.
 Do not change code.
 
-Assess architecture, ownership, complexity, resources/concurrency/failure, security/data lifecycle, observability, tests, performance, reproducibility, repository hygiene, documentation and agent operability.
+Assess architecture, ownership, complexity, resources/concurrency/failure, security/data lifecycle, observability, tests, E2E critical journeys, performance, reproducibility, repository hygiene, documentation and agent operability.
 
 Also assess:
 - canonical command coverage;
+- unit/integration/E2E/smoke layering;
+- E2E applicability, framework, evidence, cleanup and retention;
 - build identity and reproducibility;
 - artifact lineage/retention/release storage;
 - manifest/checksum/build-delta quality;
@@ -474,7 +525,7 @@ Estimate current L0/L1/L2 maturity and rank the highest-value evidence-backed ga
 
 ---
 
-# 7. Promoting lessons back into `repo-template-sw`
+# 8. Promoting lessons back into `repo-template-sw`
 
 The flow is bidirectional:
 
@@ -489,12 +540,12 @@ Prefer evidence from at least two different project contexts for non-obvious uni
 
 ---
 
-# 8. What belongs where
+# 9. What belongs where
 
 | Concern | Canonical owner |
 | --- | --- |
 | Universal engineering invariant | `repo-template-sw/STANDARD.md` |
-| Universal command/build/artifact/runtime semantics | `repo-template-sw/OPERATING-CONTRACT.md` |
+| Universal command/test/E2E/build/artifact/runtime semantics | `repo-template-sw/OPERATING-CONTRACT.md` |
 | Universal adoption/update procedure | `repo-template-sw/skills/` |
 | Optional stack/domain mapping | `repo-template-sw/profiles/` |
 | Project command implementation/policy mapping | project `.engineering/commands.json` |
@@ -505,13 +556,14 @@ Prefer evidence from at least two different project contexts for non-obvious uni
 | Durable architecture decision | project ADR |
 | Implementation history | Git |
 | Per-build exact delta | artifact `BUILD_CHANGELOG.md` |
+| E2E trace/screenshot/video/log | bounded CI/test artifact store |
 | Deterministic enforceable rule | scripts / CI |
 
 > If a machine can enforce a rule deterministically, prefer code/CI over spending coding-agent tokens explaining it repeatedly.
 
 ---
 
-# 9. Quick reference
+# 10. Quick reference
 
 ## New repository
 
@@ -519,6 +571,7 @@ Prefer evidence from at least two different project contexts for non-obvious uni
 select profiles
  -> specialize baseline
  -> map commands.json to native tooling
+ -> decide critical E2E journeys
  -> implement operating lifecycle
  -> validate
  -> start product work
@@ -528,10 +581,10 @@ select profiles
 
 ```text
 audit KEEP/ADAPT/ADD/N/A/CONFLICT
- -> preserve native strengths
+ -> preserve native strengths/E2E framework
  -> map commands
  -> migrate real gaps
- -> build/smoke/cleanup evidence
+ -> test/E2E/build/smoke/cleanup evidence
  -> validate
 ```
 
@@ -542,7 +595,8 @@ project only
  -> AGENTS.md
  -> commands.json when operational
  -> local Skill when needed
- -> code/tests/build/smoke as applicable
+ -> cheapest sufficient validation
+ -> E2E only for full-workflow claims
 ```
 
 ## Baseline upgrade
