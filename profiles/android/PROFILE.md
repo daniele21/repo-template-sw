@@ -23,12 +23,17 @@ Typical mapping:
 - `doctor` — verify JDK, SDK, ADB and required device/emulator capability;
 - `dev` — assemble/install/launch the supported debug variant when useful;
 - `check` — format/static analysis + Android Lint + fast unit gates;
-- `test` — relevant unit/integration/instrumentation tests;
+- `test` — relevant unit/integration tests;
+- `e2e` — critical complete app journeys using Compose UI Test, Espresso, UI Automator or the established native equivalent;
 - `build` — produce a uniquely identified debug/internal artifact;
 - `smoke` — install and launch the built artifact, exercising a minimal real path;
 - `package` — produce signed/unsigned release APK/AAB as appropriate without committing signing secrets;
 - `clean` — remove only project-owned generated output;
 - `stop` — mark `n/a` unless the project owns a helper/local server/process that needs explicit shutdown.
+
+Keep E2E small and critical: first launch, primary create/use/save flow, persistence/restart, import/export or a representative failure/recovery journey when those behaviors are product-critical. Prefer unit/integration tests for deterministic lower-level behavior.
+
+When the product claim depends on the real APK/device surface, execute E2E on the built artifact and on a representative physical device when emulator evidence is insufficient. Device/emulator E2E must clean run-owned app data, test fixtures, helper processes and localhost listeners according to the zero-residue contract.
 
 Each material APK/AAB build must carry a unique build identity distinct from the product version. Put product version, build ID and source revision in the artifact name/manifest; use Android `versionCode`/`versionName` consistently with release requirements rather than incrementing the marketing version for every local build.
 
