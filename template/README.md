@@ -12,7 +12,7 @@ See [`docs/architecture.md`](docs/architecture.md) for current boundaries and ow
 
 ## Project commands
 
-The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.engineering/commands.json`](.engineering/commands.json). It exposes the common intents `setup`, `doctor`, `dev`, `check`, `test`, `build`, `smoke`, `package`, `stop` and `clean` while keeping this project's native tooling underneath.
+The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.engineering/commands.json`](.engineering/commands.json). It exposes the common intents `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean` while keeping this project's native tooling underneath.
 
 Do not add a second undocumented command path for the same intent.
 
@@ -39,11 +39,13 @@ python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-Then use the declared `check`, `test`, `build` and `smoke` intents according to the change's blast radius.
+Then use the declared `check` and `test` intents while iterating. Use `e2e` when a critical complete workflow must be proven across assembled system boundaries, `build` when runnable output is affected, and `smoke` when minimum viability of the built/running artifact must be proven.
+
+E2E and smoke are intentionally different. Keep E2E focused on a small set of critical journeys and preserve the repository's stack-native E2E framework.
 
 ## Security and data
 
-See [`SECURITY.md`](SECURITY.md) and the architecture/data-lifecycle documentation for trust boundaries, sensitive data handling and reporting.
+See [`SECURITY.md`](SECURITY.md) and the architecture/data-lifecycle documentation for trust boundaries, sensitive data handling and reporting. E2E logs/screenshots/traces must remain privacy-safe and bounded-retention evidence.
 
 ## Development state
 
