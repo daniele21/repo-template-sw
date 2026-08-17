@@ -1,11 +1,11 @@
 ---
 name: review-reference-quality
-description: Audit a repository or milestone against the Agent-Native Reference Engineering Standard and produce a prioritized evidence-based L0/L1/L2 gap assessment without adding speculative machinery.
+description: Audit a repository or milestone against the Agent-Native Reference Engineering Standard and produce a prioritized evidence-based L0/L1/L2 gap assessment across engineering, operations and applicable product experience without adding speculative machinery.
 ---
 
 # Review Reference Quality
 
-Use before important releases, after major architecture change, during standard adoption, or when the user asks whether the repository is solid/reference-grade.
+Use before important releases, after major architecture/product-experience change, during standard adoption, or when the user asks whether the repository is solid/reference-grade.
 
 ## Review dimensions
 
@@ -28,26 +28,48 @@ Assess evidence for:
 15. repository hygiene;
 16. CI/branch/release enforcement;
 17. documentation lifecycle/canonical ownership;
-18. agent operability and context/token cost.
+18. agent operability and context/token cost;
+19. when `product-ui` is adopted: product-experience contract, information architecture, progressive disclosure, critical states/feedback/recovery, accessibility, adaptive behavior, design-system/brand ownership and UX evidence.
+
+## Product experience evidence
+
+For `product-ui`, inspect the actual product and owning contracts rather than grading from attractive screenshots.
+
+Assess:
+
+- whether UI concepts follow user tasks rather than internal architecture;
+- whether primary/secondary/destructive actions have a clear hierarchy;
+- whether advanced/debug complexity is progressively disclosed;
+- whether normal workflows have sensible defaults;
+- critical loading/empty/error/disabled/offline/permission/partial states;
+- feedback/progress and actionable recovery;
+- keyboard/focus/assistive semantics/text scaling/contrast/reduced motion as applicable;
+- responsive/adaptive layouts across supported contexts;
+- canonical design source, semantic tokens and component reuse;
+- bounded key reference views rather than screenshot/mockup sprawl;
+- critical journeys linked to appropriate E2E;
+- visual/accessibility/usability regression evidence at a level justified by risk.
+
+Do not label a UI "modern" or "intuitive" without explaining the observable hierarchy, interaction and evidence behind that assessment.
 
 ## Evidence rules
 
-- Inspect code, tests, CI/config and current canonical docs; do not grade from README claims alone.
+- Inspect code, tests, CI/config and current canonical docs/design contracts; do not grade from README claims alone.
 - Read `.engineering/commands.json` and verify that declared commands map to real project behavior.
-- Distinguish unit/integration/E2E/smoke evidence instead of treating all green tests as equivalent.
+- When `product-ui` is adopted, read `design/ux-contract.json` and `design/brand-kit.json` and verify they point to real design/component ownership rather than placeholder documentation.
+- Distinguish unit/integration/E2E/smoke/accessibility/visual/usability evidence instead of treating all green checks as equivalent.
 - E2E should be a small set of critical workflows, not a requirement to automate every UI path.
 - If lower-level tests fully prove a workflow invariant, do not recommend E2E merely for compliance aesthetics.
-- If a critical product outcome crosses multiple real boundaries and has no automated complete-workflow evidence, treat that as an L1 gap unless a concrete reason makes automation inappropriate.
 - Browser/web projects should prefer Playwright when adding new browser E2E unless an equally strong established solution already exists; do not replace a good incumbent tool without cause.
+- Do not recommend a new design system/UI framework when strong established components/tokens already exist.
 - Distinguish documented policy from machine-enforced reality.
 - For runtime/build/E2E lifecycle claims, inspect cleanup paths for success, failure, timeout, cancellation and interrupt.
-- Verify that E2E failure traces/screenshots/videos/logs are privacy-safe, identity-bearing and bounded-retention artifacts rather than repository clutter.
-- Verify that successful artifacts are identifiable/immutable and that local retention is bounded.
-- Verify that build deltas compare against the previous successful comparable build rather than only showing a generic Git log.
-- For localhost runtimes, distinguish a closed application listener from normal kernel states such as `TIME_WAIT`.
-- Distinguish host/emulator/synthetic evidence from representative device/hardware evidence.
+- Verify E2E/visual failure evidence is privacy-safe, identity-bearing and bounded-retention rather than repository clutter.
+- Verify successful artifacts are identifiable/immutable and local retention is bounded.
+- Verify build deltas compare against the previous successful comparable build.
+- Distinguish host/emulator/synthetic evidence from representative device/hardware/user evidence.
 - Mark unavailable evidence as unknown/pending, not passing.
-- Do not recommend a new abstraction/tool merely to satisfy the shape of the standard; recommend the simplest fix that closes a real invariant gap.
+- Recommend the simplest fix that closes a real invariant or experience gap.
 
 ## Output
 
@@ -57,9 +79,10 @@ Produce:
 - strongest existing practices worth preserving;
 - blocking gaps for the next level;
 - important non-blocking risks/debt;
-- test-layer observations (unit/integration/E2E/smoke, critical journeys and evidence strength);
-- operating-contract observations (command coverage, build/artifact identity, runtime/cleanup, retention and build delta);
-- agent-context observations (root/scoped guide size, active workstreams, duplicate/stale docs);
+- test-layer observations (unit/integration/E2E/smoke and evidence strength);
+- operating-contract observations (commands, build/artifact identity, runtime/cleanup, retention and build delta);
+- product-experience observations when applicable (task model, hierarchy/disclosure, states, accessibility/adaptive behavior, design ownership, critical journeys/evidence);
+- agent-context observations;
 - a prioritized remediation DAG with dependencies and parallelizable lanes when meaningful;
 - evidence required before claiming the next maturity level.
 

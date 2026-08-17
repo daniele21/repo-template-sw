@@ -13,6 +13,7 @@ Use progressive disclosure. Start from `AGENTS.md`, add the closest scoped agent
 | What substantial implementation is active now? | `workstreams/` |
 | How should an agent perform a recurring procedure? | `skills/`, not docs |
 | How does this repository setup/run/check/test/build/smoke/package/stop/clean? | `.engineering/commands.json`, not docs |
+| What are the UX/brand/design-system constraints when `product-ui` is adopted? | `design/ux-contract.json` + `design/brand-kit.json` and the declared canonical design owner |
 | What changed between two concrete build artifacts? | generated artifact `BUILD_CHANGELOG.md`, not project-status docs |
 | What happened historically during implementation? | Git history |
 
@@ -26,7 +27,9 @@ Active workstream documents are disposable:
 
 Keep a completed plan only when it has independent audit, regulatory, release or historical value; move such exceptional material to an explicitly historical location and never treat it as current truth.
 
-Generated build manifests/deltas are artifact evidence and follow artifact retention, not active documentation retention.
+Generated build manifests/deltas and E2E/visual regression screenshots/traces are evidence and follow artifact retention, not active documentation retention.
+
+For `product-ui`, keep only bounded key reference views needed to communicate the product system. Do not use exported screenshot history as a parallel implementation/design source of truth.
 
 ## Before creating a document
 
@@ -35,6 +38,6 @@ Generated build manifests/deltas are artifact evidence and follow artifact reten
 3. Create a document only for a durable independently readable concern or an active bounded workstream.
 4. Give active work a precise owner and `Read when` trigger.
 5. Link it from this map or the closest domain index.
-6. Delete obsolete temporary planning material.
+6. Delete obsolete temporary planning/mockup material.
 
 Do not create a document solely to say that a PR/task completed.

@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.0 — 2026-08-17
+
+Adds an optional, stack-neutral Product Experience Contract for repositories with a material user interface:
+
+- `PRODUCT-EXPERIENCE-CONTRACT.md` covering information architecture, progressive disclosure, cognitive load, sensible defaults, action hierarchy, complete UI states, feedback, error recovery, accessibility, adaptive layout, brand/design-system ownership, critical journeys and UX evidence;
+- optional `product-ui` profile that preserves platform-native interaction/tooling rather than imposing one visual framework;
+- `design/ux-contract.json` and `design/brand-kit.json` template contracts;
+- zero-dependency `verify_product_experience.py`, enforced in template CI and automatically `N/A` for adopted repositories without `product-ui`;
+- canonical design source-of-truth and key-reference-view requirements instead of uncontrolled mockup/screenshot revisions;
+- semantic brand/design tokens instead of scattered raw visual values;
+- progressive disclosure and intentional hierarchy as requirements for primary interfaces;
+- loading/empty/error/disabled states and actionable recovery treated as correctness concerns;
+- WCAG 2.2 AA or stronger declared target for web, with equivalent platform accessibility semantics for native apps;
+- responsive/adaptive behavior that preserves content priority;
+- critical user journeys linked to E2E where lower-level tests cannot prove the full outcome;
+- visual/accessibility/E2E evidence following bounded retention, identity and zero-residue cleanup;
+- L0/L1/L2 product-UI maturity for progressively stronger UX, accessibility, regression and usability evidence.
+
+The experience model follows **same semantics, native implementation**: projects converge on clarity, accessibility, progressive disclosure and recoverability without being forced into identical visuals, component libraries or design tools.
+
 ## 0.3.0 — 2026-08-17
 
 Adds end-to-end validation as a first-class but stack-neutral part of the project operating contract:

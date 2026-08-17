@@ -12,9 +12,17 @@ See [`docs/architecture.md`](docs/architecture.md) for current boundaries and ow
 
 ## Project commands
 
-The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.engineering/commands.json`](.engineering/commands.json). It exposes the common intents `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean` while keeping this project's native tooling underneath.
+The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.engineering/commands.json`](.engineering/commands.json). It exposes `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean` while keeping this project's native tooling underneath.
 
 Do not add a second undocumented command path for the same intent.
+
+## Product experience
+
+If `.engineering/baseline.json` includes `product-ui`, the canonical project experience/brand contracts live in [`design/ux-contract.json`](design/ux-contract.json) and [`design/brand-kit.json`](design/brand-kit.json).
+
+They define or point to information hierarchy, progressive disclosure, critical states/journeys, accessibility, adaptive layout, brand/design tokens, component ownership and key reference views. They do not require one design tool or visual style.
+
+If `product-ui` is not adopted, this section/design baseline is not applicable and may be removed during specialization.
 
 ## Setup
 
@@ -26,26 +34,29 @@ Use the declared `dev` command when applicable. Local servers/processes must fol
 
 ## Build and artifacts
 
-Use the declared `build`/`package` commands. Material builds use a unique build identity, immutable successful artifacts, manifests/checksums, bounded local retention and a generated build delta against the previous successful comparable build.
+Use the declared `build`/`package` commands. Material builds use unique build identity, immutable successful artifacts, manifests/checksums, bounded local retention and a generated build delta against the previous successful comparable build.
 
 ## Validate
 
-Start with the repository engineering checks:
+Start with repository health checks:
 
 ```bash
 python3 scripts/verify_repository.py
 python3 scripts/verify_operations.py
+python3 scripts/verify_product_experience.py
 python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-Then use the declared `check` and `test` intents while iterating. Use `e2e` when a critical complete workflow must be proven across assembled system boundaries, `build` when runnable output is affected, and `smoke` when minimum viability of the built/running artifact must be proven.
+`verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
 
-E2E and smoke are intentionally different. Keep E2E focused on a small set of critical journeys and preserve the repository's stack-native E2E framework.
+Then use `check`/`test` while iterating. Use `e2e` when a critical complete workflow must be proven across assembled system boundaries, `build` when runnable output is affected, and `smoke` when minimum viability of the built/running artifact must be proven.
+
+For UI changes, also validate applicable states, accessibility, layout contexts, critical journeys and design-system consistency. A happy-path screenshot alone is not production-ready experience evidence.
 
 ## Security and data
 
-See [`SECURITY.md`](SECURITY.md) and the architecture/data-lifecycle documentation for trust boundaries, sensitive data handling and reporting. E2E logs/screenshots/traces must remain privacy-safe and bounded-retention evidence.
+See [`SECURITY.md`](SECURITY.md) and architecture/data-lifecycle documentation for trust boundaries, sensitive data handling and reporting. E2E/visual logs/screenshots/traces must remain privacy-safe and bounded-retention evidence.
 
 ## Development state
 

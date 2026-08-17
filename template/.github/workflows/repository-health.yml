@@ -20,9 +20,11 @@ jobs:
         run: python3 scripts/verify_repository.py
       - name: Verify project operating contract
         run: python3 scripts/verify_operations.py
+      - name: Verify product experience contract
+        run: python3 scripts/verify_product_experience.py
       - name: Verify documentation lifecycle and budgets
         run: python3 scripts/verify_docs.py
       - name: Verify agent context budget
         run: python3 scripts/verify_agent_context.py
 
-  # Add stack-specific format/lint/static/test/build/smoke jobs during adoption.
+  # Add stack-specific format/lint/static/test/e2e/build/smoke jobs during adoption.
