@@ -1,10 +1,10 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.3.0
+Version: 0.4.0
 
 ## Purpose
 
-This standard defines the minimum engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for software correctness, operational simplicity, bounded resource use, change safety, reproducibility, clean lifecycle behavior and low context cost.
+This standard defines the minimum engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for software correctness, operational simplicity, bounded resource use, change safety, reproducibility, clean lifecycle behavior, product-experience quality where applicable, and low context cost.
 
 The central rule is:
 
@@ -14,9 +14,13 @@ The operational corollary is:
 
 > Every operation must be identifiable, owned, bounded, reversible and leave no unintended residue.
 
-The standard is intentionally not a framework. A project should adopt only the mechanisms justified by its real requirements. Common semantics do not require common build or test tools.
+For products with a material UI:
 
-Detailed operational semantics live in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md).
+> Make the user's next decision obvious, reveal complexity progressively, communicate state clearly, and keep the interface consistent, accessible and recoverable.
+
+The standard is intentionally not a framework. A project should adopt only the mechanisms justified by its real requirements. Common semantics do not require common build, test, design or UI tools.
+
+Detailed operational semantics live in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md). UI products may additionally adopt [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) through the optional `product-ui` profile.
 
 ## Operating principles
 
@@ -26,11 +30,13 @@ Every dependency, abstraction, cache, worker, service, queue, layer and document
 
 ### One owner for every important fact
 
-Mutable state, public contracts, configuration values, persisted data, caches and significant resources must have an identifiable owner. Avoid parallel sources of truth, scattered globals and duplicated policy.
+Mutable state, public contracts, configuration values, persisted data, caches, significant resources, design tokens and canonical product/design decisions must have an identifiable owner. Avoid parallel sources of truth, scattered globals and duplicated policy.
 
 ### Failure is part of the design
 
 Success, invalid input, partial failure, timeout, cancellation, shutdown and cleanup are normal lifecycle paths. Critical components define and test each applicable path.
+
+For UI products, loading, empty, error, disabled, offline, permission and partial-result states are also normal product states rather than afterthoughts.
 
 ### Resources are contracts
 
@@ -42,9 +48,15 @@ Processes, listeners, ports, locks, temp directories, build staging areas, test 
 
 A successful, failed, timed-out, cancelled or interrupted operation must restore all applicable project-owned temporary state. Repeated runs should not behave differently because previous runs left processes, listeners, locks, stale artifacts, test/browser/device state, temp data or incompatible caches behind.
 
+### Progressive disclosure applies to people too
+
+Technical/product complexity should be exposed according to the user's current decision. Essential controls should not compete visually with advanced configuration, raw diagnostics or expert/debug surfaces unless those are central to the user's task.
+
+The UI should model the user's task rather than forcing users to understand internal architecture.
+
 ### Machines enforce what machines can check
 
-Do not spend agent context reminding a model about rules that deterministic tooling can enforce. Formatting, architecture boundaries, document budgets, token budgets, command-contract shape, tests, generated-artifact bans and similar invariants belong in scripts and CI where practical.
+Do not spend agent context reminding a model about rules that deterministic tooling can enforce. Formatting, architecture boundaries, document budgets, token budgets, command-contract shape, product-experience contract shape, tests, generated-artifact bans and similar invariants belong in scripts and CI where practical.
 
 ### Git is history; docs describe the system that exists
 
@@ -78,7 +90,8 @@ Required before a project is considered engineering-grade:
 - security/trust-boundary documentation;
 - repository hygiene: no generated build output, large model/media artifacts or private local state unless explicitly justified;
 - one current-state ledger and bounded active workstreams;
-- no completed implementation plans kept as active documentation.
+- no completed implementation plans kept as active documentation;
+- when `product-ui` is adopted: design/brand source of truth, critical journeys, progressive disclosure/action hierarchy, critical loading/empty/error/disabled states, accessibility target, adaptive-layout scope, semantic design-system ownership and key reference views are explicitly defined.
 
 ### L1 — Production ready
 
@@ -97,7 +110,8 @@ L0 plus:
 - build deltas are generated for material comparable builds when artifacts are distributed/tested across runs;
 - E2E failure evidence is identity-bearing, privacy-safe and stored with bounded retention;
 - dependency/security scanning appropriate to the threat model;
-- real environment evidence for behavior that cannot be truthfully validated in CI.
+- real environment evidence for behavior that cannot be truthfully validated in CI;
+- when `product-ui` is adopted: critical journeys have appropriate UX/E2E evidence, high-value adaptive layouts are tested, accessibility has suitable automated/manual evidence, user-facing failures provide actionable recovery, and stable high-risk visual surfaces use regression protection where valuable.
 
 ### L2 — Reference grade
 
@@ -111,11 +125,12 @@ L1 plus:
 - critical E2E journeys include representative failure/retry/recovery paths where those paths materially affect product correctness;
 - E2E runs exercise the real built/package/device surface when the stronger product claim depends on it and this is technically practical;
 - representative device/hardware evidence when hardware materially changes behavior;
-- machine-enforced documentation, agent-context and operating-contract checks;
+- machine-enforced documentation, agent-context, operating-contract and applicable product-experience checks;
 - explicit complexity/dependency review for meaningful additions;
 - reproducible benchmark/evidence identity where results influence engineering decisions;
 - automated repository policy/health validation;
-- stale/duplicate documentation and completed-work detection.
+- stale/duplicate documentation and completed-work detection;
+- when `product-ui` is adopted: important/high-risk workflows have representative-user usability evidence when justified, critical UX regressions are protected appropriately, and design-system/token/component drift is actively controlled.
 
 L2 is a target, not an excuse to add machinery that a project does not need.
 
@@ -230,6 +245,24 @@ After `stop`, E2E/smoke cleanup, timeout, failure or interrupt, no project-owned
 
 Dev/test/e2e/build/smoke/package tooling must also clean owned locks, temp files/directories, test databases, browser/device sessions, downloads, run-scoped logs, reservations and other ephemeral resources.
 
+## Product experience contract
+
+Repositories with a material UI should adopt the optional `product-ui` profile and specialize `design/ux-contract.json` plus `design/brand-kit.json`.
+
+The product experience contract standardizes experience quality rather than aesthetics. It requires intentional information architecture, progressive disclosure, bounded cognitive load, sensible defaults, complete states/feedback, actionable error recovery, accessibility, adaptive layout, design-system/brand ownership, critical journeys and appropriate UX regression evidence.
+
+The UI should model user goals rather than internal architecture. Advanced/debug/diagnostic controls remain discoverable but should not dominate normal flows unless they are genuinely central to the user's job.
+
+Brand identity should use semantic design tokens and a declared source of truth. A design system should reuse canonical semantic components before creating visually duplicative one-offs. Mockups/key reference views are maintained as bounded product references, not an uncontrolled parallel implementation history.
+
+Web products should target WCAG 2.2 AA or a stronger declared target; native products should use equivalent platform accessibility semantics and evidence.
+
+Responsive/adaptive behavior should preserve content priority across supported device/window contexts rather than merely shrink a desktop layout.
+
+Significant UI changes should validate the narrowest applicable evidence: component/state behavior, critical-journey E2E, accessibility, visual regression for stable high-value surfaces, and representative-user usability evidence where the risk/value justifies it.
+
+Detailed semantics live in [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md).
+
 ## Data lifecycle and security
 
 For each meaningful data category define creation, storage location, owner, encryption/trust boundary, retention, deletion, backup, export, logging, migration and recovery.
@@ -252,6 +285,8 @@ Operational evidence should answer:
 
 Use truthful metric names, units and sources. Unavailable data remains unavailable rather than becoming zero. Keep correlation identifiers privacy-safe. For local AI systems, consider resident models, memory/VRAM or unified memory, queue depth, active jobs, load time, time-to-first-token, throughput, cache hits and eviction reason when applicable.
 
+For UI products, system state should be observable to users at the level they need for the current task, while deeper diagnostics remain progressively disclosed.
+
 ## Testing
 
 Optimize for tested invariants rather than an arbitrary coverage percentage. Every critical invariant should have a deterministic test when technically possible.
@@ -261,7 +296,8 @@ Use a layered strategy:
 - unit/component tests for local behavior and invariants;
 - integration/contract tests for real boundary interactions;
 - E2E tests for complete critical workflows whose outcome depends on the assembled system;
-- smoke tests for minimal viability of the built/running artifact.
+- smoke tests for minimal viability of the built/running artifact;
+- accessibility/visual/usability evidence for UI claims when applicable.
 
 Do not shift deterministic low-level behavior into E2E merely because E2E feels more realistic. Prefer the cheapest test level capable of proving the claim.
 
@@ -276,6 +312,8 @@ Examples:
 - repeated lifecycle operations do not leak resident resources;
 - a critical create/use/save/reopen journey works end to end when that is a product-critical flow;
 - E2E failure cleanup leaves no project-owned server/browser/helper/temp residue;
+- loading/empty/error/disabled states remain usable and understandable on critical UI flows;
+- keyboard/focus/accessibility semantics remain valid where applicable;
 - start -> smoke -> stop leaves no project-owned listener/process/temp residue;
 - failed builds are not promoted as successful artifacts;
 - local artifact retention remains bounded.
@@ -285,6 +323,8 @@ Use the narrowest useful test loop while iterating, then expand validation accor
 ## Performance
 
 Important projects should define measurable budgets appropriate to their product: startup, idle and peak memory, latency/percentiles, throughput, shutdown, binary size, storage growth or queue wait. Measure before optimizing and avoid performance claims without representative evidence.
+
+For UI products, perceived performance and feedback matter too: long operations should communicate meaningful state/progress when available rather than leaving the user uncertain.
 
 Artifact/build deltas should surface meaningful size/performance changes when they materially affect product quality.
 
@@ -298,7 +338,7 @@ Material build manifests should identify source revision and enough toolchain/co
 
 Git should contain source, tests, configuration, small fixtures, durable documentation and small durable assets. Prefer release assets, artifact storage or LFS when justified for large binaries/media. Generated bundles, build output, model weights, logs, caches, private data and temporary evidence should not accumulate in normal source history.
 
-Local artifact directories are bounded convenience stores, not release registries. E2E traces/screenshots/videos are bounded evidence artifacts, not source history. `clean` removes only project-owned generated state. Cache/log retention is bounded where material.
+Local artifact directories are bounded convenience stores, not release registries. E2E/visual-regression traces/screenshots/videos are bounded evidence artifacts, not source history. Keep only deliberate key design/reference views; do not accumulate uncontrolled mockup revisions. `clean` removes only project-owned generated state. Cache/log retention is bounded where material.
 
 ## Documentation lifecycle
 
@@ -311,19 +351,20 @@ Recommended active documentation:
 - `docs/adr/`: durable architectural decisions and their rationale;
 - `docs/current-state.md`: short volatile repository-level status;
 - `docs/workstreams/`: only active, bounded implementation plans;
+- `design/`: product-experience contracts and bounded key references when `product-ui` is adopted;
 - runbooks/evidence docs only when the project requires them.
 
 A completed workstream follows:
 
 `plan -> implement -> validate -> transfer durable knowledge -> delete plan`
 
-Do not create a document solely to record that a PR or isolated implementation step completed. Generated per-build deltas and per-run E2E evidence are artifact metadata/evidence, not active project-planning documentation.
+Do not create a document solely to record that a PR or isolated implementation step completed. Generated per-build deltas and per-run E2E/visual evidence are artifact metadata/evidence, not active project-planning documentation.
 
 ## Agent-operability
 
 ### Root guide
 
-`AGENTS.md` is a routing layer, not a repository encyclopedia. It contains only durable repository-wide invariants, ownership/routing, task reading rules and validation selection. It points to `.engineering/commands.json` for canonical operational commands rather than duplicating them.
+`AGENTS.md` is a routing layer, not a repository encyclopedia. It contains only durable repository-wide invariants, ownership/routing, task reading rules and validation selection. It points to `.engineering/commands.json` for canonical operational commands and to `design/ux-contract.json` for UI-product experience constraints when `product-ui` is adopted.
 
 ### Scoped guides
 
@@ -366,13 +407,15 @@ Project-specific Skills are justified only for recurring domain workflows that c
 
 A meaningful change progresses through applicable levels:
 
-`CODE COMPLETE -> INTEGRATION COMPLETE -> FAILURE COMPLETE -> RESOURCE COMPLETE -> OPERATIONS COMPLETE -> OBSERVABILITY COMPLETE -> EVIDENCE COMPLETE -> PRODUCT COMPLETE`
+`CODE COMPLETE -> INTEGRATION COMPLETE -> FAILURE COMPLETE -> RESOURCE COMPLETE -> OPERATIONS COMPLETE -> EXPERIENCE COMPLETE -> OBSERVABILITY COMPLETE -> EVIDENCE COMPLETE -> PRODUCT COMPLETE`
 
 Not every change needs every level, but no applicable level should be silently skipped.
 
 `OPERATIONS COMPLETE` means applicable canonical commands, E2E boundary, build/artifact identity, build delta, runtime shutdown and ephemeral cleanup agree with the behavior being claimed.
 
-A change is not complete merely because code exists. The owning tests, integration/E2E behavior, failure/resource semantics, operational lifecycle, documentation and evidence must agree with the claim being made.
+`EXPERIENCE COMPLETE` applies when a user-facing interaction changes and means task model, information hierarchy, states/feedback, accessibility, adaptive layout, design-system/brand consistency and required UX/E2E/regression evidence agree with the claim being made.
+
+A change is not complete merely because code exists. The owning tests, integration/E2E behavior, failure/resource semantics, operational lifecycle, applicable experience semantics, documentation and evidence must agree with the claim being made.
 
 ## Branch and delivery policy
 
@@ -382,8 +425,8 @@ Release workflows should promote already-identified/validated artifacts rather t
 
 ## Adoption philosophy
 
-For a new project, copy the smallest applicable core and selected profiles, then specialize all project-specific placeholders including `.engineering/commands.json`.
+For a new project, copy the smallest applicable core and selected profiles, then specialize all project-specific placeholders including `.engineering/commands.json`. UI products should add `product-ui` only when a material user-facing interface exists and then specialize the design contracts rather than leaving generic placeholders.
 
-For an existing project, audit before copying. Preserve good existing practices, native build/test tooling and stronger local mechanisms; identify conflicts and gaps and migrate incrementally. Never overwrite project-specific architecture, CI, command tooling, E2E framework or documentation blindly.
+For an existing project, audit before copying. Preserve good existing practices, native build/test tooling, design systems and stronger local mechanisms; identify conflicts and gaps and migrate incrementally. Never overwrite project-specific architecture, CI, command tooling, E2E framework, brand/design source or documentation blindly.
 
 A project is self-contained after adoption. Template updates are explicit migrations, not runtime dependencies.
