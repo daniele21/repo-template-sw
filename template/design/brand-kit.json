@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "contract_version": "0.4.0",
+  "product_name": "<REPLACE_WITH_PRODUCT_NAME>",
+  "assets": {
+    "logo_primary": "<REPLACE_WITH_PATH_OR_NA>",
+    "logo_compact": "<REPLACE_WITH_PATH_OR_NA>",
+    "logo_monochrome": "<REPLACE_WITH_PATH_OR_NA>",
+    "app_icon": "<REPLACE_WITH_PATH_OR_NA>",
+    "favicon": "<REPLACE_WITH_PATH_OR_NA>"
+  },
+  "themes": {
+    "light": true,
+    "dark": "<REPLACE_WITH_TRUE_FALSE_OR_NA>"
+  },
+  "tokens": {
+    "colors": {
+      "surface": "<REPLACE>",
+      "surface_elevated": "<REPLACE>",
+      "text_primary": "<REPLACE>",
+      "text_secondary": "<REPLACE>",
+      "primary": "<REPLACE>",
+      "success": "<REPLACE>",
+      "warning": "<REPLACE>",
+      "error": "<REPLACE>",
+      "border": "<REPLACE>",
+      "focus": "<REPLACE>"
+    },
+    "typography": "<REPLACE_WITH_CANONICAL_TYPOGRAPHY_SOURCE>",
+    "spacing": "<REPLACE_WITH_SPACING_SCALE>",
+    "radius": "<REPLACE_WITH_RADIUS_SYSTEM_OR_NA>",
+    "elevation": "<REPLACE_WITH_ELEVATION_SYSTEM_OR_NA>"
+  },
+  "style": {
+    "iconography": "<REPLACE_WITH_ICONOGRAPHY_PRINCIPLES>",
+    "motion": "<REPLACE_WITH_MOTION_PRINCIPLES_OR_NA>",
+    "imagery": "<REPLACE_WITH_IMAGERY_PRINCIPLES_OR_NA>",
+    "voice_microcopy": "<REPLACE_WITH_VOICE_AND_MICROCOPY_PRINCIPLES>"
+  }
+}
