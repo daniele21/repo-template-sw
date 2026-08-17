@@ -8,7 +8,7 @@ Always read this guide. Then read only:
 
 1. the closest scoped `AGENTS.md`, when one exists for the target subtree;
 2. the canonical architecture/feature/workstream source required by the task;
-3. `.engineering/commands.json` when setup/dev/test/build/package/runtime/cleanup behavior is relevant;
+3. `.engineering/commands.json` when setup/dev/test/E2E/build/package/runtime/cleanup behavior is relevant;
 4. the owning implementation, direct consumers and nearby tests.
 
 Do not load every plan or all documentation for a local change.
@@ -41,13 +41,16 @@ Canonical repository-level command routing lives in `.engineering/commands.json`
 Use the declared intent rather than inventing a second command path:
 
 - `check` for broad cheap validation while iterating;
-- `test` for behavioral validation;
+- `test` for unit/integration/contract behavioral validation;
+- `e2e` when the claim crosses a complete critical user/system workflow boundary and lower-level tests are insufficient;
 - `build` when runnable/build output is affected;
-- `smoke` when runtime/built-artifact behavior must be proven;
+- `smoke` when minimal runtime/built-artifact viability must be proven;
 - `package` only when distributable output is relevant;
 - `stop`/`clean` for project-owned runtime/generated state.
 
-The underlying command remains native to this repository. When build/runtime behavior is affected, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup required by the local operating contract.
+Do not treat `e2e` and `smoke` as synonyms. Keep E2E small and focused on critical journeys; prefer lower-level tests for deterministic invariants.
+
+The underlying command remains native to this repository. When build/runtime/E2E behavior is affected, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup required by the local operating contract.
 
 ## Core change workflow
 
@@ -65,7 +68,7 @@ The underlying command remains native to this repository. When build/runtime beh
 
 Run `python3 scripts/verify_operations.py` with the other repository-health checks. Use `.engineering/commands.json` for project-specific targeted/full command routing instead of duplicating command strings here.
 
-A missing real-device/hardware run must be reported as pending; never promote emulator/synthetic evidence into a stronger claim.
+A missing real-device/hardware run must be reported as pending; never promote emulator/synthetic evidence into a stronger claim. E2E traces/screenshots/videos/logs are bounded evidence artifacts, not durable repository docs.
 
 ## Documentation lifecycle
 
@@ -77,7 +80,7 @@ A missing real-device/hardware run must be reported as pending; never promote em
 - Completed plans are deleted after durable behavior/decisions are transferred. Archive only with independent audit/regulatory/release/historical justification.
 - Git history owns implementation history.
 
-Do not create plan/progress/status documents that duplicate the same workstream. Generated per-build `BUILD_CHANGELOG.md` files are artifact evidence, not project-status docs.
+Do not create plan/progress/status documents that duplicate the same workstream. Generated per-build `BUILD_CHANGELOG.md` files and per-run E2E evidence are artifact evidence, not project-status docs.
 
 ## Agent context discipline
 
@@ -87,4 +90,4 @@ Keep this guide within the configured budget in `.engineering/documentation-poli
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass the canonical command/build/artifact lifecycle, or claim evidence that was not executed.
+Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass the canonical command/test/E2E/build/artifact lifecycle, or claim evidence that was not executed.
