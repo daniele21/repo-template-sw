@@ -35,6 +35,7 @@ REQUIRED = (
     "docs/adr/README.md",
     "docs/workstreams/README.md",
     "scripts/verify_operations.py",
+    "scripts/verify_product_experience.py",
 )
 
 PLACEHOLDER_MARKERS = (
