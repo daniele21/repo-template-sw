@@ -23,12 +23,23 @@ Typical mapping:
 - `doctor` — verify Node/runtime/package-manager versions and required local tools;
 - `dev` — start the development application/server in foreground mode;
 - `check` — formatting/lint/typecheck plus cheap structural gates;
-- `test` — unit/integration/e2e tests as appropriate;
+- `test` — unit/integration/contract tests as appropriate;
+- `e2e` — complete critical browser/application journeys;
 - `build` — create a uniquely identified production/runnable build artifact;
 - `smoke` — serve/run the built output and exercise a minimal real path;
 - `package` — create distributable archive/desktop bundle/package when applicable;
 - `stop` — stop project-owned local servers/workers when applicable;
 - `clean` — remove project-owned generated bundles/staging/temp output.
+
+## Browser E2E
+
+For browser/web E2E, **prefer Playwright** unless the repository already has an equally strong established solution. Do not introduce Playwright merely to replace a working equivalent for naming consistency.
+
+Keep E2E focused on a small set of critical journeys whose complete outcome depends on the assembled application. Keep deterministic component/domain behavior in unit/integration tests.
+
+When the claim concerns production output, run E2E against the built/served production artifact when practical rather than only the dev server.
+
+Playwright/browser E2E cleanup must close browser/context processes and project-owned servers/listeners, and isolate/remove run-owned profiles, storage, downloads and temporary data. Traces/screenshots/videos/logs produced on failure are bounded CI evidence artifacts with build/run identity, not permanent repository content.
 
 Local dev/test servers bind to loopback by default unless external access is intentional, use configurable collision-aware ports, and leave no project-owned listener or worker after stop/failure/interrupt.
 
