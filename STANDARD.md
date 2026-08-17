@@ -1,6 +1,6 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.2.0
+Version: 0.3.0
 
 ## Purpose
 
@@ -14,7 +14,7 @@ The operational corollary is:
 
 > Every operation must be identifiable, owned, bounded, reversible and leave no unintended residue.
 
-The standard is intentionally not a framework. A project should adopt only the mechanisms justified by its real requirements. Common semantics do not require common build tools.
+The standard is intentionally not a framework. A project should adopt only the mechanisms justified by its real requirements. Common semantics do not require common build or test tools.
 
 Detailed operational semantics live in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md).
 
@@ -36,11 +36,11 @@ Success, invalid input, partial failure, timeout, cancellation, shutdown and cle
 
 For every significant resource, define owner, acquisition, lifetime, maximum cardinality, budget, concurrency, backpressure, timeout, cancellation, release, cleanup, idle/pressure behavior and observability. OOM is not a resource-management strategy.
 
-Processes, listeners, ports, locks, temp directories, build staging areas, test databases, logs and caches are resources too. Temporary does not mean ownerless.
+Processes, listeners, ports, locks, temp directories, build staging areas, test databases, browser/device sessions, logs and caches are resources too. Temporary does not mean ownerless.
 
 ### Clean lifecycle is a contract
 
-A successful, failed, timed-out, cancelled or interrupted operation must restore all applicable project-owned temporary state. Repeated runs should not behave differently because previous runs left processes, listeners, locks, stale artifacts, temp data or incompatible caches behind.
+A successful, failed, timed-out, cancelled or interrupted operation must restore all applicable project-owned temporary state. Repeated runs should not behave differently because previous runs left processes, listeners, locks, stale artifacts, test/browser/device state, temp data or incompatible caches behind.
 
 ### Machines enforce what machines can check
 
@@ -66,6 +66,7 @@ Required before a project is considered engineering-grade:
 - pinned/locked dependencies and reproducible setup where applicable;
 - a project-local operating command contract mapping canonical intents to native tooling;
 - formatting, lint/static checks, tests and build validation appropriate to the stack;
+- E2E applicability is explicitly decided rather than accidentally absent;
 - material builds have unique build/source identity and do not silently overwrite prior builds;
 - local generated/build artifacts are bounded and do not accumulate indefinitely;
 - local runtimes/processes/listeners and other ephemeral resources have deterministic cleanup where applicable;
@@ -83,7 +84,9 @@ Required before a project is considered engineering-grade:
 
 L0 plus:
 
-- integration/contract or end-to-end tests for critical workflows;
+- integration/contract tests for critical internal boundaries;
+- automated E2E evidence for critical workflows when lower-level tests cannot establish the complete user/system outcome;
+- critical E2E journeys are intentionally small/high-value rather than broad UI-script coverage for its own sake;
 - migration and backward-compatibility strategy where data/contracts persist;
 - failure, cancellation and shutdown tests for critical lifecycle components;
 - backup/restore or recovery procedures where user/business data requires them;
@@ -92,6 +95,7 @@ L0 plus:
 - release procedure, rollback strategy and operational runbooks;
 - successful distributable artifacts have manifests/checksums and durable release storage appropriate to the project;
 - build deltas are generated for material comparable builds when artifacts are distributed/tested across runs;
+- E2E failure evidence is identity-bearing, privacy-safe and stored with bounded retention;
 - dependency/security scanning appropriate to the threat model;
 - real environment evidence for behavior that cannot be truthfully validated in CI.
 
@@ -103,7 +107,9 @@ L1 plus:
 - resource and memory regression tests;
 - performance regression gates for critical paths where stable measurement is possible;
 - pressure/fault-injection coverage for important lifecycle boundaries;
-- repeatability/cleanliness evidence for important dev/test/build/smoke/runtime lifecycles;
+- repeatability/cleanliness evidence for important dev/test/e2e/build/smoke/runtime lifecycles;
+- critical E2E journeys include representative failure/retry/recovery paths where those paths materially affect product correctness;
+- E2E runs exercise the real built/package/device surface when the stronger product claim depends on it and this is technically practical;
 - representative device/hardware evidence when hardware materially changes behavior;
 - machine-enforced documentation, agent-context and operating-contract checks;
 - explicit complexity/dependency review for meaningful additions;
@@ -141,7 +147,7 @@ Dependencies are liabilities as well as capabilities. Pin and lock them. Avoid d
 
 ## Resource lifecycle contract
 
-For every significant resource — model, tokenizer, KV cache, audio/video buffer, worker, thread, process, socket, HTTP client, database connection, temporary file, cache, job queue, build workspace, lock or similar — define as applicable:
+For every significant resource — model, tokenizer, KV cache, audio/video buffer, worker, thread, process, socket, HTTP client, database connection, temporary file, cache, job queue, build workspace, test browser/device session, lock or similar — define as applicable:
 
 - Owner
 - Acquisition
@@ -166,7 +172,7 @@ Temporary resources must be cleaned on success, failure, timeout, cancellation, 
 
 Define maxima for requests, workers and expensive operations. Define what happens at capacity: queue, reject, wait, degrade or evict. Do not spawn indefinitely. Queue capacity and timeout semantics must be explicit and observable.
 
-Parallel dev/test/build runs should use isolated run identities/workspaces when shared mutable temporary state would otherwise collide.
+Parallel dev/test/e2e/build runs should use isolated run identities/workspaces when shared mutable temporary state would otherwise collide.
 
 ## Failure and recovery
 
@@ -180,11 +186,21 @@ Partial or failed build artifacts must not be promoted to locations where they c
 
 Each adopted repository declares its actual operational mapping in `.engineering/commands.json`. The common vocabulary is:
 
-`setup -> doctor -> dev -> check -> test -> build -> smoke -> package -> stop -> clean`
+`setup -> doctor -> dev -> check -> test -> e2e -> build -> smoke -> package -> stop -> clean`
 
-Not every intent is applicable to every project; genuinely irrelevant commands may be declared `n/a`. Do not introduce a generic wrapper merely to force identical command syntax. The project should map these intents to its native Gradle, Xcode, Swift, Python, Node, shell or other established tooling.
+Not every intent is applicable to every project; genuinely irrelevant commands may be declared `n/a`. Do not introduce a generic wrapper merely to force identical command syntax. The project should map these intents to its native Gradle, Xcode, Swift, Python, Node, browser-test, shell or other established tooling.
 
-The detailed normative behavior for commands, build identity, artifact lineage/lifecycle, build deltas, local runtimes, ports/processes and zero-residue cleanup is defined in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md).
+The detailed normative behavior for commands, E2E, build identity, artifact lineage/lifecycle, build deltas, local runtimes, ports/processes and zero-residue cleanup is defined in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md).
+
+### E2E validation
+
+`e2e` is a complete workflow validation boundary, not a synonym for all tests and not a synonym for smoke.
+
+Use E2E when correctness depends on the assembled system and cannot be established adequately by unit/integration/contract tests alone. Keep most invariants in lower-level tests and reserve E2E for a small set of critical journeys.
+
+The standard does not mandate one framework. Prefer stack-native tooling. Browser/web projects should generally prefer Playwright unless an equally strong established solution already exists; native mobile/desktop and server/CLI projects should use the appropriate native or protocol-level equivalent.
+
+E2E runs must have deterministic cleanup and bounded failure evidence. When the claim concerns a distributable artifact, run E2E against the built/package artifact when technically practical.
 
 ### Build identity
 
@@ -198,21 +214,21 @@ A new build must not silently overwrite a previous successful build.
 
 Successful artifacts are immutable. Build/package output is produced in staging, validated, then promoted. Durable binary/package artifacts include a machine-readable build manifest and SHA-256 checksum where applicable.
 
-The default local retention is the latest two successful builds per comparable artifact lineage. CI artifacts are temporary evidence with explicit bounded retention. Durable releases belong in GitHub Releases or an equivalent release/artifact store; package/container registries are used when the output is genuinely consumed as a package/container.
+The default local retention is the latest two successful builds per comparable artifact lineage. CI/E2E artifacts are temporary evidence with explicit bounded retention. Durable releases belong in GitHub Releases or an equivalent release/artifact store; package/container registries are used when the output is genuinely consumed as a package/container.
 
 ### Build delta
 
 Every successful material build should generate a `BUILD_CHANGELOG.md` or equivalent delta against the previous successful comparable build in the same lineage.
 
-The delta covers source, dependencies, toolchain, configuration, compatibility/migrations, artifact metrics and validation where applicable. A generic Git log is insufficient because rebuilds can differ without source changes.
+The delta covers source, dependencies, toolchain, configuration, compatibility/migrations, artifact metrics and validation, including relevant E2E evidence, where applicable. A generic Git log is insufficient because rebuilds can differ without source changes.
 
 ### Local runtime and zero residue
 
 Local servers bind to loopback by default unless external exposure is intentional. Ports are configurable and collision-checked. Project-owned processes/listeners have explicit shutdown ownership.
 
-After `stop`, smoke-test cleanup, timeout, failure or interrupt, no project-owned application listener or orphan process may remain. Normal kernel states such as TCP `TIME_WAIT` are not considered an open project listener.
+After `stop`, E2E/smoke cleanup, timeout, failure or interrupt, no project-owned application listener or orphan process may remain. Normal kernel states such as TCP `TIME_WAIT` are not considered an open project listener.
 
-Dev/test/build/smoke/package tooling must also clean owned locks, temp files/directories, test databases, run-scoped logs, reservations and other ephemeral resources.
+Dev/test/e2e/build/smoke/package tooling must also clean owned locks, temp files/directories, test databases, browser/device sessions, downloads, run-scoped logs, reservations and other ephemeral resources.
 
 ## Data lifecycle and security
 
@@ -220,7 +236,7 @@ For each meaningful data category define creation, storage location, owner, encr
 
 Defaults should minimize exposure. Remote/network access must be explicit when local-only behavior is expected. Never silently fall back to cloud processing. Secrets, private user paths and sensitive content do not belong in source control or normal telemetry.
 
-Build/test tooling must not leak generated credentials, signing material or private data into logs, caches or distributed artifacts.
+Build/test/E2E tooling must not leak generated credentials, signing material, private data or sensitive screenshots/traces into logs, caches or distributed artifacts.
 
 ## Observability
 
@@ -240,6 +256,15 @@ Use truthful metric names, units and sources. Unavailable data remains unavailab
 
 Optimize for tested invariants rather than an arbitrary coverage percentage. Every critical invariant should have a deterministic test when technically possible.
 
+Use a layered strategy:
+
+- unit/component tests for local behavior and invariants;
+- integration/contract tests for real boundary interactions;
+- E2E tests for complete critical workflows whose outcome depends on the assembled system;
+- smoke tests for minimal viability of the built/running artifact.
+
+Do not shift deterministic low-level behavior into E2E merely because E2E feels more realistic. Prefer the cheapest test level capable of proving the claim.
+
 Examples:
 
 - an active resource cannot be evicted;
@@ -249,6 +274,8 @@ Examples:
 - cloud processing is never implicit;
 - backup/export round trips preserve required data;
 - repeated lifecycle operations do not leak resident resources;
+- a critical create/use/save/reopen journey works end to end when that is a product-critical flow;
+- E2E failure cleanup leaves no project-owned server/browser/helper/temp residue;
 - start -> smoke -> stop leaves no project-owned listener/process/temp residue;
 - failed builds are not promoted as successful artifacts;
 - local artifact retention remains bounded.
@@ -263,7 +290,7 @@ Artifact/build deltas should surface meaningful size/performance changes when th
 
 ## Reproducibility
 
-A clean checkout should have a documented path to setup, test, build and run. Pin toolchains where practical, commit lockfiles, validate configuration and avoid environment-specific hidden state. Benchmark/evidence artifacts used for decisions should include enough identity to be reproduced.
+A clean checkout should have a documented path to setup, test, E2E when applicable, build and run. Pin toolchains where practical, commit lockfiles, validate configuration and avoid environment-specific hidden state. Benchmark/evidence artifacts used for decisions should include enough identity to be reproduced.
 
 Material build manifests should identify source revision and enough toolchain/configuration context to diagnose why two builds differ. Local/global environment pollution should be avoided; prefer project-scoped environments and explicit configuration.
 
@@ -271,7 +298,7 @@ Material build manifests should identify source revision and enough toolchain/co
 
 Git should contain source, tests, configuration, small fixtures, durable documentation and small durable assets. Prefer release assets, artifact storage or LFS when justified for large binaries/media. Generated bundles, build output, model weights, logs, caches, private data and temporary evidence should not accumulate in normal source history.
 
-Local artifact directories are bounded convenience stores, not release registries. `clean` removes only project-owned generated state. Cache/log retention is bounded where material.
+Local artifact directories are bounded convenience stores, not release registries. E2E traces/screenshots/videos are bounded evidence artifacts, not source history. `clean` removes only project-owned generated state. Cache/log retention is bounded where material.
 
 ## Documentation lifecycle
 
@@ -290,7 +317,7 @@ A completed workstream follows:
 
 `plan -> implement -> validate -> transfer durable knowledge -> delete plan`
 
-Do not create a document solely to record that a PR or isolated implementation step completed. Generated per-build deltas are artifact metadata/evidence, not active project-planning documentation.
+Do not create a document solely to record that a PR or isolated implementation step completed. Generated per-build deltas and per-run E2E evidence are artifact metadata/evidence, not active project-planning documentation.
 
 ## Agent-operability
 
@@ -343,9 +370,9 @@ A meaningful change progresses through applicable levels:
 
 Not every change needs every level, but no applicable level should be silently skipped.
 
-`OPERATIONS COMPLETE` means applicable canonical commands, build/artifact identity, build delta, runtime shutdown and ephemeral cleanup agree with the behavior being claimed.
+`OPERATIONS COMPLETE` means applicable canonical commands, E2E boundary, build/artifact identity, build delta, runtime shutdown and ephemeral cleanup agree with the behavior being claimed.
 
-A change is not complete merely because code exists. The owning tests, integration behavior, failure/resource semantics, operational lifecycle, documentation and evidence must agree with the claim being made.
+A change is not complete merely because code exists. The owning tests, integration/E2E behavior, failure/resource semantics, operational lifecycle, documentation and evidence must agree with the claim being made.
 
 ## Branch and delivery policy
 
@@ -357,6 +384,6 @@ Release workflows should promote already-identified/validated artifacts rather t
 
 For a new project, copy the smallest applicable core and selected profiles, then specialize all project-specific placeholders including `.engineering/commands.json`.
 
-For an existing project, audit before copying. Preserve good existing practices, native build tooling and stronger local mechanisms; identify conflicts and gaps and migrate incrementally. Never overwrite project-specific architecture, CI, command tooling or documentation blindly.
+For an existing project, audit before copying. Preserve good existing practices, native build/test tooling and stronger local mechanisms; identify conflicts and gaps and migrate incrementally. Never overwrite project-specific architecture, CI, command tooling, E2E framework or documentation blindly.
 
 A project is self-contained after adoption. Template updates are explicit migrations, not runtime dependencies.
