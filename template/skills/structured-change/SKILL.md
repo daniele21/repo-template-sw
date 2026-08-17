@@ -1,11 +1,11 @@
 ---
 name: structured-change
-description: Guard meaningful code changes against duplicated ownership, unnecessary complexity, unbounded resources, incomplete failure handling, unsafe data lifecycle changes, operational residue and cross-layer contract drift.
+description: Guard meaningful code and product changes against duplicated ownership, unnecessary complexity, unbounded resources, incomplete failure handling, unsafe data lifecycle changes, operational residue, weak UX hierarchy and cross-layer contract drift.
 ---
 
 # Structured Change
 
-Use this Skill as a pre-edit and pre-final review for meaningful behavior, architecture, persistence, API, concurrency, resource, security, build/runtime or cross-layer changes.
+Use this Skill as a pre-edit and pre-final review for meaningful behavior, architecture, persistence, API, concurrency, resource, security, build/runtime, user-facing experience or cross-layer changes.
 
 ## 1. Find the owner before editing
 
@@ -13,19 +13,20 @@ Use this Skill as a pre-edit and pre-final review for meaningful behavior, archi
 - Inspect direct consumers, fakes and tests before changing a shared boundary.
 - Search before adding constants, settings, statuses, endpoint paths, mappings or lifecycle rules.
 - Prefer extending the existing owner over introducing parallel state or duplicated policy.
+- For `product-ui`, find the canonical design/component/token owner before adding a new visual pattern.
 
 Ask: **who owns this after my change?** If there is no clear answer, fix ownership before adding behavior.
 
 ## 2. Spend complexity deliberately
 
-For every new abstraction, dependency, cache, service, worker, queue or layer ask:
+For every new abstraction, dependency, cache, service, worker, queue, layer, UI component or interaction pattern ask:
 
 - Which concrete problem requires it?
-- Why is the current boundary insufficient?
-- What failure/resource/upgrade surface does it add?
+- Why is the current boundary/component insufficient?
+- What failure/resource/upgrade/experience surface does it add?
 - Can a smaller direct solution preserve the same invariants?
 
-Do not add speculative extensibility.
+Do not add speculative extensibility or visual novelty without a product reason.
 
 ## 3. Respect the project operating contract
 
@@ -42,24 +43,33 @@ Preserve the common semantics even when the underlying tool changes:
 
 Do not introduce a second undocumented way to run/build/package the project when the canonical command contract already owns that intent.
 
-## 4. Define resource lifecycle when applicable
+## 4. Respect the product experience contract when applicable
 
-For each new/changed significant resource identify:
+When `.engineering/baseline.json` includes `product-ui`, read `design/ux-contract.json` and `design/brand-kit.json` before meaningful UI changes.
 
-- owner and acquisition;
-- lifetime and maximum cardinality;
-- memory/disk/CPU/GPU budget where material;
-- concurrency/backpressure behavior;
-- timeout/cancellation;
-- release and failure cleanup;
-- idle/pressure behavior;
-- metrics/diagnostics.
+Check that the change:
+
+- models the user's task rather than leaking internal architecture without value;
+- preserves a clear primary/secondary/destructive action hierarchy;
+- reveals advanced/expert/diagnostic complexity progressively;
+- uses sensible defaults for normal use;
+- handles applicable loading/empty/error/disabled and recovery states;
+- gives timely, understandable feedback;
+- preserves accessibility and adaptive layout behavior;
+- reuses semantic tokens/components where an owner already exists;
+- keeps critical journeys aligned with E2E evidence where required.
+
+Do not treat "show all available information" as a neutral choice; excess simultaneous information has cognitive cost.
+
+## 5. Define resource lifecycle when applicable
+
+For each new/changed significant resource identify owner/acquisition, lifetime/cardinality, budgets, concurrency/backpressure, timeout/cancellation, release/failure cleanup, idle/pressure behavior and metrics.
 
 No unbounded queue/list/cache on an unbounded input path. Prefer admission/reservation before expensive allocation when exhaustion is predictable.
 
 Temporary processes, sockets, locks, test stores, workspaces, build staging areas, logs and caches are resources too. Cleanup must cover success, failure, timeout, cancellation, user interrupt and partial initialization.
 
-## 5. Treat failure as normal behavior
+## 6. Treat failure as normal behavior
 
 Check applicable paths:
 
@@ -72,21 +82,24 @@ Check applicable paths:
 - restart/recovery;
 - interrupted persistence/migration;
 - failed build/package promotion;
-- stale PID/lock/temp state from a previous crashed run.
+- stale PID/lock/temp state from a previous crashed run;
+- user-facing loading/empty/error/offline/permission/partial states where applicable.
 
-Cleanup must restore ownership/invariants rather than merely catch an exception. Never delete a shared/global resource unless project ownership is proven.
+Cleanup and UI recovery must restore useful ownership/invariants rather than merely catch an exception or show a generic error.
 
-## 6. Preserve data/security semantics
+## 7. Preserve data/security semantics
 
 When data changes, check creation, storage, owner, trust/encryption boundary, retention, deletion, backup/export, logging, migration and recovery.
 
-Never introduce silent cloud fallback, content logging, secret persistence or destructive migration behavior without explicit contract/review. Temporary credentials/signing data must not leak into logs, caches or distributed artifacts.
+Never introduce silent cloud fallback, content logging, secret persistence or destructive migration behavior without explicit contract/review. Temporary credentials/signing data must not leak into logs, caches or distributed artifacts. UI/E2E screenshots/traces must remain privacy-safe.
 
-## 7. Verify cross-layer contracts
+## 8. Verify cross-layer contracts
 
 When changing a public/shared boundary, inspect every material adapter/consumer and test. Keep domain policy out of UI/transport/persistence adapters unless that layer genuinely owns the policy.
 
-## 8. Pre-final questions
+UI text and controls should translate domain capability into the user's task rather than mirror internal object/service names mechanically.
+
+## 9. Pre-final questions
 
 - Is there exactly one owner/source of truth?
 - Did the change add more complexity than the problem requires?
@@ -94,9 +107,12 @@ When changing a public/shared boundary, inspect every material adapter/consumer 
 - Are cancellation/shutdown/failure states coherent?
 - Does a local runtime leave no project-owned process/listener after stop?
 - Are build/artifact identity, immutability, retention and build delta preserved when applicable?
+- If user-facing, is the next action clear and complexity progressively disclosed?
+- Are critical states/feedback/recovery/accessibility/adaptive behavior coherent?
+- Did we reuse the canonical design component/token instead of creating drift?
 - Are persisted/user data and trust boundaries preserved?
-- Are tests focused on invariants rather than implementation trivia?
-- Did documentation update only durable current truth?
+- Are tests/evidence focused on real invariants and critical journeys rather than implementation trivia?
+- Did documentation/design contracts update only durable current truth?
 - Can deterministic parts of this rule move from prose into tooling/CI?
 
-A change is complete only when applicable code, integration, failure/resource semantics, operating-contract behavior, validation and durable documentation agree.
+A change is complete only when applicable code, integration, failure/resource semantics, operating-contract behavior, product-experience behavior, validation and durable documentation agree.
