@@ -8,7 +8,7 @@
   "profiles": [],
   "skills": {
     "plan-workstream": {"source_version": "0.1.0", "customized": false},
-    "structured-change": {"source_version": "0.2.0", "customized": false},
+    "structured-change": {"source_version": "0.4.0", "customized": false},
     "validate-change": {"source_version": "0.4.0", "customized": false},
     "finalize-workstream": {"source_version": "0.1.0", "customized": false},
     "review-reference-quality": {"source_version": "0.4.0", "customized": false}
