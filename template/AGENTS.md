@@ -9,7 +9,8 @@ Always read this guide. Then read only:
 1. the closest scoped `AGENTS.md`, when one exists for the target subtree;
 2. the canonical architecture/feature/workstream source required by the task;
 3. `.engineering/commands.json` when setup/dev/test/E2E/build/package/runtime/cleanup behavior is relevant;
-4. the owning implementation, direct consumers and nearby tests.
+4. `design/ux-contract.json` and `design/brand-kit.json` when `product-ui` is adopted and user-facing behavior/visual semantics change;
+5. the owning implementation, direct consumers and nearby tests.
 
 Do not load every plan or all documentation for a local change.
 
@@ -31,6 +32,7 @@ Keep this list short. Do not copy generic advice already enforced by the standar
 | <runtime/lifecycle> | <owner path> | <adapters/persistence/tests> |
 | <persistence/data lifecycle> | <owner path> | <migrations/consumers/tests> |
 | <UI/transport adapter> | <owner path> | <owning domain contract/tests> |
+| <product experience / design system, if applicable> | `design/ux-contract.json` | <canonical design/component source + critical journeys> |
 
 Add scoped `AGENTS.md` files only for subtrees with meaningful local invariants, hazards, ownership or validation commands.
 
@@ -52,6 +54,21 @@ Do not treat `e2e` and `smoke` as synonyms. Keep E2E small and focused on critic
 
 The underlying command remains native to this repository. When build/runtime/E2E behavior is affected, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup required by the local operating contract.
 
+## Product experience routing
+
+When `.engineering/baseline.json` includes `product-ui`, `design/ux-contract.json` and `design/brand-kit.json` are canonical routing surfaces for user-facing experience and brand/design-system constraints.
+
+For meaningful UI changes, preserve applicable:
+
+- user-task model and information hierarchy;
+- progressive disclosure and sensible defaults;
+- critical loading/empty/error/disabled states and feedback/recovery;
+- accessibility and adaptive-layout behavior;
+- semantic token/component ownership;
+- critical-journey E2E and visual/accessibility evidence.
+
+Do not make a screen denser or expose internal architecture merely because the implementation exposes more options. Do not create a new visual component when the canonical design system already owns the semantic role.
+
 ## Core change workflow
 
 1. Confirm the owning boundary and smallest coherent scope.
@@ -60,15 +77,22 @@ The underlying command remains native to this repository. When build/runtime/E2E
 4. Inspect owner, direct consumers, fakes and tests before changing a shared contract.
 5. Implement one coherent vertical slice without speculative layers.
 6. Use `validate-change` to choose the narrowest sufficient validation while iterating, then expand according to blast radius.
-7. Update only the canonical durable document whose current behavior/decision changed.
+7. Update only the canonical durable document/design contract whose current behavior/decision changed.
 8. When an active workstream completes, use `finalize-workstream` to transfer durable knowledge and delete the plan by default.
 9. Inspect the complete diff before publishing.
 
 ## Validation routing
 
-Run `python3 scripts/verify_operations.py` with the other repository-health checks. Use `.engineering/commands.json` for project-specific targeted/full command routing instead of duplicating command strings here.
+Run the repository-health checks, including:
 
-A missing real-device/hardware run must be reported as pending; never promote emulator/synthetic evidence into a stronger claim. E2E traces/screenshots/videos/logs are bounded evidence artifacts, not durable repository docs.
+```bash
+python3 scripts/verify_operations.py
+python3 scripts/verify_product_experience.py
+```
+
+`verify_product_experience.py` is `N/A` unless `product-ui` is adopted. Use `.engineering/commands.json` for project-specific targeted/full command routing instead of duplicating command strings here.
+
+A missing real-device/hardware/usability run must be reported as pending; never promote synthetic evidence into a stronger claim. E2E/visual traces/screenshots/videos/logs are bounded evidence artifacts, not durable repository docs.
 
 ## Documentation lifecycle
 
@@ -77,10 +101,11 @@ A missing real-device/hardware run must be reported as pending; never promote em
 - `docs/adr/` owns accepted durable architectural decisions.
 - `docs/current-state.md` is the single short repository-level operational ledger.
 - `docs/workstreams/` contains only active bounded implementation plans.
+- `design/` owns project experience/brand contracts and bounded key reference views when `product-ui` is adopted.
 - Completed plans are deleted after durable behavior/decisions are transferred. Archive only with independent audit/regulatory/release/historical justification.
 - Git history owns implementation history.
 
-Do not create plan/progress/status documents that duplicate the same workstream. Generated per-build `BUILD_CHANGELOG.md` files and per-run E2E evidence are artifact evidence, not project-status docs.
+Do not create plan/progress/status documents that duplicate the same workstream. Generated per-build `BUILD_CHANGELOG.md` files and per-run E2E/visual evidence are artifact evidence, not project-status docs.
 
 ## Agent context discipline
 
@@ -90,4 +115,4 @@ Keep this guide within the configured budget in `.engineering/documentation-poli
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass the canonical command/test/E2E/build/artifact lifecycle, or claim evidence that was not executed.
+Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass canonical command/test/E2E/build/artifact lifecycle, bypass an adopted product-experience/design-system contract, or claim evidence that was not executed.
