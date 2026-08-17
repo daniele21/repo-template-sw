@@ -75,6 +75,21 @@ def unresolved(value: object) -> bool:
     return any(marker in value for marker in PLACEHOLDER_MARKERS)
 
 
+def find_placeholders(value: object, path: str = "") -> list[str]:
+    found: list[str] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_path = f"{path}.{key}" if path else str(key)
+            found.extend(find_placeholders(child, child_path))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            child_path = f"{path}[{index}]"
+            found.extend(find_placeholders(child, child_path))
+    elif unresolved(value):
+        found.append(path or "<root>")
+    return found
+
+
 def require_text(section: dict, key: str, errors: list[str], prefix: str, template_mode: bool) -> None:
     value = section.get(key)
     if not isinstance(value, str) or not value.strip():
@@ -157,13 +172,10 @@ def main() -> int:
         adaptive = ux.get("adaptive_layout")
         if not isinstance(adaptive, dict):
             errors.append("ux-contract.adaptive_layout must be an object")
-        else:
-            if adaptive.get("applicable") is True:
-                contexts = adaptive.get("supported_contexts")
-                if not isinstance(contexts, list) or not contexts:
-                    errors.append("adaptive_layout.supported_contexts must be a non-empty list when applicable")
-                elif not args.template_mode and any(unresolved(item) for item in contexts):
-                    errors.append("unresolved placeholder in adaptive_layout.supported_contexts")
+        elif adaptive.get("applicable") is True:
+            contexts = adaptive.get("supported_contexts")
+            if not isinstance(contexts, list) or not contexts:
+                errors.append("adaptive_layout.supported_contexts must be a non-empty list when applicable")
 
         system = ux.get("design_system")
         if not isinstance(system, dict):
@@ -184,9 +196,7 @@ def main() -> int:
                 require_text(journey, "id", errors, f"critical_journeys[{index}]", args.template_mode)
                 require_text(journey, "name", errors, f"critical_journeys[{index}]", args.template_mode)
                 e2e = journey.get("e2e")
-                if isinstance(e2e, str) and not args.template_mode and unresolved(e2e):
-                    errors.append(f"unresolved placeholder in critical_journeys[{index}].e2e")
-                elif isinstance(e2e, str) and not unresolved(e2e) and e2e.lower() not in E2E_VALUES:
+                if isinstance(e2e, str) and not unresolved(e2e) and e2e.lower() not in E2E_VALUES:
                     errors.append(f"critical_journeys[{index}].e2e must be required, recommended or n/a")
                 elif not isinstance(e2e, str):
                     errors.append(f"critical_journeys[{index}].e2e must be a string")
@@ -194,8 +204,6 @@ def main() -> int:
         views = ux.get("reference_views")
         if not isinstance(views, list) or not views:
             errors.append("ux-contract.reference_views must contain at least one key reference view")
-        elif not args.template_mode and any(unresolved(item) for item in views):
-            errors.append("unresolved placeholder in ux-contract.reference_views")
 
         evidence = ux.get("evidence")
         if not isinstance(evidence, dict):
@@ -228,12 +236,13 @@ def main() -> int:
         missing_colors = sorted(REQUIRED_COLORS - set(colors))
         if missing_colors:
             errors.append("brand-kit.tokens.colors missing: " + ", ".join(missing_colors))
-        if not args.template_mode:
-            for key, value in colors.items():
-                if unresolved(value):
-                    errors.append(f"unresolved placeholder in tokens.colors.{key}")
         require_text(tokens, "typography", errors, "tokens", args.template_mode)
         require_text(tokens, "spacing", errors, "tokens", args.template_mode)
+
+    if not args.template_mode:
+        for label, data in (("ux-contract", ux), ("brand-kit", brand)):
+            for path in find_placeholders(data):
+                errors.append(f"unresolved placeholder in {label}.{path}")
 
     for warning in warnings:
         print(f"WARN: {warning}")
