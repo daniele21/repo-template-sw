@@ -8,9 +8,9 @@ Use a workstream plan only when dependency/state coordination adds real value. S
 
 ## Canonical project commands
 
-`.engineering/commands.json` is the canonical repository-level mapping for `setup`, `doctor`, `dev`, `check`, `test`, `build`, `smoke`, `package`, `stop` and `clean`.
+`.engineering/commands.json` is the canonical repository-level mapping for `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean`.
 
-Use the project's native tooling behind those intents. Do not introduce a second undocumented build/test/run path merely for convenience.
+Use the project's native tooling behind those intents. Do not introduce a second undocumented build/test/E2E/run path merely for convenience.
 
 ## Validation
 
@@ -25,16 +25,20 @@ python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-Use `.engineering/commands.json` for the actual project `check`/`test`/`build`/`smoke` commands.
+Use `.engineering/commands.json` for the actual project `check`/`test`/`e2e`/`build`/`smoke` commands.
+
+Use E2E only when a complete critical user/system outcome needs to be proven across assembled boundaries and lower-level tests are insufficient. Keep most deterministic behavior in unit/integration tests. `smoke` proves minimum built/runtime viability and is not a substitute for E2E.
+
+When E2E runs, verify cleanup of project-owned servers/listeners, browser/device sessions, test data, downloads/temp state and generated evidence. Failure traces/screenshots/videos/logs must have bounded retention and remain privacy-safe.
 
 When build/runtime/package behavior changes, validate applicable operating invariants: unique build identity, immutable/promoted artifacts, manifest/checksum/build delta, bounded local retention, graceful stop and zero project-owned process/listener/temp residue.
 
 ## Dependencies and architecture
 
-Avoid dynamic versions and speculative dependencies. New abstractions/dependencies must have a concrete owner/problem and should not duplicate an existing source of truth.
+Avoid dynamic versions and speculative dependencies. New abstractions/dependencies must have a concrete owner/problem and should not duplicate an existing source of truth. Do not add an E2E framework when the project has no meaningful E2E boundary or already has an equally strong established solution.
 
 ## Pull requests
 
-Keep PRs focused. Describe what changed, why, user/developer impact, relevant failure/resource/operating-lifecycle implications, and validation executed. Do not claim hardware/device evidence that was not run.
+Keep PRs focused. Describe what changed, why, user/developer impact, relevant failure/resource/operating-lifecycle implications, and validation executed. Distinguish unit/integration/E2E/smoke evidence and do not claim hardware/device evidence that was not run.
 
 Canonical branches should be protected with pull requests and required checks according to the project's branching/release model.
