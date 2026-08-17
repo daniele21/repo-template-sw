@@ -16,7 +16,11 @@
 
 ## Validation
 
-<!-- Exact check/test/build/smoke/manual/device/hardware checks executed. Never claim evidence not run. -->
+<!-- Exact check/test/e2e/build/smoke/manual/device/hardware checks executed. Distinguish E2E from smoke and never claim evidence not run. -->
+
+## E2E evidence
+
+<!-- If a complete critical workflow was affected: journey(s), environment/artifact tested, cleanup verification, and trace/screenshot/video/log artifact policy. Otherwise N/A. -->
 
 ## Documentation lifecycle
 
