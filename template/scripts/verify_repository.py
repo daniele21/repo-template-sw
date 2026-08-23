@@ -11,6 +11,7 @@ import sys
 CORE_SKILLS = (
     "plan-workstream",
     "structured-change",
+    "design-product-experience",
     "validate-change",
     "finalize-workstream",
     "review-reference-quality",
