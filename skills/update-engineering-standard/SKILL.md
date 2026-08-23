@@ -75,6 +75,30 @@ Do not create a second design system, copy Figma into static screenshots, or int
 
 A metadata-only 0.4 bump, or selecting `product-ui` while leaving generic placeholders, is not a valid migration.
 
+## 0.5 product-experience workflow migration guidance
+
+When migrating from 0.4.x to 0.5.x, the main change is not a new visual style. It is an explicit decision workflow that keeps structural UX ahead of implementation/polish and separates UX motion semantics from project-specific motion language.
+
+For repositories without `product-ui`, keep the new `design-product-experience` Skill as a dormant core Skill unless local policy intentionally removes non-applicable Skills and records that customization.
+
+For repositories with `product-ui`, explicitly classify and merge:
+
+- `design-product-experience` Skill routing in `AGENTS.md`;
+- primary users/jobs/surfaces in `design/ux-contract.json`;
+- decision-model invariants: user outcome first, task model before layout, hierarchy before polish, states before motion, purposeful motion and evidence before completion;
+- proportional change depth: structural UX vs interaction vs visual-only;
+- motion semantics/purposes in the UX contract;
+- functional-before-decorative graphics/imagery semantics;
+- project-owned motion character/tokens in `design/brand-kit.json` (durations, easing, spring/bounce and reduced-motion strategy) without replacing stronger existing design-system tokens;
+- verifier changes for the new machine-readable fields;
+- `structured-change` and `validate-change` routing so meaningful UX/UI work cannot silently jump straight to components, animation or graphics.
+
+Preserve stronger existing product/design processes. If an established design system already owns motion tokens, point/map `brand-kit.json` to that truth rather than introducing duplicate values.
+
+Do not treat migration as permission to redesign the product. The semantic migration is complete when future meaningful UX/UI work is routed through the ordered, proportional process and the machine-readable project contracts reflect real current ownership/semantics.
+
+A metadata-only 0.5 bump is not a valid migration.
+
 ## Output
 
 Report:
