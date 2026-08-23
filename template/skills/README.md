@@ -6,10 +6,13 @@ Core set:
 
 - `plan-workstream` — create a bounded dependency-aware active plan only when coordination is justified;
 - `structured-change` — preserve ownership, simplicity, resource/failure/data invariants during meaningful changes;
+- `design-product-experience` — reason through meaningful UX/UI work in the correct order, with proportional depth, before implementation/polish;
 - `validate-change` — choose the narrowest sufficient validation while iterating and the correct final gate;
 - `finalize-workstream` — transfer durable knowledge and delete completed plans by default;
 - `review-reference-quality` — perform an L0/L1/L2 gap review before important milestones.
 
 Projects may specialize local copies. Record customization in `.engineering/baseline.json` so future baseline migrations merge rather than overwrite local procedure.
+
+`design-product-experience` is conditional in use: headless repositories keep the Skill dormant, while repositories adopting `product-ui` use it for meaningful structural UX, interaction or motion/visual-system changes. Local visual-only token/style edits should stay proportional rather than expanding into unnecessary design process.
 
 Do not create a Skill for one-off instructions. A Skill is justified when a procedure recurs, is conditional, has non-obvious ordering/hazards, or saves substantial repeated agent context.

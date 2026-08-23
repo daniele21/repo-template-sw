@@ -9,7 +9,7 @@ Always read this guide. Then read only:
 1. the closest scoped `AGENTS.md`, when one exists for the target subtree;
 2. the canonical architecture/feature/workstream source required by the task;
 3. `.engineering/commands.json` when setup/dev/test/E2E/build/package/runtime/cleanup behavior is relevant;
-4. `design/ux-contract.json` and `design/brand-kit.json` when `product-ui` is adopted and user-facing behavior/visual semantics change;
+4. when `product-ui` is adopted and user-facing behavior/visual semantics change, `design/ux-contract.json`, `design/brand-kit.json` and `skills/design-product-experience/SKILL.md` for meaningful UX/UI work;
 5. the owning implementation, direct consumers and nearby tests.
 
 Do not load every plan or all documentation for a local change.
@@ -32,7 +32,7 @@ Keep this list short. Do not copy generic advice already enforced by the standar
 | <runtime/lifecycle> | <owner path> | <adapters/persistence/tests> |
 | <persistence/data lifecycle> | <owner path> | <migrations/consumers/tests> |
 | <UI/transport adapter> | <owner path> | <owning domain contract/tests> |
-| <product experience / design system, if applicable> | `design/ux-contract.json` | <canonical design/component source + critical journeys> |
+| <product experience / design system, if applicable> | `design/ux-contract.json` | `skills/design-product-experience/SKILL.md` + <canonical design/component source + critical journeys> |
 
 Add scoped `AGENTS.md` files only for subtrees with meaningful local invariants, hazards, ownership or validation commands.
 
@@ -58,28 +58,43 @@ The underlying command remains native to this repository. When build/runtime/E2E
 
 When `.engineering/baseline.json` includes `product-ui`, `design/ux-contract.json` and `design/brand-kit.json` are canonical routing surfaces for user-facing experience and brand/design-system constraints.
 
-For meaningful UI changes, preserve applicable:
+For meaningful UX/UI work, use `design-product-experience` and preserve this decision order at the depth justified by the change:
 
-- user-task model and information hierarchy;
-- progressive disclosure and sensible defaults;
-- critical loading/empty/error/disabled states and feedback/recovery;
-- accessibility and adaptive-layout behavior;
-- semantic token/component ownership;
-- critical-journey E2E and visual/accessibility evidence.
+```text
+user outcome
+-> task model
+-> information architecture / critical journey
+-> information + action hierarchy
+-> progressive disclosure / defaults
+-> interactions / states / feedback / recovery
+-> adaptive / platform behavior
+-> accessibility
+-> design system / components
+-> motion
+-> visual polish / graphics
+-> validation
+```
 
-Do not make a screen denser or expose internal architecture merely because the implementation exposes more options. Do not create a new visual component when the canonical design system already owns the semantic role.
+Classify the change first:
+
+- structural UX — use the full sequence;
+- interaction — start from the owning task/journey and cover changed interaction/state/accessibility/motion layers;
+- visual-only — preserve the settled flow, start from the design-system/brand owner and keep the change local.
+
+Do not make a screen denser or expose internal architecture merely because the implementation exposes more options. Do not create a new visual component when the canonical design system already owns the semantic role. Do not use animation, graphics or polish to compensate for an unresolved task flow, hierarchy or feedback model.
 
 ## Core change workflow
 
 1. Confirm the owning boundary and smallest coherent scope.
 2. Use `plan-workstream` only for work large enough to need dependency/state coordination.
 3. Use `structured-change` before and after meaningful code changes.
-4. Inspect owner, direct consumers, fakes and tests before changing a shared contract.
-5. Implement one coherent vertical slice without speculative layers.
-6. Use `validate-change` to choose the narrowest sufficient validation while iterating, then expand according to blast radius.
-7. Update only the canonical durable document/design contract whose current behavior/decision changed.
-8. When an active workstream completes, use `finalize-workstream` to transfer durable knowledge and delete the plan by default.
-9. Inspect the complete diff before publishing.
+4. If `product-ui` is adopted and the change meaningfully affects UX/UI semantics, use `design-product-experience` before implementation; do not invoke a full UX exercise for a genuinely visual-only local edit.
+5. Inspect owner, direct consumers, fakes and tests before changing a shared contract.
+6. Implement one coherent vertical slice without speculative layers.
+7. Use `validate-change` to choose the narrowest sufficient validation while iterating, then expand according to blast radius.
+8. Update only the canonical durable document/design contract whose current behavior/decision changed.
+9. When an active workstream completes, use `finalize-workstream` to transfer durable knowledge and delete the plan by default.
+10. Inspect the complete diff before publishing.
 
 ## Validation routing
 

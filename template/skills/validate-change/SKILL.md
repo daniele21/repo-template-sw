@@ -70,9 +70,16 @@ Synthetic/emulator evidence must be labelled as such and cannot satisfy a strong
 
 When `product-ui` is adopted and a change affects user-facing behavior, validate the experience properties actually changed rather than only checking visual appearance.
 
+First confirm the change depth was appropriate:
+
+- structural UX change — user outcome/task, IA/critical journey and hierarchy/disclosure were explicitly considered before components/motion/polish;
+- interaction change — the owning task/journey plus affected states/feedback/accessibility/adaptive/component/motion layers were considered;
+- visual-only change — settled flow/interaction semantics were preserved and the change stayed with the canonical design-system/brand owner.
+
 Depending on blast radius, inspect/prove:
 
-- user task model and information hierarchy;
+- user outcome/task model and information architecture;
+- critical journey continuity and context preservation;
 - primary/secondary/destructive action hierarchy;
 - progressive disclosure and whether advanced/debug complexity remains appropriately separated;
 - sensible defaults and reduction of unnecessary configuration burden;
@@ -81,6 +88,8 @@ Depending on blast radius, inspect/prove:
 - keyboard/focus/assistive semantics/text scaling/contrast/reduced-motion behavior where applicable;
 - responsive/adaptive layout across relevant supported contexts;
 - semantic token/component reuse and absence of accidental design-system duplication;
+- meaningful motion has an explicit purpose, remains restrained for frequent interaction, tracks gestures where applicable and does not degrade performance;
+- functional UI remains understandable without decorative imagery and data graphics support a user question/decision;
 - critical-journey E2E when lower-level tests cannot prove the user outcome;
 - visual regression for stable high-risk surfaces where useful;
 - representative-user usability evidence for important/high-risk workflows when justified.
@@ -118,13 +127,14 @@ A strong E2E extends that lifecycle with one complete critical workflow before t
 
 1. Identify changed owner, user-visible impact and public blast radius.
 2. Read the nearest agent guide and `.engineering/commands.json`; read design contracts when `product-ui` and UI behavior are relevant.
-3. Run the cheapest deterministic gate that can falsify the current edit quickly.
-4. Expand only when the change crosses a boundary or is ready for final integration.
-5. Use E2E only when the full product/system outcome is part of the claim.
-6. Add accessibility/adaptive/visual/usability evidence only when the changed experience claim requires it.
-7. If a gate cannot run, record the exact missing dependency/environment and do not silently treat it as passed.
-8. Never weaken/delete/suppress a legitimate failing test or experience requirement merely to make the change green without explicitly changing the owning contract.
-9. Report exact validation executed and evidence still pending.
+3. For meaningful UX/UI semantics, confirm `design-product-experience` was applied at proportional depth before validating the implementation.
+4. Run the cheapest deterministic gate that can falsify the current edit quickly.
+5. Expand only when the change crosses a boundary or is ready for final integration.
+6. Use E2E only when the full product/system outcome is part of the claim.
+7. Add accessibility/adaptive/motion/visual/usability evidence only when the changed experience claim requires it.
+8. If a gate cannot run, record the exact missing dependency/environment and do not silently treat it as passed.
+9. Never weaken/delete/suppress a legitimate failing test or experience requirement merely to make the change green without explicitly changing the owning contract.
+10. Report exact validation executed and evidence still pending.
 
 ## Output
 

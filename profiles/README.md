@@ -13,7 +13,7 @@ Current profile families:
 - `android` — Gradle wrapper/toolchain, dependency locking, lint/static/unit/instrumented validation, native UI E2E and APK/AAB identity/smoke mapping;
 - `macos` — native lifecycle, packaging/signing, filesystem paths, XCTest/XCUITest-style E2E, built-artifact smoke validation and representative device validation;
 - `local-ai` — model/resource lifecycle, memory pressure, admission/backpressure, complete pipeline E2E, benchmark identity and owned local-runtime cleanup;
-- `product-ui` — progressive disclosure, information hierarchy, cognitive-load control, complete UI states, accessibility, adaptive layouts, brand/design-system ownership, critical journeys and UX regression evidence for products with a material interface.
+- `product-ui` — ordered user-outcome-first UX reasoning, progressive disclosure, information/action hierarchy, cognitive-load control, complete UI states, accessibility, adaptive layouts, semantic motion/graphics, brand/design-system ownership, critical journeys and UX regression evidence for products with a material interface.
 
 Stack profiles primarily refine [`OPERATING-CONTRACT.md`](../OPERATING-CONTRACT.md). `product-ui` primarily refines [`PRODUCT-EXPERIENCE-CONTRACT.md`](../PRODUCT-EXPERIENCE-CONTRACT.md) and can be combined with any UI-bearing stack profile.
 

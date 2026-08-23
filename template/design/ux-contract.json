@@ -1,10 +1,23 @@
 {
   "schema_version": 1,
-  "contract_version": "0.4.0",
+  "contract_version": "0.5.0",
   "applicable": true,
   "design_source_of_truth": {
     "type": "<REPLACE_WITH_figma_code-first_in-repo_or_other>",
     "location": "<REPLACE_WITH_CANONICAL_LOCATION>"
+  },
+  "experience_context": {
+    "primary_users": ["<REPLACE_WITH_PRIMARY_USER_OR_ROLE>"],
+    "primary_jobs": ["<REPLACE_WITH_PRIMARY_USER_JOB_OR_DECISION>"],
+    "primary_surfaces": ["<REPLACE_WITH_PRIMARY_SURFACE_OR_WORKSPACE>"]
+  },
+  "decision_model": {
+    "user_outcome_first": true,
+    "task_model_before_layout": true,
+    "hierarchy_before_visual_polish": true,
+    "states_before_motion": true,
+    "motion_requires_purpose": true,
+    "evidence_before_completion": true
   },
   "principles": {
     "user_task_model_over_internal_architecture": true,
@@ -38,6 +51,37 @@
     "component_source": "<REPLACE_WITH_CANONICAL_COMPONENT_SOURCE>",
     "brand_tokens": "design/brand-kit.json",
     "reuse_existing_semantic_component_first": true
+  },
+  "motion": {
+    "purpose_required": true,
+    "supported_purposes": [
+      "feedback",
+      "continuity",
+      "spatial_relationship",
+      "state_transition",
+      "progress",
+      "attention",
+      "hierarchy",
+      "meaningful_completion"
+    ],
+    "frequent_interactions_are_restrained": true,
+    "gesture_motion_tracks_input": true,
+    "performance_over_decorative_complexity": true,
+    "reduced_motion": true
+  },
+  "graphics": {
+    "functional_before_decorative": true,
+    "ui_understandable_without_decorative_imagery": true,
+    "supported_roles": [
+      "explanation",
+      "orientation",
+      "onboarding",
+      "empty_state",
+      "status",
+      "meaningful_completion",
+      "data_visualization",
+      "brand"
+    ]
   },
   "critical_journeys": [
     {

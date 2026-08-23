@@ -47,19 +47,23 @@ Do not introduce a second undocumented way to run/build/package the project when
 
 When `.engineering/baseline.json` includes `product-ui`, read `design/ux-contract.json` and `design/brand-kit.json` before meaningful UI changes.
 
+For structural UX, interaction redesign, adaptive behavior, motion-system or other semantically meaningful UI work, use `design-product-experience` before implementation. Keep visual-only local token/style edits proportional rather than reopening settled product structure without a reason.
+
 Check that the change:
 
-- models the user's task rather than leaking internal architecture without value;
+- starts from the user outcome/task rather than the desired visual treatment;
+- preserves the owning information architecture/critical journey or explicitly updates it;
 - preserves a clear primary/secondary/destructive action hierarchy;
 - reveals advanced/expert/diagnostic complexity progressively;
 - uses sensible defaults for normal use;
 - handles applicable loading/empty/error/disabled and recovery states;
 - gives timely, understandable feedback;
-- preserves accessibility and adaptive layout behavior;
+- preserves accessibility and adaptive/platform behavior;
 - reuses semantic tokens/components where an owner already exists;
+- uses motion only for a product purpose and keeps graphics functional-before-decorative;
 - keeps critical journeys aligned with E2E evidence where required.
 
-Do not treat "show all available information" as a neutral choice; excess simultaneous information has cognitive cost.
+Do not treat "show all available information" as a neutral choice; excess simultaneous information has cognitive cost. Do not use animation, illustration or visual polish to compensate for an unresolved task flow, hierarchy or feedback model.
 
 ## 5. Define resource lifecycle when applicable
 
@@ -107,8 +111,10 @@ UI text and controls should translate domain capability into the user's task rat
 - Are cancellation/shutdown/failure states coherent?
 - Does a local runtime leave no project-owned process/listener after stop?
 - Are build/artifact identity, immutability, retention and build delta preserved when applicable?
-- If user-facing, is the next action clear and complexity progressively disclosed?
+- If user-facing, did the design start from user outcome/task rather than visual polish?
+- Are hierarchy/progressive disclosure/defaults coherent at the depth this change affects?
 - Are critical states/feedback/recovery/accessibility/adaptive behavior coherent?
+- Is meaningful motion purposeful, restrained and reduced-motion aware?
 - Did we reuse the canonical design component/token instead of creating drift?
 - Are persisted/user data and trust boundaries preserved?
 - Are tests/evidence focused on real invariants and critical journeys rather than implementation trivia?
