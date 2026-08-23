@@ -1,6 +1,6 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.4.0
+Version: 0.5.0
 
 ## Purpose
 
@@ -251,6 +251,14 @@ Repositories with a material UI should adopt the optional `product-ui` profile a
 
 The product experience contract standardizes experience quality rather than aesthetics. It requires intentional information architecture, progressive disclosure, bounded cognitive load, sensible defaults, complete states/feedback, actionable error recovery, accessibility, adaptive layout, design-system/brand ownership, critical journeys and appropriate UX regression evidence.
 
+Meaningful product-experience work follows semantic dependency order rather than starting from visual treatment:
+
+`user outcome -> task model -> information architecture / critical journey -> information + action hierarchy -> progressive disclosure / defaults -> interactions + states + feedback + recovery -> adaptive / platform behavior -> accessibility -> design system -> motion -> visual / graphics -> validation`
+
+The depth of this reasoning is proportional to semantic impact. Structural UX changes traverse the full sequence; interaction changes start at the earliest affected dependency while checking upstream assumptions; genuinely visual-only changes may stay at design-system/visual validation when task, flow, hierarchy and interaction semantics are unchanged.
+
+Motion, illustration, gradients, effects and other visual treatments must not compensate for unresolved task-model, hierarchy, flow or interaction problems. Motion should communicate feedback, continuity, spatial relationship, state change, progress, attention or another explicit experience purpose before its aesthetic language is chosen.
+
 The UI should model user goals rather than internal architecture. Advanced/debug/diagnostic controls remain discoverable but should not dominate normal flows unless they are genuinely central to the user's job.
 
 Brand identity should use semantic design tokens and a declared source of truth. A design system should reuse canonical semantic components before creating visually duplicative one-offs. Mockups/key reference views are maintained as bounded product references, not an uncontrolled parallel implementation history.
@@ -397,6 +405,7 @@ Core reusable Skills are:
 
 - `plan-workstream`;
 - `structured-change`;
+- `design-product-experience`;
 - `validate-change`;
 - `finalize-workstream`;
 - `review-reference-quality`.
