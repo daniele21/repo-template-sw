@@ -9,7 +9,7 @@ Agent-native reference engineering baseline for software repositories maintained
 - [`USAGE.md`](USAGE.md) — practical guide for using this repository with a brand-new project, an existing repository, ordinary coding-agent development, audits and baseline upgrades.
 - [`STANDARD.md`](STANDARD.md) — canonical L0/L1/L2 engineering standard.
 - [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md) — common stack-neutral semantics for setup/dev/test/E2E/build/smoke/package/cleanup, build identity, artifacts and local runtimes.
-- [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) — optional stack-neutral UX/UI contract for products with a material user interface.
+- [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) — optional stack-neutral UX/UI contract for products with a material user interface, including ordered product-experience decision semantics.
 
 ## What it optimizes for
 
@@ -21,6 +21,8 @@ Agent-native reference engineering baseline for software repositories maintained
 - uniquely identifiable builds and traceable immutable artifacts;
 - bounded artifact/cache/log/test-evidence retention and zero-residue runtime/build/E2E lifecycles;
 - clear, accessible and progressively disclosed product experiences when UI is present;
+- user-outcome-first UX reasoning before layout, motion and visual polish;
+- purposeful motion/graphics without forcing one visual language;
 - stable brand/design-system ownership without forcing one visual style;
 - privacy/security and data lifecycle clarity;
 - low repository/documentation entropy;
@@ -36,6 +38,8 @@ The core principles are:
 
 > **A strong interface makes the user's next decision obvious, reveals complexity progressively, communicates system state clearly, and remains consistent, accessible and recoverable.**
 
+> **UX before UI. Interaction before motion. Structure before polish. Evidence before completion.**
+
 ## Repository layout
 
 - [`STANDARD.md`](STANDARD.md) — canonical L0/L1/L2 engineering standard.
@@ -45,7 +49,7 @@ The core principles are:
 - [`template/`](template/) — universal files that can be adopted into a project and then specialized locally.
 - [`template/.engineering/commands.json`](template/.engineering/commands.json) — machine-readable project operating contract template.
 - [`template/design/`](template/design/) — opt-in UX/brand contract files validated when `product-ui` is adopted.
-- [`template/skills/`](template/skills/) — core project-local coding-agent Skills.
+- [`template/skills/`](template/skills/) — core project-local coding-agent Skills, including ordered product-experience design procedure.
 - [`profiles/`](profiles/) — optional stack/domain/product guidance, including `product-ui` for UI products.
 - [`skills/adopt-engineering-standard/`](skills/adopt-engineering-standard/) — workflow for aligning a new/existing repository.
 - [`skills/update-engineering-standard/`](skills/update-engineering-standard/) — workflow for migrating an adopted repository to a newer baseline.
@@ -55,7 +59,7 @@ The core principles are:
 ```text
 AGENTS.md          -> how to orient and what is invariant
 commands.json      -> how this project sets up/runs/checks/tests/E2Es/builds/cleans
-design contracts   -> how a UI product expresses hierarchy, accessibility and brand/design ownership
+design contracts   -> how a UI product expresses users/jobs, hierarchy, motion semantics and brand/design ownership
 Skills             -> how to perform recurring change workflows
 Active workstream  -> what is being implemented now
 Feature/ADR/docs   -> how the system works now and why durable decisions exist
@@ -65,7 +69,26 @@ Scripts/CI         -> deterministic enforcement
 
 The operating model is **same semantics, native implementation**. Android remains Gradle/native-test-tooling, macOS remains Xcode/Swift/Python-native, browser/web can prefer Playwright for new browser E2E, and local servers use established tooling.
 
-The product-experience model follows the same rule: **same UX quality contract, platform-appropriate implementation**. A web app, Android app and macOS app should converge on clarity, progressive disclosure, complete states, accessibility and design-system ownership without being forced into identical visuals or interactions.
+The product-experience model follows the same rule: **same UX quality/decision contract, platform-appropriate implementation**. A web app, Android app and macOS app should converge on user-outcome-first task modeling, clarity, progressive disclosure, complete states, accessibility, purposeful motion/graphics and design-system ownership without being forced into identical visuals or interactions.
+
+For meaningful product-experience work, the default decision order is:
+
+```text
+user outcome
+-> task model
+-> IA / critical journey
+-> information + action hierarchy
+-> progressive disclosure / defaults
+-> interactions / states / feedback / recovery
+-> adaptive / platform
+-> accessibility
+-> design system / components
+-> motion
+-> visual polish / graphics
+-> validation
+```
+
+Use proportional depth: structural UX changes use the full sequence; interaction changes start from the owning task/journey and affected layers; visual-only edits preserve settled semantics and remain local.
 
 ## Use with a new project
 
@@ -77,7 +100,7 @@ The product-experience model follows the same rule: **same UX quality contract, 
 6. Map `.engineering/commands.json` to native setup/dev/check/test/E2E/build/smoke/package/stop/clean commands.
 7. Decide E2E applicability and cover only critical whole-system workflows lower-level tests cannot prove.
 8. Implement applicable build identity, artifact lifecycle/build-delta and local-runtime/cleanup semantics.
-9. For UI products, define information architecture, progressive disclosure, critical states/journeys, accessibility target, responsive/adaptive scope, design-system ownership and key reference views.
+9. For UI products, identify primary users/jobs/surfaces, define information architecture/journeys, progressive disclosure, critical states, accessibility target, responsive/adaptive scope, design-system ownership, motion/graphics semantics and key reference views; route meaningful UX/UI work through `design-product-experience`.
 10. Record adopted standard version and profiles in `.engineering/baseline.json`.
 11. Run repository/operations/product-experience/documentation/agent-context checks.
 12. Add stack-specific CI/test/E2E/build/smoke and UI evidence gates before claiming the relevant maturity level.
@@ -88,7 +111,7 @@ The `adopt-engineering-standard` Skill describes the complete workflow.
 
 Do not copy blindly. First audit existing architecture, docs, CI, tests, E2E framework/critical journeys, security, native commands, build/version identity, artifact/release behavior, local runtimes, cleanup and agent guidance.
 
-For UI products also audit information architecture, progressive disclosure, design source of truth, brand tokens/components, critical states, accessibility, responsive/adaptive behavior, key reference views and UX regression evidence. Preserve stronger existing practices, identify gaps/conflicts, build a small adoption DAG, then migrate incrementally.
+For UI products also audit primary users/jobs, information architecture/journeys, progressive disclosure, design source of truth, brand tokens/components, critical states, accessibility, responsive/adaptive behavior, motion/imagery ownership, key reference views and UX regression evidence. Preserve stronger existing practices, identify gaps/conflicts, build a small adoption DAG, then migrate incrementally.
 
 The goal is convergence on engineering and experience invariants, not identical repository layouts, build tools, E2E frameworks or visual styles.
 
@@ -112,4 +135,4 @@ Git already preserves implementation history. Keep completed plans only when the
 
 The baseline version is stored in [`VERSION`](VERSION). Changes that alter required invariants, copied Skills or machine-readable baseline semantics must be recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
-Current baseline: **0.4.0**.
+Current baseline: **0.5.0**.
