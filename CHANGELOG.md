@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0 — 2026-08-23
+
+Makes product-experience reasoning an explicit, ordered and proportional workflow instead of a flat collection of UX/UI requirements:
+
+- `PRODUCT-EXPERIENCE-CONTRACT.md` now defines the default decision order: user outcome -> task model -> information architecture/critical journey -> information/action hierarchy -> progressive disclosure/defaults -> interactions/states/feedback/recovery -> adaptive/platform behavior -> accessibility -> design system/components -> motion -> visual polish/graphics -> validation;
+- new core `design-product-experience` Skill routes meaningful structural UX, interaction and motion/visual-system changes through that order while keeping visual-only edits proportional;
+- `template/AGENTS.md`, `structured-change` and `validate-change` now route meaningful `product-ui` work through the new Skill and explicitly prohibit using motion/graphics/polish to compensate for unresolved structure;
+- `design/ux-contract.json` now records primary users/jobs/surfaces, decision-model invariants, purposeful motion semantics and functional-before-decorative graphics roles;
+- `design/brand-kit.json` now separates product-owned motion language/tokens (durations, easing, spring/bounce, reduced-motion strategy) from universal UX motion semantics;
+- motion is standardized by purpose (feedback, continuity, spatial relationship, state transition, progress, attention, hierarchy, meaningful completion) without forcing universal timings/easings;
+- graphics/imagery are treated as functional product tools before decoration, and functional UI must remain understandable without decorative imagery;
+- `verify_product_experience.py` validates the new machine-readable decision, motion, graphics and brand-motion contract fields while still avoiding false claims that CI can judge beauty/usability;
+- `verify_repository.py` and baseline Skill metadata include `design-product-experience`;
+- `product-ui`, adoption and update guidance now preserve proportional design depth and provide an explicit 0.4.x -> 0.5.x migration path.
+
+The central product-experience rule is now: **UX before UI. Interaction before motion. Structure before polish. Evidence before completion.**
+
 ## 0.4.0 — 2026-08-17
 
 Adds an optional, stack-neutral Product Experience Contract for repositories with a material user interface:
