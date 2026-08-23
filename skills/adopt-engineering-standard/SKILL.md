@@ -18,11 +18,12 @@ Make a repository self-contained and aligned with the Agent-Native Reference Eng
 5. Map common command intents (`setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop`, `clean`) to native tooling; mark only genuinely inapplicable intents `n/a`.
 6. Decide E2E applicability explicitly. Add a small set of critical complete-workflow tests when lower-level tests cannot establish the full outcome; preserve stack-native tooling and prefer Playwright only for browser/web when no equally strong incumbent exists.
 7. Implement applicable project operating contracts: unique build identity, artifact lineage/retention/manifest/checksum, generated build delta, localhost/runtime cleanup and ephemeral-resource cleanup.
-8. If `product-ui` is selected, specialize `design/ux-contract.json` and `design/brand-kit.json`: declare design source of truth, task/IA hierarchy, progressive disclosure/defaults, critical states/journeys, accessibility, adaptive layout, semantic design-system ownership, key reference views and applicable UX regression evidence.
-9. Record standard version, profiles and local Skill customization in `.engineering/baseline.json`.
-10. Configure stack-specific formatter/lint/static/test/E2E/build/smoke CI plus applicable accessibility/visual/UI evidence gates and branch protection.
-11. Run repository/operating/product-experience/docs/agent-context validation.
-12. Report current maturity truthfully; bootstrap alone establishes structure, not L1/L2 evidence.
+8. If `product-ui` is selected, specialize `design/ux-contract.json` and `design/brand-kit.json`: identify primary users/jobs/surfaces and design source of truth; preserve the user-outcome -> task -> IA/journey -> hierarchy/disclosure/defaults -> interaction/states/feedback/recovery -> adaptive/platform -> accessibility -> design-system -> motion -> visual/graphics -> validation decision order; define motion/graphics semantics, critical states/journeys, accessibility, adaptive layout, semantic design-system ownership, concrete motion/visual language, key reference views and applicable UX regression evidence.
+9. Keep the copied `design-product-experience` Skill available and route meaningful `product-ui` work through it at proportional depth; do not force a full UX exercise for local visual-only edits.
+10. Record standard version, profiles and local Skill customization in `.engineering/baseline.json`.
+11. Configure stack-specific formatter/lint/static/test/E2E/build/smoke CI plus applicable accessibility/visual/UI evidence gates and branch protection.
+12. Run repository/operating/product-experience/docs/agent-context validation.
+13. Report current maturity truthfully; bootstrap alone establishes structure, not L1/L2 evidence.
 
 ## Existing repository path
 
@@ -41,7 +42,7 @@ Inspect:
 - security/privacy/data lifecycle;
 - resource/memory/concurrency ownership;
 - repository/generated-artifact hygiene;
-- when a material UI exists: information architecture, progressive disclosure, defaults/action hierarchy, critical states, accessibility, adaptive layout, existing design/brand source of truth, tokens/components, key mockups/reference views and usability/visual regression evidence.
+- when a material UI exists: primary users/jobs, information architecture/critical journeys, progressive disclosure, defaults/action hierarchy, critical states, accessibility, adaptive/platform behavior, existing design/brand source of truth, tokens/components, current motion/imagery language, key mockups/reference views and usability/visual regression evidence.
 
 ### 2. Classify existing practices
 
@@ -65,7 +66,7 @@ Create a temporary workstream only when migration spans multiple coordinated cha
 - critical-workflow E2E gaps where lower-level tests are insufficient;
 - build/artifact identity and release/retention gaps;
 - runtime/process/port/ephemeral cleanup gaps;
-- if `product-ui`: task/IA/accessibility/critical-state/design-system gaps that materially affect usability/correctness;
+- if `product-ui`: user-outcome/task/IA/accessibility/critical-state/design-system gaps that materially affect usability/correctness, before motion/visual polish gaps;
 - resource/failure/data gaps;
 - cleanup/duplicate plan/mockup removal.
 
@@ -77,7 +78,7 @@ Copy only missing/useful universal files and core Skills. Merge project-specific
 
 Preserve native Gradle/Xcode/Python/Node/etc. workflows, strong E2E suites and established design systems/Figma/code-first sources. Do not replace them merely to resemble the template.
 
-For existing artifact/build systems, migrate identity/retention/delta behavior incrementally. For existing UI systems, use `design/ux-contract.json` and `design/brand-kit.json` as routing/contract metadata pointing to real owners; do not create a second design truth.
+For existing artifact/build systems, migrate identity/retention/delta behavior incrementally. For existing UI systems, use `design/ux-contract.json` and `design/brand-kit.json` as routing/contract metadata pointing to real owners; do not create a second design truth. Preserve existing motion/visual tokens when they are strong and map them rather than replacing them with arbitrary template values.
 
 ### 5. Validate and finalize
 
@@ -92,5 +93,7 @@ Transfer durable changes, delete adoption workstream by default, and leave the r
 - introducing Playwright where no browser E2E boundary exists or an equally strong incumbent already works;
 - introducing a UI/design framework solely for compliance aesthetics;
 - creating duplicate Figma/code/mockup sources of truth;
+- turning every visual-only edit into a full UX design process;
+- defining universal motion timings/easings/graphics styles instead of project-owned tokens;
 - claiming production/reference readiness without evidence;
 - keeping the template repository as a runtime dependency.
