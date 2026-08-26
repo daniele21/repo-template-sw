@@ -8,9 +8,10 @@ Always read this guide. Then read only:
 
 1. the closest scoped `AGENTS.md`, when one exists for the target subtree;
 2. the canonical architecture/feature/workstream source required by the task;
-3. `.engineering/commands.json` when setup/dev/test/E2E/build/package/runtime/cleanup or publication-readiness behavior is relevant;
-4. when `product-ui` is adopted and user-facing behavior/visual semantics change, `design/ux-contract.json`, `design/brand-kit.json` and `skills/design-product-experience/SKILL.md` for meaningful UX/UI work;
-5. the owning implementation, direct consumers and nearby tests.
+3. `.engineering/commands.json` when setup/dev/test/E2E/build/package/runtime/cleanup, execution capability or publication-readiness behavior is relevant;
+4. `skills/preflight-change/SKILL.md` before publication and `skills/remote-preflight/SKILL.md` when required deterministic gates cannot run in the current agent environment;
+5. when `product-ui` is adopted and user-facing behavior/visual semantics change, `design/ux-contract.json`, `design/brand-kit.json` and `skills/design-product-experience/SKILL.md` for meaningful UX/UI work;
+6. the owning implementation, direct consumers and nearby tests.
 
 Do not load every plan or all documentation for a local change.
 
@@ -38,7 +39,7 @@ Add scoped `AGENTS.md` files only for subtrees with meaningful local invariants,
 
 ## Project operating commands
 
-Canonical repository-level command routing and the publication gate live in `.engineering/commands.json`.
+Canonical repository-level command routing, publication gate and validation execution model live in `.engineering/commands.json`.
 
 Use the declared intent rather than inventing a second command path:
 
@@ -54,7 +55,9 @@ Do not treat `e2e` and `smoke` as synonyms. Keep E2E small and focused on critic
 
 The underlying command remains native to this repository. When build/runtime/E2E behavior is affected, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup required by the local operating contract.
 
-Before publishing, use `preflight-change`: CI should confirm locally reproducible deterministic gates, not be the first normal debugging loop.
+Before publishing, use `preflight-change` to classify every required gate as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT` for the current agent/session.
+
+If a deterministic gate is automatable but unavailable to the current agent, use `remote-preflight`. Do not ask the user to become the test runner solely because the agent lacks a shell, checkout, SDK or platform toolchain.
 
 ## Product experience routing
 
@@ -97,7 +100,8 @@ Do not make a screen denser or expose internal architecture merely because the i
 8. Use `validate-change` to choose the narrowest sufficient validation while iterating; diagnose the owning invariant/root cause before patching a failure.
 9. Update only the canonical durable document/design contract whose current behavior/decision changed.
 10. When an active workstream completes, use `finalize-workstream` to transfer durable knowledge and delete the plan by default.
-11. Use `preflight-change` before publishing: refresh target base, inspect the complete diff, rerun every required locally reproducible deterministic gate on the exact head, and declare CI-only/device evidence.
+11. Use `preflight-change` before publishing: refresh target base, inspect the complete diff and classify required validation by current execution capability.
+12. Run all required `AGENT_LOCAL` gates. If deterministic gates are `REMOTE_AUTOMATED`, establish `READY_FOR_REMOTE_PREFLIGHT`, invoke `remote-preflight`, inspect failures, repair the owning cause and retrigger until automated evidence is complete or a genuine blocker appears.
 
 ## Validation routing
 
@@ -109,6 +113,12 @@ python3 scripts/verify_product_experience.py
 ```
 
 `verify_product_experience.py` is `N/A` unless `product-ui` is adopted. Use `.engineering/commands.json` for project-specific targeted/full command routing instead of duplicating command strings here.
+
+Execution evidence is reported separately:
+
+- `AGENT_LOCAL` — executed by the current agent;
+- `REMOTE_AUTOMATED` — executed by repository-owned remote automation;
+- `REAL_ENVIRONMENT` — physical/device/external/manual evidence that automation cannot truthfully replace.
 
 A missing real-device/hardware/usability run must be reported as pending; never promote synthetic evidence into a stronger claim. E2E/visual traces/screenshots/videos/logs are bounded evidence artifacts, not durable repository docs.
 
@@ -133,4 +143,4 @@ Keep this guide within the configured budget in `.engineering/documentation-poli
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, leave a material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass canonical command/test/E2E/build/artifact lifecycle or publication gate, bypass an adopted product-experience/design-system contract, or claim evidence that was not executed.
+Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, leave a material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass canonical command/test/E2E/build/artifact lifecycle or publication gate, delegate automatable deterministic validation to the user merely because the agent lacks execution capability, bypass an adopted product-experience/design-system contract, or claim evidence that was not executed.
