@@ -26,15 +26,19 @@ REQUIRED_NON_NA = {"setup", "check", "test", "build", "clean"}
 STATUSES = {"required", "recommended", "optional", "n/a"}
 PLACEHOLDER_MARKERS = ("<REPLACE_WITH_", "<PROJECT_")
 REQUIRED_PUBLICATION_FLAGS = (
-    "local_preflight_required",
+    "agent_preflight_required",
     "target_base_freshness_required",
     "full_diff_review_required",
     "material_ambiguity_must_be_resolved",
     "failure_root_cause_required",
-    "deterministic_ci_local_parity_required",
-    "ci_only_evidence_must_be_declared",
+    "execution_capability_classification_required",
+    "automatable_gates_must_not_be_delegated_to_user",
+    "remote_automated_fallback_required_when_agent_local_unavailable",
+    "deterministic_ci_command_parity_required",
+    "non_automated_evidence_must_be_declared",
     "exact_head_evidence_required",
 )
+REQUIRED_EXECUTION_CLASSES = {"agent_local", "remote_automated", "real_environment"}
 REQUIRED_CLEANUP_PATHS = {
     "success",
     "failure",
@@ -96,8 +100,8 @@ def main() -> int:
 
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
-    if not data.get("contract_version"):
-        errors.append("contract_version is required")
+    if data.get("contract_version") != "0.5.0":
+        errors.append("contract_version must be 0.5.0")
 
     commands = data.get("commands")
     if not isinstance(commands, dict):
@@ -128,6 +132,40 @@ def main() -> int:
         publication = {}
     for key in REQUIRED_PUBLICATION_FLAGS:
         expect_true(publication, key, errors, "publication_gate")
+
+    execution = data.get("validation_execution")
+    if not isinstance(execution, dict):
+        errors.append("validation_execution must be an object")
+        execution = {}
+    classes = set(execution.get("classes") or [])
+    missing_classes = sorted(REQUIRED_EXECUTION_CLASSES - classes)
+    if missing_classes:
+        errors.append("validation_execution.classes missing: " + ", ".join(missing_classes))
+    expect_true(execution, "no_human_runner_for_automatable_gates", errors, "validation_execution")
+    expect_true(execution, "remote_automation_required_when_agent_local_unavailable", errors, "validation_execution")
+
+    remote = data.get("remote_preflight")
+    if not isinstance(remote, dict):
+        errors.append("remote_preflight must be an object")
+        remote = {}
+    remote_status = remote.get("status")
+    if remote_status not in {"required", "recommended", "n/a"}:
+        errors.append("remote_preflight.status must be required, recommended or n/a")
+    if remote_status != "n/a":
+        trigger = remote.get("trigger")
+        if not isinstance(trigger, str) or not trigger.strip():
+            errors.append("remote_preflight.trigger is required when remote preflight is enabled")
+        elif not args.template_mode and any(marker in trigger for marker in PLACEHOLDER_MARKERS):
+            errors.append("unresolved remote_preflight.trigger placeholder")
+        for key in (
+            "exact_head_required",
+            "trusted_requesters_only",
+            "same_repository_prs_only_by_default",
+            "report_result_to_pr",
+        ):
+            expect_true(remote, key, errors, "remote_preflight")
+        if remote.get("execution_job_write_credentials") is not False:
+            errors.append("remote_preflight.execution_job_write_credentials must be false")
 
     e2e = data.get("end_to_end")
     if not isinstance(e2e, dict):
