@@ -8,7 +8,8 @@ Core set:
 - `structured-change` — preserve ownership, simplicity, ambiguity, resource/failure/data invariants during meaningful changes;
 - `design-product-experience` — reason through meaningful UX/UI work in the correct order, with proportional depth, before implementation/polish;
 - `validate-change` — choose the narrowest sufficient validation while iterating and diagnose failures at their owning invariant;
-- `preflight-change` — establish exact-head/base `READY_FOR_CI` only after material ambiguity, full-diff review and all locally reproducible deterministic gates are resolved;
+- `preflight-change` — establish exact-head/base automated-validation readiness and classify required gates as agent-local, remote-automated or real-environment;
+- `remote-preflight` — trigger, inspect and iterate repository-owned remote deterministic validation when the current agent lacks equivalent local execution capability, without delegating automatable tests to the user;
 - `finalize-workstream` — transfer durable knowledge and delete completed plans by default;
 - `review-reference-quality` — perform an L0/L1/L2 gap review before important milestones.
 
@@ -16,6 +17,6 @@ Projects may specialize local copies. Record customization in `.engineering/base
 
 `design-product-experience` is conditional in use: headless repositories keep the Skill dormant, while repositories adopting `product-ui` use it for meaningful structural UX, interaction or motion/visual-system changes. Local visual-only token/style edits should stay proportional rather than expanding into unnecessary design process.
 
-`preflight-change` is a publication boundary, not a replacement for the fast edit-test loop. Use `validate-change` while iterating, then use preflight once the change is believed complete and again after any head/base change that invalidates evidence.
+`preflight-change` is a publication boundary, not a replacement for the fast edit-test loop. It first determines what the current agent can execute. If required deterministic gates are `REMOTE_AUTOMATED`, hand off to `remote-preflight`; do not ask the user to become the test runner merely because the current agent lacks a shell/SDK/toolchain.
 
 Do not create a Skill for one-off instructions. A Skill is justified when a procedure recurs, is conditional, has non-obvious ordering/hazards, or saves substantial repeated agent context.
