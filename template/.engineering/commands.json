@@ -21,6 +21,7 @@
     "material_ambiguity_must_be_resolved": true,
     "failure_root_cause_required": true,
     "execution_capability_classification_required": true,
+    "blast_radius_profile_selection_required": true,
     "automatable_gates_must_not_be_delegated_to_user": true,
     "remote_automated_fallback_required_when_agent_local_unavailable": true,
     "deterministic_ci_command_parity_required": true,
@@ -32,9 +33,23 @@
     "no_human_runner_for_automatable_gates": true,
     "remote_automation_required_when_agent_local_unavailable": true
   },
+  "validation_profiles": {
+    "default": "auto",
+    "profiles": ["lean", "scoped", "strong", "full"],
+    "selector": "<REPLACE_WITH_PROJECT_SCOPE_SELECTOR_OR_NA>",
+    "unknown_executable_paths_fail_safe": true,
+    "selector_changes_force_full": true,
+    "promotion_validation_full": true,
+    "automatic_escalation_allowed": true,
+    "silent_downgrade_below_auto_forbidden": true,
+    "report_selected_profile_and_reason": true
+  },
   "remote_preflight": {
     "status": "recommended",
     "trigger": "<REPLACE_WITH_AGENT_TRIGGER_OR_NA>",
+    "default_profile": "auto",
+    "stronger_profile_override_allowed": true,
+    "weaker_profile_override_requires_explicit_justification": true,
     "exact_head_required": true,
     "trusted_requesters_only": true,
     "same_repository_prs_only_by_default": true,
