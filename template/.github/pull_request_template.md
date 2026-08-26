@@ -18,9 +18,17 @@
 
 <!-- If applicable: canonical command intents affected; build identity; artifact manifest/checksum/build delta/retention; localhost/process/port/temp cleanup. Otherwise N/A. -->
 
+## Pre-publication readiness
+
+<!-- Exact HEAD and intended target/base revision; material ambiguity resolved; full diff reviewed; target-base freshness; READY_FOR_CI or known-red reason. CI should confirm locally reproducible deterministic gates rather than discover them. -->
+
 ## Validation
 
-<!-- Exact check/test/e2e/build/smoke/accessibility/visual/manual/device/hardware/usability evidence executed. Never claim evidence not run. -->
+<!-- Exact check/test/e2e/build/smoke/accessibility/visual/manual/device/hardware/usability evidence executed. Use PASS/FAIL/PENDING/N/A. Never claim evidence not run. -->
+
+## CI-only / real-environment evidence
+
+<!-- Gates that genuinely cannot run in the supported local environment (CI-only, physical device, hardware, external service, representative user). State PENDING/N/A and why. -->
 
 ## E2E / experience evidence
 
