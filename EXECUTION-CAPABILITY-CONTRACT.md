@@ -1,14 +1,16 @@
 # Validation Execution Capability Contract
 
-Version: 0.1.0
+Version: 0.2.0
 
-This contract defines **who executes required validation** when a repository is maintained by different kinds of coding agents. It complements `STANDARD.md` and `OPERATING-CONTRACT.md` without changing the strength of the required tests.
+This contract defines **who executes required validation** and **how much automated validation is justified** when a repository is maintained by different kinds of coding agents. It complements `STANDARD.md` and `OPERATING-CONTRACT.md` without weakening required evidence.
 
-The governing rule is:
+The governing rules are:
 
 > Automation should execute automatable work. A human must not become the fallback test runner merely because a coding agent lacks a local shell, checkout, SDK or build environment.
 
-A deterministic gate remains required even when the current agent cannot execute it locally. The execution location changes; the evidence requirement does not.
+> Validation depth follows blast radius. Do not run a full repository/release matrix when a narrower automated profile can prove the changed invariants.
+
+A deterministic gate remains required even when the current agent cannot execute it locally. The execution location changes; the evidence requirement does not. Likewise, remote execution does not imply running every possible gate.
 
 ## 1. Execution classes
 
@@ -53,7 +55,96 @@ Examples:
 
 `REAL_ENVIRONMENT` evidence may require the user or an authorized device/lab operator. It must never be used as a bucket for ordinary compile/test/build work that is merely inconvenient for the current agent.
 
-## 2. No-human-runner principle
+## 2. Validation depth profiles
+
+Execution location and validation depth are separate decisions.
+
+The repository should expose an `auto` selector that maps the exact change blast radius to the narrowest sufficient profile. Recommended profiles are:
+
+### `LEAN`
+
+Use for changes with no executable/product/runtime blast radius, or for cheap universal guards that should always run.
+
+Typical evidence:
+
+- repository/governance verifier scripts;
+- changed-file policy checks;
+- syntax/config validation;
+- lightweight formatter/linter checks where cheap;
+- documentation/link/schema checks when applicable.
+
+A docs-only PR should not initialize a full Android SDK, NDK, native toolchain or release build merely because those jobs exist elsewhere.
+
+### `SCOPED`
+
+Use for implementation changes whose blast radius is contained to one or a small number of owners/modules and their direct consumers.
+
+Typical evidence:
+
+- formatter/static analysis;
+- affected module compilation;
+- focused unit/component tests;
+- affected direct-consumer/contract tests;
+- affected-module lint;
+- cheap compile checks for known integration consumers.
+
+Do not build unrelated modules merely for completeness theater.
+
+### `STRONG`
+
+Use for cross-boundary or release-sensitive changes where a narrow module test cannot prove safety.
+
+Typical escalation signals:
+
+- public/shared API or protocol changes;
+- persistence/migration/security/trust-boundary changes;
+- native/JNI changes;
+- Android manifest, packaging, R8/ProGuard, dependency or variant behavior;
+- changes affecting multiple dependency cones;
+- runtime/resource/concurrency/lifecycle ownership;
+- shared integration fixtures or consumer compatibility.
+
+Typical evidence adds the relevant broader integration cone, release/R8/minification or packaging checks, native host tests, assembled test APKs/artifacts, or other cross-boundary gates actually implicated by the change.
+
+`STRONG` does not automatically mean every repository test. It means all evidence necessary for the material blast radius.
+
+### `FULL`
+
+Use when the selector itself cannot safely narrow the blast radius or when repository/release policy requires complete validation.
+
+Typical triggers:
+
+- promotion PRs to the stable/release branch;
+- release-candidate validation;
+- changes to CI scope detection, global build logic, dependency graph/inventory, toolchain/SDK/NDK configuration, or other machinery that decides what normally gets skipped;
+- unknown/unclassified executable paths;
+- intentionally requested full validation;
+- periodic/nightly/reference-grade health runs where justified.
+
+`FULL` should be exceptional on ordinary feature PRs, not the default.
+
+## 3. Automatic profile selection
+
+Profile selection should be deterministic and project-owned, normally from the changed paths plus repository dependency/ownership knowledge.
+
+The default remote trigger should request `auto`, not `full`.
+
+The selector should:
+
+- identify changed paths against the exact intended base/head;
+- treat docs-only/metadata-only changes cheaply when safe;
+- map implementation files to owning modules/components;
+- expand to direct consumers or dependency cones when contracts cross boundaries;
+- escalate native/build/package/security/persistence/global configuration changes appropriately;
+- fail safe to a stronger profile when an executable path is unknown;
+- force `FULL` when the selector/build inventory itself changes and therefore cannot be trusted to narrow its own validation;
+- report the chosen profile, reason and affected modules/jobs in the run summary.
+
+Automatic **escalation** is allowed whenever additional risk is detected. Automatic silent **downgrade** below the project selector is not.
+
+A human/agent may explicitly request a stronger profile (`strong`/`full`). A weaker-than-auto override should be exceptional, justified in the PR evidence, and should not be available as a casual way to skip required gates.
+
+## 4. No-human-runner principle
 
 An automatable deterministic gate MUST NOT be delegated to the user solely because the coding agent lacks local execution capability.
 
@@ -68,7 +159,8 @@ Correct:
 ```text
 agent has no Android SDK
 -> classify Gradle/R8 gate as REMOTE_AUTOMATED
--> trigger repository-owned remote preflight
+-> select validation profile from blast radius
+-> trigger repository-owned remote preflight with profile=auto
 -> inspect result/logs
 -> fix owning cause
 -> retrigger automation
@@ -76,22 +168,25 @@ agent has no Android SDK
 
 A user may explicitly choose a manual workaround, but repository procedure must not make that the normal path.
 
-## 3. Agent-triggerable remote preflight
+## 5. Agent-triggerable remote preflight
 
 Repositories expected to be maintained by execution-limited agents should expose an agent-triggerable remote preflight mechanism.
 
-The trigger may be a trusted PR comment such as `/preflight`, a dispatch API, a checked-in bot command or another repository-owned automation surface. The exact mechanism is project-owned and declared in `.engineering/commands.json`.
+The trigger may be a trusted PR comment such as `/preflight`, `/preflight strong` or `/preflight full`, a dispatch API, a checked-in bot command or another repository-owned automation surface. The exact mechanism is project-owned and declared in `.engineering/commands.json`.
+
+The default command should be equivalent to `/preflight auto`.
 
 A remote preflight must:
 
 - resolve the exact pull-request/head revision to validate;
+- determine the validation profile from blast radius unless a stronger profile was explicitly requested;
 - execute the same project-owned deterministic semantics used by normal CI/local tooling rather than inventing a second test policy;
-- report PASS/FAIL and enough identity/log location for the agent to diagnose failures;
+- report chosen profile, reason, affected modules/jobs, PASS/FAIL and enough identity/log location for the agent to diagnose failures;
 - be safely retriggerable after a fix;
 - keep failure artifacts bounded and privacy-safe;
 - avoid production secrets for untrusted or change-controlled code execution.
 
-## 4. Security model for PR-triggered remote execution
+## 6. Security model for PR-triggered remote execution
 
 When a PR comment or equivalent trigger executes code from a change branch:
 
@@ -105,18 +200,18 @@ When a PR comment or equivalent trigger executes code from a change branch:
 
 A convenient remote runner is not allowed to weaken the repository trust boundary.
 
-## 5. Readiness states
+## 7. Readiness states
 
 `preflight-change` reports one of these automation-readiness states:
 
-- `READY_FOR_CI` — the current agent has equivalent local execution capability and every required `AGENT_LOCAL` deterministic gate passed; CI can independently confirm;
-- `READY_FOR_REMOTE_PREFLIGHT` — semantic/base/diff checks and all available `AGENT_LOCAL` gates passed, while one or more required deterministic gates are `REMOTE_AUTOMATED`; the agent should trigger remote preflight rather than ask the user to run them;
-- `AUTOMATED_PREFLIGHT_CONFIRMED` — every required deterministic automated gate for the exact head/base passed, whether executed locally, remotely, or both;
-- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — material ambiguity, base/diff uncertainty, failed agent-local gate, missing required automation routing, or another blocker prevents truthful automated validation.
+- `READY_FOR_CI` — the current agent has equivalent local execution capability and every required `AGENT_LOCAL` deterministic gate for the selected blast-radius profile passed; CI can independently confirm;
+- `READY_FOR_REMOTE_PREFLIGHT` — semantic/base/diff checks and all available `AGENT_LOCAL` gates passed, while one or more required gates in the selected profile are `REMOTE_AUTOMATED`; the agent should trigger remote preflight rather than ask the user to run them;
+- `AUTOMATED_PREFLIGHT_CONFIRMED` — every required deterministic automated gate in the selected profile for the exact head/base passed, whether executed locally, remotely, or both;
+- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — material ambiguity, base/diff uncertainty, failed agent-local gate, missing required automation routing, invalid profile selection, or another blocker prevents truthful automated validation.
 
 Real-environment evidence is tracked separately and may remain `PENDING` after automated preflight. It still blocks any stronger product/release claim that depends on it.
 
-## 6. Failure loop
+## 8. Failure loop
 
 For a failing `REMOTE_AUTOMATED` gate:
 
@@ -126,14 +221,19 @@ remote failure
 -> classify failure
 -> identify violated invariant + owner
 -> patch owning cause
+-> re-evaluate blast radius/profile
 -> review diff/base impact
 -> retrigger remote preflight
 ```
 
+A fix can change the validation profile. For example, a local Kotlin fix may remain `SCOPED`, while adding a ProGuard rule or global Gradle change can legitimately escalate the next run to `STRONG` or `FULL`.
+
 Do not ask the user to rerun the same automatable command between iterations. Do not repeatedly patch symptoms without a new falsifiable hypothesis.
 
-## 7. Capability gaps are repository defects
+## 9. Capability or scope gaps are repository defects
 
-If a required deterministic gate is automatable but the current agent cannot run it locally **and** the repository exposes no usable remote execution path, classify the situation as an automation-capability gap.
+If a required deterministic gate is automatable but the current agent cannot run it locally **and** the repository exposes no usable remote execution path, classify the situation as an `AUTOMATION_CAPABILITY_GAP`.
 
-The preferred fix is to add or repair agent-triggerable remote automation. The fallback is not to permanently assign the command to a human.
+If the repository cannot reliably decide what is affected, classify the situation as a `VALIDATION_SCOPE_GAP` and fail safe to a stronger profile while improving the selector.
+
+The preferred fix is to add or repair agent-triggerable remote automation and blast-radius detection. The fallback is not to permanently assign the command to a human or run the entire repository on every ordinary PR forever.
