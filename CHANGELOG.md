@@ -61,7 +61,7 @@ Adds end-to-end validation as a first-class but stack-neutral part of the projec
 
 - new canonical `e2e` command intent in `.engineering/commands.json`;
 - E2E is recommended rather than universally mandatory, and may be `n/a` only when no meaningful whole-system/user journey exists;
-- L1 expects automated end-to-end evidence for critical workflows when lower-level tests cannot establish the complete user/system outcome;
+- L1 expects automated end-to-end evidence for critical workflows when lower-level tests cannot establish the full outcome;
 - L2 expects stronger coverage of critical journeys, representative failure/recovery paths and real artifact/device execution where applicable;
 - E2E is explicitly distinct from `smoke`: smoke proves minimal runtime/artifact viability, E2E proves a complete workflow outcome;
 - E2E runs inherit the zero-residue contract for processes, listeners, browser/device sessions, downloads, test data, temporary workspaces, logs, screenshots, traces and videos;
