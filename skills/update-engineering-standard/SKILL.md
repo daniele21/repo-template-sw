@@ -99,6 +99,50 @@ Do not treat migration as permission to redesign the product. The semantic migra
 
 A metadata-only 0.5 bump is not a valid migration.
 
+## 0.6 pre-publication readiness migration guidance
+
+When migrating from 0.5.x to 0.6.x, explicitly classify and merge:
+
+- `publication_gate` semantics in `.engineering/commands.json`;
+- the core `preflight-change` Skill;
+- material ambiguity resolution before implementation;
+- root-cause-first failure handling and repeated-failure hypothesis reset;
+- exact-head and intended-target/base freshness;
+- complete-diff review;
+- local/CI command parity for deterministic gates;
+- PR evidence that distinguishes PASS/FAIL/PENDING/N/A;
+- Android-specific deterministic preflight gates where applicable.
+
+Preserve project-native commands. Do not add a universal wrapper merely for compliance.
+
+A metadata-only 0.6 bump is not a valid migration.
+
+## 0.7 execution-capability and blast-radius migration guidance
+
+When migrating from 0.6.x to 0.7.x, the goal is to preserve strong validation while removing two kinds of waste: **human-as-runner fallback** and **full-CI-by-default**.
+
+Explicitly classify and merge:
+
+- `EXECUTION-CAPABILITY-CONTRACT.md` semantics;
+- `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` executor classification;
+- the no-human-runner invariant: ordinary deterministic compile/test/lint/R8/build work is not delegated to the user merely because an agent lacks a local environment;
+- `remote-preflight` Skill and an agent-triggerable repository-owned remote execution surface when supported agents need one;
+- validation depth profiles `LEAN`, `SCOPED`, `STRONG`, `FULL`, with `auto` as the normal selection mode;
+- a deterministic project-owned blast-radius selector that reports profile, reason and affected modules/jobs;
+- fail-safe escalation for unknown executable paths;
+- `FULL` validation when the selector/global build inventory/toolchain/dependency graph itself changes or on stable/release promotion according to project policy;
+- automatic escalation when a repair broadens blast radius;
+- prohibition on silent downgrade below the `auto` profile;
+- least-privilege remote execution: trusted requesters, exact-head pinning, same-repository heads by default, no production/signing/deployment secrets in the code-execution job, and separate report-writing permission when necessary;
+- readiness states `READY_FOR_REMOTE_PREFLIGHT` and `AUTOMATED_PREFLIGHT_CONFIRMED`;
+- PR evidence separating selected validation profile, agent-local gates, remote-automated gates and real-environment evidence.
+
+Do not replace an existing stronger scope detector. For example, a repository that already maps changed paths to Gradle modules/native/packaging jobs should extend that mechanism to emit the standard profiles rather than introduce a parallel selector.
+
+Do not make developers or repository owners choose a label on every PR just to control cost. The normal path is deterministic `auto` selection; manual input is for explicit stronger validation or exceptional justified downgrade, not routine routing.
+
+A metadata-only 0.7 bump, a `/preflight` trigger that always runs the entire repository, or a process that still asks the user to run automatable commands is not a valid migration.
+
 ## Output
 
 Report:
@@ -106,8 +150,9 @@ Report:
 - old -> new baseline version;
 - deltas applied/merged/deferred/not applicable;
 - local customizations preserved;
-- operating/E2E/product-experience mappings and migrations;
-- validation/evidence executed;
+- operating/E2E/product-experience/execution-capability mappings and migrations;
+- selected validation profile and why;
+- validation/evidence executed locally, remotely and in real environments;
 - unresolved conflicts/deferred migrations.
 
 A version bump without applying or explicitly classifying relevant semantic deltas is not a valid migration.

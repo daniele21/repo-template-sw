@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.7.0 — 2026-08-26
+
+Makes preflight execution-capability and blast-radius aware so strong validation neither turns the repository owner into a manual CI runner nor forces full CI on every ordinary PR:
+
+- introduces `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` validation execution classes through `EXECUTION-CAPABILITY-CONTRACT.md`;
+- establishes the **no-human-runner principle**: an automatable deterministic gate must not be delegated to the user solely because the current coding agent cannot execute it locally;
+- keeps **CI should confirm, not discover** when the agent has an equivalent local environment, while explicitly allowing CI/repository automation to become the execution backend when it does not;
+- introduces blast-radius validation profiles `LEAN`, `SCOPED`, `STRONG` and `FULL`, with deterministic `auto` selection as the normal path;
+- defines `LEAN` for docs/governance/cheap universal guards, `SCOPED` for contained owner/module changes, `STRONG` for cross-boundary/release-sensitive changes, and `FULL` for promotion/release or changes where narrowing cannot safely be trusted;
+- requires selectors to fail safe stronger for unknown executable paths and to force `FULL` when CI-scope/global-build/dependency-inventory/toolchain machinery that controls skipping is itself modified;
+- allows automatic escalation and explicit stronger overrides, while forbidding silent downgrade below the `auto` profile;
+- adds `READY_FOR_REMOTE_PREFLIGHT` and `AUTOMATED_PREFLIGHT_CONFIRMED` alongside the local-capable `READY_FOR_CI` path;
+- upgrades `.engineering/commands.json` to operating contract `0.5.0` with machine-readable execution-capability, validation-profile, remote-fallback and remote-preflight security requirements;
+- adds the core `remote-preflight` Skill for triggering the narrowest sufficient remote automation, reading logs, classifying failures, fixing the owning cause and retriggering without asking the user to run the same command;
+- upgrades `preflight-change` to select validation depth from blast radius and then classify every required gate by the current agent's actual execution capability;
+- strengthens Android guidance so Gradle, Kotlin compilation, Lint, R8/minification, unit tests and ordinary APK/package builds are `REMOTE_AUTOMATED` rather than user tasks when a ChatGPT Project lacks Android tooling;
+- defines a least-privilege pattern for PR-triggered remote validation: trusted requesters, exact-head pinning, same-repository heads by default, no production/signing/deployment secrets in the code-execution job, and separate reporting permission when needed;
+- updates agent/contributor/PR routing and machine verifiers so repositories must preserve selected profile plus the distinction between agent-local, remote-automated and real-environment evidence.
+
+The delivery model is now: **reason -> determine blast radius -> select the narrowest sufficient profile -> classify executor -> automate deterministic validation -> diagnose/fix autonomously -> request human/device evidence only when genuinely non-automatable.**
+
 ## 0.6.0 — 2026-08-26
 
 Moves coding-agent quality assurance decisively before remote CI and makes delivery readiness a first-class engineering contract:
@@ -61,7 +82,7 @@ Adds end-to-end validation as a first-class but stack-neutral part of the projec
 
 - new canonical `e2e` command intent in `.engineering/commands.json`;
 - E2E is recommended rather than universally mandatory, and may be `n/a` only when no meaningful whole-system/user journey exists;
-- L1 expects automated end-to-end evidence for critical workflows when lower-level tests cannot establish the full outcome;
+- L1 expects automated end-to-end evidence for critical workflows when lower-level tests cannot establish the complete user/system outcome;
 - L2 expects stronger coverage of critical journeys, representative failure/recovery paths and real artifact/device execution where applicable;
 - E2E is explicitly distinct from `smoke`: smoke proves minimal runtime/artifact viability, E2E proves a complete workflow outcome;
 - E2E runs inherit the zero-residue contract for processes, listeners, browser/device sessions, downloads, test data, temporary workspaces, logs, screenshots, traces and videos;

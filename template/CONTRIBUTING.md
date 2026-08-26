@@ -10,7 +10,7 @@ Resolve material ambiguity from canonical repository evidence before implementat
 
 ## Canonical project commands
 
-`.engineering/commands.json` is the canonical repository-level mapping for `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean`, and declares the publication-readiness gate.
+`.engineering/commands.json` is the canonical repository-level mapping for `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean`, and declares publication readiness, validation execution classes and remote-preflight routing.
 
 Use the project's native tooling behind those intents. Do not introduce a second undocumented build/test/E2E/run path merely for convenience.
 
@@ -40,6 +40,14 @@ python3 scripts/verify_agent_context.py
 
 Use `.engineering/commands.json` for actual project `check`/`test`/`e2e`/`build`/`smoke` commands.
 
+For each required final gate, classify execution for the current agent/session as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT`.
+
+- Run `AGENT_LOCAL` gates directly.
+- Use `skills/remote-preflight/SKILL.md` for deterministic `REMOTE_AUTOMATED` gates.
+- Reserve `REAL_ENVIRONMENT` for evidence that genuinely requires representative hardware, external authority/environment or manual judgement.
+
+Do not ask the user to run an automatable deterministic command merely because the current coding agent lacks a checkout, shell, SDK or platform toolchain. Missing remote execution for such a gate is an automation-capability gap to fix, not a permanent human task.
+
 Use E2E only when a complete critical user/system outcome needs to be proven across assembled boundaries and lower-level tests are insufficient. `smoke` proves minimum built/runtime viability and is not a substitute for E2E.
 
 For UI changes, validate only the experience layers relevant to the claim: component/state behavior, critical-journey E2E, accessibility, adaptive layout, visual regression for stable high-risk surfaces, and usability evidence when the risk/value justifies it. A happy-path screenshot alone is not sufficient.
@@ -50,11 +58,13 @@ When build/runtime/package behavior changes, validate applicable operating invar
 
 ## Pre-publication readiness
 
-Before pushing/opening/updating a PR for normal readiness confirmation, use `skills/preflight-change/SKILL.md` and establish `READY_FOR_CI` on the exact head.
+Before pushing/opening/updating a PR, use `skills/preflight-change/SKILL.md` on the exact head.
 
-That requires the intended target base to be refreshed, the complete diff reviewed, no unresolved material ambiguity, and every required locally reproducible deterministic gate to pass. CI/device/hardware/external evidence that cannot run locally must be explicitly declared pending rather than treated as passed.
+If every required deterministic gate can run in the current agent environment and passes, record `READY_FOR_CI` and use CI as independent confirmation.
 
-CI should independently confirm the same project-owned deterministic validation semantics. If CI repeatedly discovers format/lint/compile/test failures that local preflight could reproduce, close the local/CI parity gap rather than normalizing CI as the edit-test loop.
+If required deterministic gates are automatable but unavailable to the current agent, record `READY_FOR_REMOTE_PREFLIGHT` after semantic/base/diff and available local checks pass, then use `skills/remote-preflight/SKILL.md` to trigger repository-owned remote automation. The agent should inspect failures, fix the owning cause and retrigger without delegating the loop to the user.
+
+`AUTOMATED_PREFLIGHT_CONFIRMED` requires every required deterministic automated gate to pass on the exact head/base. Real-environment evidence may remain explicitly pending and still blocks stronger claims that depend on it.
 
 ## Dependencies and architecture
 
@@ -62,8 +72,8 @@ Avoid dynamic versions and speculative dependencies. New abstractions/dependenci
 
 ## Pull requests
 
-Keep PRs focused. Describe what changed, why, user/developer impact, relevant failure/resource/operating/experience implications, and validation executed. Distinguish unit/integration/E2E/smoke/accessibility/visual/usability evidence and do not claim hardware/device/user evidence that was not run.
+Keep PRs focused. Describe what changed, why, user/developer impact, relevant failure/resource/operating/experience implications, and validation executed. Distinguish agent-local, remote-automated and real-environment evidence and do not claim hardware/device/user evidence that was not run.
 
-Record preflight head/base identity and `READY_FOR_CI` vs known pending/failed gates. A known-red draft may be published for explicit collaboration/investigation, but must not be represented as ready.
+Record preflight head/base identity and the actual readiness state: `READY_FOR_CI`, `READY_FOR_REMOTE_PREFLIGHT`, `AUTOMATED_PREFLIGHT_CONFIRMED` or a blocked state. A known-red draft may be published for explicit collaboration/investigation, but must not be represented as ready.
 
 Canonical branches should be protected with pull requests and required checks according to the project's branching/release model.

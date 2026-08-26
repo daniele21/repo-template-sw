@@ -31,15 +31,27 @@ Typical mapping:
 - `clean` — remove only project-owned generated output;
 - `stop` — mark `n/a` unless the project owns a helper/local server/process that needs explicit shutdown.
 
-During implementation, use the cheapest affected Gradle tasks first. Before publication, `preflight-change` must execute every locally reproducible deterministic Android gate required by blast radius on the exact head — including formatter/Spotless-style checks, static analysis/detekt-style checks, affected Kotlin/Java compilation, relevant unit/contract tests, Android Lint and assemble/package tasks when applicable. The exact task names remain project-owned through `.engineering/commands.json`.
+During implementation, use the cheapest affected Gradle tasks first when the current agent has a supported Android execution environment.
 
-A formatting, lint, compile or host-unit failure that could have been reproduced through the supported Gradle environment should normally never be first discovered by GitHub Actions. If it is, treat it as local/CI parity or preflight-selection feedback and move that gate earlier rather than accepting repeated CI patch cycles.
+Before publication, `preflight-change` selects every deterministic Android gate required by blast radius — including formatter/Spotless-style checks, static analysis/detekt-style checks, affected Kotlin/Java compilation, relevant unit/contract tests, Android Lint, R8/minification and assemble/package tasks when applicable — and classifies each for the current agent/session:
+
+- `AGENT_LOCAL` when the agent has the required checkout/JDK/SDK/NDK/tooling;
+- `REMOTE_AUTOMATED` when the gate is automatable but the current agent lacks that environment;
+- `REAL_ENVIRONMENT` only when the claim genuinely depends on a representative device/hardware/manual environment.
+
+A ChatGPT Project that can inspect/write GitHub but cannot execute Gradle must **not** ask the user to run `./gradlew`, R8, Lint, unit tests or ordinary APK builds as its normal validation loop. Those gates are `REMOTE_AUTOMATED` and must be executed through repository-owned remote preflight.
+
+When an equivalent agent-local Gradle environment exists, a formatting, lint, compile, host-unit or deterministic R8/build failure should normally never be first discovered by GitHub Actions. If it is, treat it as local/remote parity or preflight-selection feedback and move that gate earlier.
+
+When no equivalent agent-local environment exists, GitHub Actions or another secured remote runner is a valid execution backend. The failure should be consumed by the agent, diagnosed at the owning invariant, fixed and remotely retriggered without turning the user into a runner.
+
+For PR-comment remote preflight, prefer trusted requesters, exact PR-head pinning, same-repository heads by default, no production/signing/deployment secrets in the code-execution job, read-only/no write credentials while PR code executes, and a separate reporting job if PR write permission is required.
 
 Keep E2E small and critical: first launch, primary create/use/save flow, persistence/restart, import/export or a representative failure/recovery journey when those behaviors are product-critical. Prefer unit/integration tests for deterministic lower-level behavior.
 
 When the product claim depends on the real APK/device surface, execute E2E on the built artifact and on a representative physical device when emulator evidence is insufficient. Device/emulator E2E must clean run-owned app data, test fixtures, helper processes and localhost listeners according to the zero-residue contract.
 
-Physical-device/thermal/performance/TalkBack evidence that cannot truthfully run in the local preflight environment may remain explicitly pending at `READY_FOR_CI`; it still blocks stronger product-complete claims that require it.
+Physical-device/thermal/performance/TalkBack evidence may remain explicitly pending after `AUTOMATED_PREFLIGHT_CONFIRMED` when it cannot truthfully run through ordinary automation; it still blocks stronger product-complete claims that require it.
 
 Each material APK/AAB build must carry a unique build identity distinct from the product version. Put product version, build ID and source revision in the artifact name/manifest; use Android `versionCode`/`versionName` consistently with release requirements rather than incrementing the marketing version for every local build.
 
