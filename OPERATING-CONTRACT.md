@@ -402,7 +402,7 @@ Prefer:
 - project-local or isolated virtual environments;
 - test-specific data directories/databases;
 - explicit environment overrides;
-- no permanent edits to shell profiles, PATH, registry or global config unless the project genuinely requires it;
+- no permanent edits to shell profiles, PATH, registry or global config unless the project genuinely requires them;
 - no secrets/private data in build output, logs, screenshots, traces or cached artifacts.
 
 E2E accounts/data should be disposable or namespaced when possible. Never run destructive E2E cleanup against production/user data without an explicit protected test boundary.
