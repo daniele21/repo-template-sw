@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.0 — 2026-08-26
+
+Moves coding-agent quality assurance decisively before remote CI and makes delivery readiness a first-class engineering contract:
+
+- introduces the rule **CI should confirm, not discover** for deterministic repository failures that can be reproduced locally;
+- adds a machine-readable `publication_gate` to `.engineering/commands.json` without forcing a universal wrapper command or replacing stack-native tooling;
+- adds the core `preflight-change` Skill, which establishes `READY_FOR_CI` only after material ambiguity is resolved, the intended target base is fresh, the complete diff is reviewed, and every required locally reproducible deterministic gate passes on the exact head;
+- distinguishes iteration validation (`validate-change`) from final publication readiness (`preflight-change`);
+- adds an explicit material-ambiguity protocol: inspect canonical repository evidence first, then ask the user when unresolved alternatives would materially change behavior, contracts, persistence, security, lifecycle, compatibility, acceptance criteria or UX;
+- adds a failure root-cause protocol that classifies failures before modifying production code and prohibits test suppression or repeated symptom patching without a new falsifiable hypothesis;
+- makes stacked/base-dependent work conditional until dependencies land and exact-head/base validation is refreshed;
+- requires deterministic local/CI parity where practical so GitHub Actions invokes the same project-owned validation semantics used by developers/agents;
+- strengthens PR readiness reporting with PASS/FAIL/PENDING/N/A evidence and explicit CI-only/device/hardware pending gates;
+- extends Android guidance so cheap format/lint/compile/unit gates are expected before publication rather than being delegated to Actions;
+- adds L2 feedback through CI first-pass health so recurring avoidable failures are systematically moved earlier into preflight.
+
+The delivery model is now: **reason first -> validate locally -> prove exact-head readiness -> CI confirms -> stronger real-environment evidence completes the claim.**
+
 ## 0.5.0 — 2026-08-23
 
 Makes product-experience reasoning an explicit, ordered and proportional workflow instead of a flat collection of UX/UI requirements:
@@ -43,7 +61,7 @@ Adds end-to-end validation as a first-class but stack-neutral part of the projec
 
 - new canonical `e2e` command intent in `.engineering/commands.json`;
 - E2E is recommended rather than universally mandatory, and may be `n/a` only when no meaningful whole-system/user journey exists;
-- L1 expects automated end-to-end evidence for critical workflows when lower-level tests cannot establish the full outcome;
+- L1 expects automated end-to-end evidence for critical workflows when lower-level tests cannot establish the complete user/system outcome;
 - L2 expects stronger coverage of critical journeys, representative failure/recovery paths and real artifact/device execution where applicable;
 - E2E is explicitly distinct from `smoke`: smoke proves minimal runtime/artifact viability, E2E proves a complete workflow outcome;
 - E2E runs inherit the zero-residue contract for processes, listeners, browser/device sessions, downloads, test data, temporary workspaces, logs, screenshots, traces and videos;
