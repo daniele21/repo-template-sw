@@ -32,6 +32,7 @@ REQUIRED_PUBLICATION_FLAGS = (
     "material_ambiguity_must_be_resolved",
     "failure_root_cause_required",
     "execution_capability_classification_required",
+    "blast_radius_profile_selection_required",
     "automatable_gates_must_not_be_delegated_to_user",
     "remote_automated_fallback_required_when_agent_local_unavailable",
     "deterministic_ci_command_parity_required",
@@ -39,6 +40,7 @@ REQUIRED_PUBLICATION_FLAGS = (
     "exact_head_evidence_required",
 )
 REQUIRED_EXECUTION_CLASSES = {"agent_local", "remote_automated", "real_environment"}
+REQUIRED_VALIDATION_PROFILES = {"lean", "scoped", "strong", "full"}
 REQUIRED_CLEANUP_PATHS = {
     "success",
     "failure",
@@ -144,6 +146,31 @@ def main() -> int:
     expect_true(execution, "no_human_runner_for_automatable_gates", errors, "validation_execution")
     expect_true(execution, "remote_automation_required_when_agent_local_unavailable", errors, "validation_execution")
 
+    profiles = data.get("validation_profiles")
+    if not isinstance(profiles, dict):
+        errors.append("validation_profiles must be an object")
+        profiles = {}
+    if profiles.get("default") != "auto":
+        errors.append("validation_profiles.default must be auto")
+    configured_profiles = set(profiles.get("profiles") or [])
+    missing_profiles = sorted(REQUIRED_VALIDATION_PROFILES - configured_profiles)
+    if missing_profiles:
+        errors.append("validation_profiles.profiles missing: " + ", ".join(missing_profiles))
+    selector = profiles.get("selector")
+    if not isinstance(selector, str) or not selector.strip():
+        errors.append("validation_profiles.selector is required")
+    elif not args.template_mode and any(marker in selector for marker in PLACEHOLDER_MARKERS):
+        errors.append("unresolved validation_profiles.selector placeholder")
+    for key in (
+        "unknown_executable_paths_fail_safe",
+        "selector_changes_force_full",
+        "promotion_validation_full",
+        "automatic_escalation_allowed",
+        "silent_downgrade_below_auto_forbidden",
+        "report_selected_profile_and_reason",
+    ):
+        expect_true(profiles, key, errors, "validation_profiles")
+
     remote = data.get("remote_preflight")
     if not isinstance(remote, dict):
         errors.append("remote_preflight must be an object")
@@ -157,7 +184,11 @@ def main() -> int:
             errors.append("remote_preflight.trigger is required when remote preflight is enabled")
         elif not args.template_mode and any(marker in trigger for marker in PLACEHOLDER_MARKERS):
             errors.append("unresolved remote_preflight.trigger placeholder")
+        if remote.get("default_profile") != "auto":
+            errors.append("remote_preflight.default_profile must be auto")
         for key in (
+            "stronger_profile_override_allowed",
+            "weaker_profile_override_requires_explicit_justification",
             "exact_head_required",
             "trusted_requesters_only",
             "same_repository_prs_only_by_default",
