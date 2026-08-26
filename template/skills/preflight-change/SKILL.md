@@ -1,19 +1,19 @@
 ---
 name: preflight-change
-description: Establish exact-head automated-validation readiness by resolving material ambiguity, verifying target-base freshness, reviewing the complete diff, classifying validation by execution capability and running or routing every required deterministic gate without turning the user into a test runner.
+description: Establish exact-head automated-validation readiness by resolving material ambiguity, verifying target-base freshness, reviewing the complete diff, selecting validation depth from blast radius, classifying execution capability and routing every required deterministic gate without turning the user into a test runner.
 ---
 
 # Preflight Change
 
-Use this Skill immediately before pushing, opening/updating a PR, or otherwise publishing a change for automated validation. `validate-change` owns the iterative test loop; this Skill owns the publication/readiness decision and execution routing.
+Use this Skill immediately before pushing, opening/updating a PR, or otherwise publishing a change for automated validation. `validate-change` owns the iterative test loop; this Skill owns final publication/readiness, validation-depth selection and execution routing.
 
 Read `EXECUTION-CAPABILITY-CONTRACT.md` when the current agent may lack a shell, checkout, SDK or platform toolchain.
 
 The governing rules are:
 
-> CI should confirm locally reproducible deterministic failures when the agent has equivalent execution capability.
+> Validation depth follows blast radius: use the narrowest profile that proves the changed invariants.
 
-and:
+> CI should confirm locally reproducible deterministic failures when the agent has equivalent execution capability.
 
 > An automatable deterministic gate must not be delegated to the user merely because the current agent cannot run it locally.
 
@@ -60,9 +60,24 @@ Look for:
 
 A diff review is a semantic review, not only a formatting pass.
 
-## 4. Classify required gates by execution capability
+## 4. Select validation depth from blast radius
 
-Use `validate-change` and `.engineering/commands.json` to select the narrowest sufficient final matrix for the actual blast radius.
+Read `.engineering/commands.json` and use the project-owned selector to choose `auto -> LEAN | SCOPED | STRONG | FULL`.
+
+Use the narrowest sufficient profile:
+
+- `LEAN` — docs/governance/metadata-only or cheap universal guards with no executable/product blast radius;
+- `SCOPED` — contained implementation change: affected owner/module plus direct consumers/tests/lint/compile;
+- `STRONG` — cross-boundary or release-sensitive change such as shared contracts, persistence/security, native/JNI, packaging/R8/manifest/dependency/variant or multi-owner behavior;
+- `FULL` — promotion/release, CI-selector/global build/dependency-inventory/toolchain changes, unknown executable paths, explicit full request or other cases where narrowing cannot be trusted.
+
+The selector must report the profile and reason. Unknown executable paths fail safe stronger. Changes to the selector/inventory itself force `FULL` because the narrowing mechanism cannot safely validate itself.
+
+Do not silently downgrade below `auto`. Explicit stronger validation is always allowed. If an attempted fix broadens blast radius — for example by adding a global Gradle or ProGuard change — re-run selection and allow escalation.
+
+## 5. Classify required gates by execution capability
+
+Use `validate-change`, the selected profile and `.engineering/commands.json` to construct the final matrix.
 
 For every required gate, assign the execution class for the **current agent/session**:
 
@@ -77,26 +92,26 @@ Typical deterministic gates include:
 - touched module/package compilation;
 - focused unit/component tests;
 - direct-consumer/contract/integration tests;
-- canonical repository `check`/`test`;
-- build/package/smoke/E2E where the claim requires them.
+- canonical repository `check`/`test` where selected;
+- R8/minification/build/package/smoke/E2E where the chosen profile/claim requires them.
 
 Do not classify a Gradle/R8/compiler/unit-test gate as `REAL_ENVIRONMENT` merely because ChatGPT lacks an Android SDK. That is `REMOTE_AUTOMATED`.
 
-## 5. Execute or route deterministic validation
+## 6. Execute or route deterministic validation
 
-Run every required `AGENT_LOCAL` gate on the exact current head.
+Run every required `AGENT_LOCAL` gate in the selected validation profile on the exact current head.
 
-If all required deterministic gates are `AGENT_LOCAL` and pass, readiness may be `READY_FOR_CI`: remote CI is an independent confirmation environment.
+If all required deterministic gates are `AGENT_LOCAL` and pass, readiness may be `READY_FOR_CI`: remote CI is an independent confirmation environment and should use the same blast-radius profile or a deliberately stronger one.
 
-If one or more required deterministic gates are `REMOTE_AUTOMATED` and all semantic/base/diff plus available local gates pass, readiness is `READY_FOR_REMOTE_PREFLIGHT`. Hand off immediately to `skills/remote-preflight/SKILL.md` and trigger the repository-owned automation.
+If one or more required deterministic gates are `REMOTE_AUTOMATED` and all semantic/base/diff plus available local gates pass, readiness is `READY_FOR_REMOTE_PREFLIGHT`. Hand off immediately to `skills/remote-preflight/SKILL.md` and trigger repository-owned automation with the default `auto` profile unless a stronger profile is justified.
 
 Do **not** ask the user to run an automatable deterministic command solely because the agent lacks a shell, checkout, SDK or toolchain.
 
-If a required deterministic gate is unavailable both locally and through repository-owned remote automation, status is `NOT_READY_FOR_AUTOMATED_PREFLIGHT` with `AUTOMATION_CAPABILITY_GAP`. Prefer adding/repairing automation.
+If a required deterministic gate is unavailable both locally and through repository-owned remote automation, status is `NOT_READY_FOR_AUTOMATED_PREFLIGHT` with `AUTOMATION_CAPABILITY_GAP`. If blast radius cannot be classified safely, report `VALIDATION_SCOPE_GAP` and fail safe stronger while the selector is repaired.
 
 `REAL_ENVIRONMENT` evidence may remain pending after automated validation, but still blocks any stronger claim that depends on it.
 
-## 6. Diagnose failures before editing
+## 7. Diagnose failures before editing
 
 For every failure, classify it before changing production code:
 
@@ -113,13 +128,17 @@ Never delete, suppress, weaken or rewrite a legitimate gate simply to make the b
 
 If the same gate fails again after an attempted fix, stop symptom patching. Re-examine the cause, owner and assumptions and form a new falsifiable hypothesis before editing again. If that exposes material ambiguity, return to section 1 and ask the user.
 
-## 7. Check command parity
+After every material fix, reconsider the selected validation profile because the repair itself may broaden or narrow the blast radius.
 
-Deterministic automation should invoke the same project-owned canonical commands/scripts regardless of whether execution occurs agent-local or remotely. Workflow YAML may orchestrate environment setup, caching and evidence, but should not secretly own a divergent formatter/test/build policy.
+## 8. Check command parity
+
+Deterministic automation should invoke the same project-owned canonical commands/scripts regardless of whether execution occurs agent-local or remotely. Workflow YAML may orchestrate scope detection, environment setup, caching and evidence, but should not secretly own a divergent formatter/test/build policy.
 
 If remote automation finds a deterministic failure that an equivalent agent-local environment should have found, close the parity/preflight-selection gap. If the current agent had **no equivalent local execution capability**, the remote discovery is valid execution, not a process defect.
 
-## 8. Output readiness
+If a remote run executes materially unrelated suites, improve the scope selector rather than accepting full-CI-by-default as permanent overhead.
+
+## 9. Output readiness
 
 Report:
 
@@ -129,6 +148,8 @@ TARGET: <branch>@<revision>
 AMBIGUITY: PASS|FAIL
 BASE_FRESHNESS: PASS|FAIL
 FULL_DIFF_REVIEW: PASS|FAIL
+VALIDATION_PROFILE: LEAN|SCOPED|STRONG|FULL
+PROFILE_REASON: <reason>
 EXECUTION_CAPABILITY: local|mixed|remote-only
 AGENT_LOCAL:
   <gate>: PASS|FAIL|N/A
@@ -141,11 +162,11 @@ READINESS: READY_FOR_CI|READY_FOR_REMOTE_PREFLIGHT|AUTOMATED_PREFLIGHT_CONFIRMED
 
 Readiness meanings:
 
-- `READY_FOR_CI` — all required deterministic gates could run agent-local and passed; CI can confirm independently;
-- `READY_FOR_REMOTE_PREFLIGHT` — semantic/base/diff checks and all available local gates passed; required deterministic remote gates must now be triggered by the agent;
-- `AUTOMATED_PREFLIGHT_CONFIRMED` — every required deterministic automated gate passed on the exact head/base, regardless of execution location;
-- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — a required gate failed, a material ambiguity/base/diff issue remains, or required automation routing is missing.
+- `READY_FOR_CI` — all deterministic gates required by the selected profile could run agent-local and passed; CI can confirm independently;
+- `READY_FOR_REMOTE_PREFLIGHT` — semantic/base/diff checks and all available local gates passed; required deterministic remote gates from the selected profile must now be triggered by the agent;
+- `AUTOMATED_PREFLIGHT_CONFIRMED` — every deterministic automated gate required by the selected profile passed on the exact head/base, regardless of execution location;
+- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — a required gate failed, profile selection is unsafe, a material ambiguity/base/diff issue remains, or required automation routing is missing.
 
-Any later edit, rebase/merge/replay, dependency change or material target-base movement invalidates the affected evidence.
+Any later edit, rebase/merge/replay, dependency change or material target-base movement invalidates the affected evidence and may change the selected profile.
 
 A known-red draft may be published only when the user explicitly wants a collaboration/investigation artifact. State the known-red condition clearly; do not represent it as automated readiness.
