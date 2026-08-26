@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0 — 2026-08-26
+
+Makes preflight execution-capability aware so strong validation no longer turns the repository owner into a manual CI runner when a coding agent lacks a shell, checkout, SDK or platform toolchain:
+
+- introduces `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` validation execution classes through `EXECUTION-CAPABILITY-CONTRACT.md`;
+- establishes the **no-human-runner principle**: an automatable deterministic gate must not be delegated to the user solely because the current coding agent cannot execute it locally;
+- keeps **CI should confirm, not discover** when the agent has an equivalent local environment, while explicitly allowing CI/repository automation to become the execution backend when it does not;
+- adds `READY_FOR_REMOTE_PREFLIGHT` and `AUTOMATED_PREFLIGHT_CONFIRMED` alongside the local-capable `READY_FOR_CI` path;
+- upgrades `.engineering/commands.json` to operating contract `0.5.0` with machine-readable execution-capability, remote-fallback and remote-preflight security requirements;
+- adds the core `remote-preflight` Skill for triggering remote automation, reading logs, classifying failures, fixing the owning cause and retriggering without asking the user to run the same command;
+- upgrades `preflight-change` to classify every required gate by the current agent's actual execution capability before choosing local or remote validation;
+- strengthens Android guidance so Gradle, Kotlin compilation, Lint, R8/minification, unit tests and ordinary APK/package builds are `REMOTE_AUTOMATED` rather than user tasks when a ChatGPT Project lacks Android tooling;
+- defines a least-privilege pattern for PR-triggered remote validation: trusted requesters, exact-head pinning, same-repository heads by default, no production/signing/deployment secrets in the code-execution job, and separate reporting permission when needed;
+- updates agent/contributor/PR routing and machine verifiers so repositories must preserve the distinction between agent-local, remote-automated and real-environment evidence.
+
+The delivery model is now: **reason -> classify executor -> automate deterministic validation -> diagnose/fix autonomously -> request human/device evidence only when it is genuinely non-automatable.**
+
 ## 0.6.0 — 2026-08-26
 
 Moves coding-agent quality assurance decisively before remote CI and makes delivery readiness a first-class engineering contract:
