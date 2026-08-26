@@ -6,9 +6,11 @@ Prefer the smallest coherent change that preserves repository invariants. Inspec
 
 Use a workstream plan only when dependency/state coordination adds real value. Small changes should not create planning documents.
 
+Resolve material ambiguity from canonical repository evidence before implementation. If two reasonable interpretations remain and would materially alter product behavior, public contracts, persistence/migration, security/trust, failure/resource/lifecycle semantics, compatibility, acceptance criteria or meaningful UX, ask the user/owner instead of silently selecting one.
+
 ## Canonical project commands
 
-`.engineering/commands.json` is the canonical repository-level mapping for `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean`.
+`.engineering/commands.json` is the canonical repository-level mapping for `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean`, and declares the publication-readiness gate.
 
 Use the project's native tooling behind those intents. Do not introduce a second undocumented build/test/E2E/run path merely for convenience.
 
@@ -23,6 +25,8 @@ Prefer reusing an existing semantic component/token over creating a visually sim
 ## Validation
 
 Run the narrowest useful checks while iterating, then the required integration/repository gates for the changed blast radius. Do not suppress failing tests or weaken a gate merely to make a change green.
+
+When a gate fails, classify it before changing production code: current-change regression, baseline failure, environment/toolchain issue, flaky behavior, stale-base effect or incorrect assumption/contract. Fix the owning invariant rather than applying unexplained symptom patches. Repeated failure of the same gate after a fix requires re-evaluating the hypothesis before another patch.
 
 Run repository health checks before publishing engineering-governance changes:
 
@@ -44,6 +48,14 @@ When E2E runs, verify cleanup of project-owned servers/listeners, browser/device
 
 When build/runtime/package behavior changes, validate applicable operating invariants: unique build identity, immutable/promoted artifacts, manifest/checksum/build delta, bounded local retention, graceful stop and zero project-owned process/listener/temp residue.
 
+## Pre-publication readiness
+
+Before pushing/opening/updating a PR for normal readiness confirmation, use `skills/preflight-change/SKILL.md` and establish `READY_FOR_CI` on the exact head.
+
+That requires the intended target base to be refreshed, the complete diff reviewed, no unresolved material ambiguity, and every required locally reproducible deterministic gate to pass. CI/device/hardware/external evidence that cannot run locally must be explicitly declared pending rather than treated as passed.
+
+CI should independently confirm the same project-owned deterministic validation semantics. If CI repeatedly discovers format/lint/compile/test failures that local preflight could reproduce, close the local/CI parity gap rather than normalizing CI as the edit-test loop.
+
 ## Dependencies and architecture
 
 Avoid dynamic versions and speculative dependencies. New abstractions/dependencies must have a concrete owner/problem and should not duplicate an existing source of truth. Do not add an E2E, UI or design framework merely for compliance aesthetics or when an equally strong established mechanism already exists.
@@ -51,5 +63,7 @@ Avoid dynamic versions and speculative dependencies. New abstractions/dependenci
 ## Pull requests
 
 Keep PRs focused. Describe what changed, why, user/developer impact, relevant failure/resource/operating/experience implications, and validation executed. Distinguish unit/integration/E2E/smoke/accessibility/visual/usability evidence and do not claim hardware/device/user evidence that was not run.
+
+Record preflight head/base identity and `READY_FOR_CI` vs known pending/failed gates. A known-red draft may be published for explicit collaboration/investigation, but must not be represented as ready.
 
 Canonical branches should be protected with pull requests and required checks according to the project's branching/release model.

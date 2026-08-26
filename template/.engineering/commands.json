@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "commands": {
     "setup": {"status": "required", "run": "<REPLACE_WITH_SETUP_COMMAND>"},
     "doctor": {"status": "recommended", "run": "<REPLACE_WITH_DOCTOR_COMMAND_OR_NA>"},
@@ -13,6 +13,16 @@
     "package": {"status": "optional", "run": "<REPLACE_WITH_PACKAGE_COMMAND_OR_NA>"},
     "stop": {"status": "optional", "run": "<REPLACE_WITH_STOP_COMMAND_OR_NA>"},
     "clean": {"status": "required", "run": "<REPLACE_WITH_CLEAN_COMMAND>"}
+  },
+  "publication_gate": {
+    "local_preflight_required": true,
+    "target_base_freshness_required": true,
+    "full_diff_review_required": true,
+    "material_ambiguity_must_be_resolved": true,
+    "failure_root_cause_required": true,
+    "deterministic_ci_local_parity_required": true,
+    "ci_only_evidence_must_be_declared": true,
+    "exact_head_evidence_required": true
   },
   "end_to_end": {
     "recommended_when_full_workflow_boundary_exists": true,

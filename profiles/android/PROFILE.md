@@ -31,9 +31,15 @@ Typical mapping:
 - `clean` — remove only project-owned generated output;
 - `stop` — mark `n/a` unless the project owns a helper/local server/process that needs explicit shutdown.
 
+During implementation, use the cheapest affected Gradle tasks first. Before publication, `preflight-change` must execute every locally reproducible deterministic Android gate required by blast radius on the exact head — including formatter/Spotless-style checks, static analysis/detekt-style checks, affected Kotlin/Java compilation, relevant unit/contract tests, Android Lint and assemble/package tasks when applicable. The exact task names remain project-owned through `.engineering/commands.json`.
+
+A formatting, lint, compile or host-unit failure that could have been reproduced through the supported Gradle environment should normally never be first discovered by GitHub Actions. If it is, treat it as local/CI parity or preflight-selection feedback and move that gate earlier rather than accepting repeated CI patch cycles.
+
 Keep E2E small and critical: first launch, primary create/use/save flow, persistence/restart, import/export or a representative failure/recovery journey when those behaviors are product-critical. Prefer unit/integration tests for deterministic lower-level behavior.
 
 When the product claim depends on the real APK/device surface, execute E2E on the built artifact and on a representative physical device when emulator evidence is insufficient. Device/emulator E2E must clean run-owned app data, test fixtures, helper processes and localhost listeners according to the zero-residue contract.
+
+Physical-device/thermal/performance/TalkBack evidence that cannot truthfully run in the local preflight environment may remain explicitly pending at `READY_FOR_CI`; it still blocks stronger product-complete claims that require it.
 
 Each material APK/AAB build must carry a unique build identity distinct from the product version. Put product version, build ID and source revision in the artifact name/manifest; use Android `versionCode`/`versionName` consistently with release requirements rather than incrementing the marketing version for every local build.
 

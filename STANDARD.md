@@ -1,10 +1,10 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.5.0
+Version: 0.6.0
 
 ## Purpose
 
-This standard defines the minimum engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for software correctness, operational simplicity, bounded resource use, change safety, reproducibility, clean lifecycle behavior, product-experience quality where applicable, and low context cost.
+This standard defines the minimum engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for software correctness, operational simplicity, bounded resource use, change safety, reproducibility, clean lifecycle behavior, product-experience quality where applicable, low context cost, and high-confidence delivery before CI.
 
 The central rule is:
 
@@ -13,6 +13,10 @@ The central rule is:
 The operational corollary is:
 
 > Every operation must be identifiable, owned, bounded, reversible and leave no unintended residue.
+
+The delivery corollary is:
+
+> CI should confirm a reasoned, locally validated change — not be the first place deterministic repository failures are discovered.
 
 For products with a material UI:
 
@@ -58,6 +62,12 @@ The UI should model the user's task rather than forcing users to understand inte
 
 Do not spend agent context reminding a model about rules that deterministic tooling can enforce. Formatting, architecture boundaries, document budgets, token budgets, command-contract shape, product-experience contract shape, tests, generated-artifact bans and similar invariants belong in scripts and CI where practical.
 
+### CI confirms; local preflight discovers
+
+A coding agent must not use remote CI as its normal edit-test loop when the same failure can be reproduced locally. Before publication, locally reproducible formatting, lint/static checks, compilation, unit/integration tests and applicable builds must be executed according to blast radius. CI remains an independent confirmation environment and the home for evidence that genuinely requires CI infrastructure.
+
+A deterministic failure discovered by CI that the project could have reproduced through its canonical local commands is process feedback: improve local/CI parity or the agent preflight rather than normalizing repeated red-green patch cycles.
+
 ### Git is history; docs describe the system that exists
 
 Active documentation explains current behavior, durable decisions, operations and active work. Completed implementation plans are deleted by default after durable knowledge is transferred. Archive only material with independent audit, regulatory, release or historical value.
@@ -77,6 +87,7 @@ Required before a project is considered engineering-grade:
 - root `AGENTS.md` with bounded context and routing;
 - pinned/locked dependencies and reproducible setup where applicable;
 - a project-local operating command contract mapping canonical intents to native tooling;
+- a pre-publication readiness gate requiring local deterministic validation, complete-diff review, material-ambiguity resolution and target-base freshness;
 - formatting, lint/static checks, tests and build validation appropriate to the stack;
 - E2E applicability is explicitly decided rather than accidentally absent;
 - material builds have unique build/source identity and do not silently overwrite prior builds;
@@ -111,6 +122,7 @@ L0 plus:
 - E2E failure evidence is identity-bearing, privacy-safe and stored with bounded retention;
 - dependency/security scanning appropriate to the threat model;
 - real environment evidence for behavior that cannot be truthfully validated in CI;
+- deterministic CI jobs invoke the same canonical project-owned validation semantics used locally rather than maintaining divergent validation logic;
 - when `product-ui` is adopted: critical journeys have appropriate UX/E2E evidence, high-value adaptive layouts are tested, accessibility has suitable automated/manual evidence, user-facing failures provide actionable recovery, and stable high-risk visual surfaces use regression protection where valuable.
 
 ### L2 — Reference grade
@@ -129,6 +141,7 @@ L1 plus:
 - explicit complexity/dependency review for meaningful additions;
 - reproducible benchmark/evidence identity where results influence engineering decisions;
 - automated repository policy/health validation;
+- CI first-pass health is measured or periodically reviewed so recurring formatting/compile/test/base-drift failures are moved earlier into local preflight;
 - stale/duplicate documentation and completed-work detection;
 - when `product-ui` is adopted: important/high-risk workflows have representative-user usability evidence when justified, critical UX regressions are protected appropriately, and design-system/token/component drift is actively controlled.
 
@@ -197,6 +210,8 @@ Test failure at the owning boundary. Useful scenarios include partial load, corr
 
 Partial or failed build artifacts must not be promoted to locations where they can be mistaken for valid outputs.
 
+A validation failure is evidence, not an instruction to patch the nearest line. Classify the failure, identify the violated invariant and its owner, distinguish branch-induced regressions from pre-existing/environment/flaky failures, then fix the owning cause. Repeated failures of the same gate after attempted fixes require re-evaluating the design/assumptions before another patch.
+
 ## Project operating contract
 
 Each adopted repository declares its actual operational mapping in `.engineering/commands.json`. The common vocabulary is:
@@ -205,7 +220,22 @@ Each adopted repository declares its actual operational mapping in `.engineering
 
 Not every intent is applicable to every project; genuinely irrelevant commands may be declared `n/a`. Do not introduce a generic wrapper merely to force identical command syntax. The project should map these intents to its native Gradle, Xcode, Swift, Python, Node, browser-test, shell or other established tooling.
 
-The detailed normative behavior for commands, E2E, build identity, artifact lineage/lifecycle, build deltas, local runtimes, ports/processes and zero-residue cleanup is defined in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md).
+The same contract also declares the repository's pre-publication gate. It does not add a universal `preflight` wrapper command; instead it requires agents to select and execute the applicable canonical project commands through `preflight-change` before publishing.
+
+The detailed normative behavior for commands, pre-publication readiness, E2E, build identity, artifact lineage/lifecycle, build deltas, local runtimes, ports/processes and zero-residue cleanup is defined in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md).
+
+### Pre-publication readiness
+
+Before pushing a change, opening/updating a PR or intentionally triggering CI, a coding agent must establish `READY_FOR_CI` on the exact current head:
+
+- resolve any material ambiguity that could change product behavior, public contracts, persistence, security/trust boundaries, resource/concurrency semantics, backward compatibility, acceptance criteria or meaningful UX;
+- verify ownership and inspect the complete diff rather than only the last edited files;
+- synchronize or otherwise verify against the current intended target base; stacked work remains explicitly conditional until its dependency is integrated/replayed;
+- run every locally reproducible deterministic gate required by the changed blast radius, including formatting/lint/static checks, compilation, affected tests and applicable build/package checks;
+- classify every failure and repair its owning cause instead of weakening/suppressing gates or applying unexplained symptom patches;
+- record PASS/FAIL/PENDING/N/A truthfully and declare evidence that can only run in CI, on hardware or in another representative environment.
+
+Changing the head or material target-base relationship invalidates prior readiness evidence. CI may still discover environment-specific failures, but deterministic repository failures should normally have been falsified locally first.
 
 ### E2E validation
 
@@ -326,7 +356,9 @@ Examples:
 - failed builds are not promoted as successful artifacts;
 - local artifact retention remains bounded.
 
-Use the narrowest useful test loop while iterating, then expand validation according to change scope.
+Use the narrowest useful test loop while iterating, then expand validation according to change scope. Before publication, `preflight-change` converts those scoped results into exact-head readiness evidence and reruns any locally reproducible gate invalidated by later edits or base movement.
+
+When a test fails, do not immediately mutate production code. First establish whether the failure is caused by the current change, already exists on the target base, is environment/toolchain-specific, is flaky/non-deterministic, or exposes an incorrect assumption/contract. Fix the owner of the violated invariant and add regression evidence at the lowest useful level.
 
 ## Performance
 
@@ -378,6 +410,14 @@ Do not create a document solely to record that a PR or isolated implementation s
 
 Add a scoped `AGENTS.md` only when a subtree has meaningful local invariants, hazards, ownership or validation commands. The closest applicable guide should let an agent avoid loading unrelated domains.
 
+### Material ambiguity
+
+Coding agents should resolve ambiguity from canonical repository evidence before asking the user. An ambiguity is material when two reasonable interpretations would produce meaningfully different product behavior, public/API contracts, persisted data semantics, trust/security boundaries, resource/concurrency behavior, backward compatibility, acceptance criteria or user experience.
+
+For material ambiguity, inspect the owner, durable docs/ADRs, direct consumers and tests. If one interpretation is not established, ask the user before implementation and present the smallest useful decision with a recommendation when possible. Do not ask about implementation-local naming/style choices that do not alter observable semantics.
+
+If interaction with the user is unavailable, do not silently convert a material product/contract decision into an implementation assumption. Mark the work blocked/conditional at that boundary and continue only with independent work that does not depend on the unresolved choice.
+
 ### Context budgets
 
 Default recommended budgets:
@@ -407,6 +447,7 @@ Core reusable Skills are:
 - `structured-change`;
 - `design-product-experience`;
 - `validate-change`;
+- `preflight-change`;
 - `finalize-workstream`;
 - `review-reference-quality`.
 
@@ -416,7 +457,7 @@ Project-specific Skills are justified only for recurring domain workflows that c
 
 A meaningful change progresses through applicable levels:
 
-`CODE COMPLETE -> INTEGRATION COMPLETE -> FAILURE COMPLETE -> RESOURCE COMPLETE -> OPERATIONS COMPLETE -> EXPERIENCE COMPLETE -> OBSERVABILITY COMPLETE -> EVIDENCE COMPLETE -> PRODUCT COMPLETE`
+`CODE COMPLETE -> INTEGRATION COMPLETE -> FAILURE COMPLETE -> RESOURCE COMPLETE -> OPERATIONS COMPLETE -> EXPERIENCE COMPLETE -> OBSERVABILITY COMPLETE -> LOCAL PREFLIGHT COMPLETE -> EVIDENCE COMPLETE -> PRODUCT COMPLETE`
 
 Not every change needs every level, but no applicable level should be silently skipped.
 
@@ -424,11 +465,15 @@ Not every change needs every level, but no applicable level should be silently s
 
 `EXPERIENCE COMPLETE` applies when a user-facing interaction changes and means task model, information hierarchy, states/feedback, accessibility, adaptive layout, design-system/brand consistency and required UX/E2E/regression evidence agree with the claim being made.
 
+`LOCAL PREFLIGHT COMPLETE` means the exact current head has no unresolved material ambiguity, the complete diff and intended target-base relationship were reviewed, and every required locally reproducible deterministic gate for the blast radius passed. CI-only/device/hardware evidence may remain explicitly pending, but absence of local evidence is never treated as a pass.
+
 A change is not complete merely because code exists. The owning tests, integration/E2E behavior, failure/resource semantics, operational lifecycle, applicable experience semantics, documentation and evidence must agree with the claim being made.
 
 ## Branch and delivery policy
 
 Projects should define a canonical integration/stable path appropriate to their release model. Protect canonical branches, require pull requests and required checks, prevent force pushes/deletion except explicit administration, and keep feature branches focused and short-lived.
+
+Before `READY_FOR_CI`, verify the feature head against the current intended target base. If the target base moved after local evidence was collected, refresh/reconcile the branch as appropriate to the repository's branching model and rerun invalidated gates. Stacked branches are conditional evidence until dependencies land and the stack is replayed or otherwise proven against the canonical base.
 
 Release workflows should promote already-identified/validated artifacts rather than silently rebuilding or mutating an existing build identity unless the release process explicitly treats the rebuild as a new build.
 

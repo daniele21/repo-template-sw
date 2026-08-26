@@ -1,12 +1,16 @@
 # Project Operating Contract
 
-Version: 0.3.0
+Version: 0.4.0
 
 This document defines the common operational semantics that adopted repositories expose to humans and coding agents. It standardizes **intent and lifecycle**, not implementation tools. Android may use Gradle, macOS may use Xcode or Python tooling, browser applications may use Playwright or an established equivalent, and servers may use `uv`, `python`, `pnpm` or another native mechanism, while still exposing the same operational concepts.
 
 The governing rule is:
 
 > Every operation must be identifiable, owned, bounded, reversible and leave no unintended residue.
+
+The delivery rule is:
+
+> CI confirms a change that has already passed the applicable local deterministic preflight; it is not the default debugging loop.
 
 ## 1. Command contract
 
@@ -30,7 +34,112 @@ Repositories may mark an intent `n/a` when it is genuinely not applicable. The c
 
 `check`, `test`, `build` and `clean` should be available for normal application repositories. `e2e` is recommended when the product has a meaningful whole-system/user journey that is not adequately proven by lower-level tests. `dev`, `smoke`, `package` and `stop` are required only when the project has the corresponding runtime/distribution behavior.
 
-## 2. Validation boundary: test vs E2E vs smoke
+The repository also declares a machine-readable `publication_gate` in `.engineering/commands.json`. This gate does not introduce a universal wrapper command: the coding agent selects the existing canonical intents required by the change's blast radius and runs those native project commands before publication.
+
+## 2. Pre-publication readiness contract
+
+Before pushing a change, opening/updating a pull request, or intentionally triggering CI for readiness confirmation, the exact current head must pass a local preflight whenever the required evidence is reproducible in the supported local environment.
+
+The governing principle is:
+
+```text
+understand
+-> resolve ownership/invariants
+-> resolve material ambiguity
+-> implement
+-> focused validation
+-> diagnose root cause of failures
+-> verify target-base freshness
+-> review complete diff
+-> run final local deterministic gates
+-> READY_FOR_CI
+-> independent CI confirmation
+```
+
+### Material ambiguity gate
+
+A coding agent must first inspect canonical repository evidence — owner, architecture/feature docs, ADRs, direct consumers, fakes and tests. Ask the user only when a material decision remains unresolved.
+
+An ambiguity is material when two reasonable interpretations would produce meaningfully different:
+
+- product behavior or acceptance criteria;
+- public/API/protocol contracts;
+- persisted data, migration or retention semantics;
+- security/trust/privacy boundaries;
+- failure, concurrency, resource or lifecycle semantics;
+- backward compatibility;
+- meaningful user task/UX behavior.
+
+Implementation-local naming, formatting and equivalent choices that preserve observable semantics do not require user clarification.
+
+If the user cannot be reached, unresolved material semantics remain blocked/conditional; they must not be silently guessed merely to continue coding.
+
+### Failure diagnosis gate
+
+A failing gate is evidence to diagnose, not a request to patch the nearest symptom. Before changing production behavior in response to a failure, classify it as one of:
+
+- regression caused by the current change;
+- failure already present on the intended target base;
+- environment/toolchain/dependency mismatch;
+- flaky/non-deterministic test;
+- stale branch/base integration effect;
+- incorrect requirement/design/contract assumption.
+
+Identify the violated invariant and its owner, then fix that owner and add or strengthen regression evidence at the lowest useful test level. Do not delete, suppress, relax or rewrite a legitimate gate merely to obtain green status without explicitly changing the owning contract.
+
+If the same gate fails again after an attempted fix, re-evaluate the cause/assumption before applying another patch. Repeated symptom patching without a new falsifiable hypothesis is not acceptable engineering progress.
+
+### Target-base freshness gate
+
+Preflight evidence is relative to both the exact feature head and its intended integration base.
+
+Before `READY_FOR_CI`:
+
+- refresh knowledge of the intended target branch;
+- verify that the feature work is based on, reconciled with, or otherwise proven merge-compatible with the current target according to the repository's branch model;
+- treat stacked branches as conditional until parent dependencies are integrated and the branch is replayed/revalidated where necessary;
+- rerun gates invalidated by a changed head, dependency or base relationship.
+
+Prior green evidence from an older head/base is historical evidence, not current readiness.
+
+### Complete-diff gate
+
+Review the complete change against the intended base, not only files edited most recently. Check for accidental generated files, debug/logging residue, unrelated edits, duplicated ownership/policy, weakened tests, stale documentation, hidden compatibility changes and unbounded resource/lifecycle consequences.
+
+### Local deterministic gate
+
+Use `validate-change` to determine the required validation level, then execute every applicable locally reproducible deterministic gate before publication. Typical examples include:
+
+- formatter/format check;
+- lint/static analysis/typecheck;
+- affected compilation;
+- focused unit/component tests;
+- direct-consumer/contract/integration tests;
+- repository `check`/`test` as required by blast radius;
+- build/package/smoke where the claim depends on them.
+
+Do not run expensive unrelated suites for every edit, but do not publish after only a focused unit test when the change crosses shared/build/runtime boundaries.
+
+A project may have evidence that cannot truthfully run locally, such as physical-device, specialized hardware, external-service or representative-user validation. Such evidence must be declared `PENDING/CI_ONLY/DEVICE` rather than being silently treated as passed. It can remain pending for `READY_FOR_CI` only when it is genuinely not locally reproducible; it still blocks any stronger completion claim that requires it.
+
+### Readiness result
+
+Report preflight evidence as `PASS`, `FAIL`, `PENDING` or `N/A` and distinguish:
+
+- `READY_FOR_CI` — no unresolved material ambiguity; target/base and full diff reviewed; every required locally reproducible deterministic gate passed on the exact current head; CI-only/real-environment evidence explicitly declared;
+- `NOT_READY_FOR_CI` — any required local deterministic gate failed/pending, material ambiguity remains, or exact-head/base readiness is unknown;
+- `CI_CONFIRMED` — remote independent checks passed for that exact head/base relationship;
+- stronger product/release readiness — only after any required device/hardware/external/manual evidence also passes.
+
+Publishing a known-red draft may be done only when explicitly requested for collaboration/investigation, and the known-red state must be stated clearly rather than represented as readiness.
+
+### Local/CI parity
+
+Deterministic CI validation should invoke the same project-owned canonical commands/scripts used locally where practical. Do not maintain a hidden second implementation of formatting/test/build policy only in workflow YAML.
+
+When CI finds a deterministic repository failure that local preflight should have found, treat it as a parity/process defect. Fix command routing, environment setup, validation selection or agent procedure so the same class of failure moves earlier.
+
+## 3. Validation boundary: test vs E2E vs smoke
 
 These intents are intentionally distinct:
 
@@ -62,7 +171,7 @@ Typical critical journeys include, when applicable:
 
 E2E is evidence, not coverage theater. Prefer a small deterministic set of high-value journeys over hundreds of brittle UI scripts.
 
-## 3. E2E implementation contract
+## 4. E2E implementation contract
 
 Use the smallest reliable stack-native tool already appropriate to the project. The universal baseline does **not** mandate Playwright.
 
@@ -86,7 +195,7 @@ E2E failure evidence should carry enough identity to diagnose the run:
 
 Failure evidence is temporary CI/test evidence, not permanent repository content. Store it through the artifact lifecycle with bounded retention.
 
-## 4. E2E zero-residue contract
+## 5. E2E zero-residue contract
 
 E2E runs inherit the same cleanup guarantees as every other project operation.
 
@@ -104,7 +213,7 @@ An E2E run may own:
 
 The owner must clean or explicitly retain these resources according to policy on success, failure, timeout, cancellation and interrupt. A failed E2E test is not allowed to leave a localhost server, browser worker or helper process alive merely because the assertion failed.
 
-## 5. Build identity contract
+## 6. Build identity contract
 
 Every material build has a unique identity even when the same source revision is rebuilt.
 
@@ -128,7 +237,7 @@ A new build must not silently overwrite a previous build. Product version and bu
 
 The build identity must be discoverable from the artifact itself or its adjacent manifest, and preferably from an application's About/Diagnostics surface when practical.
 
-## 6. Artifact lineage
+## 7. Artifact lineage
 
 Artifacts are compared and retained within a comparable lineage, normally:
 
@@ -146,7 +255,7 @@ local-llm-server/macos/arm64/dev/server
 
 The "previous build" means the previous **successful comparable build in the same lineage**, not simply the newest file in a directory.
 
-## 7. Artifact lifecycle contract
+## 8. Artifact lifecycle contract
 
 Build artifacts are immutable outputs. Once a build ID is assigned and an artifact is promoted as successful, modifying that artifact in place is forbidden. A changed output receives a new build ID.
 
@@ -180,7 +289,7 @@ Durable distributable releases belong in GitHub Releases or an equivalent durabl
 
 Local `dist/` directories are convenience caches, not the durable source of released artifacts.
 
-## 8. Build delta contract
+## 9. Build delta contract
 
 Every successful build generates a build delta against the previous successful comparable build in its lineage.
 
@@ -204,7 +313,7 @@ A Git diff alone is insufficient because two builds of the same commit may diffe
 
 The build delta travels with the artifact and may also be surfaced in application diagnostics when useful.
 
-## 9. Local runtime contract
+## 10. Local runtime contract
 
 Projects that open local servers, sockets, helper processes or listeners must declare and own them explicitly.
 
@@ -238,7 +347,7 @@ allocate run id
 
 A strong server E2E lifecycle extends that minimal request into one complete critical workflow, then performs the same cleanup verification.
 
-## 10. Ephemeral resource / zero-residue contract
+## 11. Ephemeral resource / zero-residue contract
 
 Every temporary resource created by `dev`, `test`, `e2e`, `build`, `smoke`, `package`, benchmark or migration tooling has an owner and deterministic cleanup path.
 
@@ -272,7 +381,7 @@ A new operation should detect stale resources from an earlier crash and recover 
 
 `clean` may remove only resources the project can prove it owns.
 
-## 11. Run identity and isolated workspaces
+## 12. Run identity and isolated workspaces
 
 Longer-lived dev/test/e2e/smoke/build runs should have a unique `run_id` when practical. Use it to namespace temporary files, logs, PID files, test databases and diagnostics.
 
@@ -284,7 +393,7 @@ Example:
 
 Parallel or repeated runs must not accidentally share mutable temporary state unless that sharing is intentional and synchronized.
 
-## 12. Test-data and environment isolation
+## 13. Test-data and environment isolation
 
 Testing/build tooling must not pollute real user state or global development state.
 
@@ -298,7 +407,7 @@ Prefer:
 
 E2E accounts/data should be disposable or namespaced when possible. Never run destructive E2E cleanup against production/user data without an explicit protected test boundary.
 
-## 13. Cache and log hygiene
+## 14. Cache and log hygiene
 
 Caches and logs are resources and require bounded lifecycle rules.
 
@@ -306,7 +415,7 @@ Caches define owner, namespace/version, invalidation and maximum size/retention 
 
 Development/build/test/E2E logs must not grow indefinitely. Prefer bounded retention or run-scoped temporary logs.
 
-## 14. Repeatability
+## 15. Repeatability
 
 A healthy repository should tolerate repeated cycles such as:
 
@@ -318,7 +427,7 @@ without behavior changing because earlier runs left processes, listeners, locks,
 
 For reference-grade projects, add lifecycle cleanliness tests for important dev/test/e2e/build/smoke paths that snapshot relevant project-owned state, run the operation, stop it and assert that no unintended residue remains.
 
-## 15. Stack mapping
+## 16. Stack mapping
 
 Profiles refine the common contract without replacing it.
 

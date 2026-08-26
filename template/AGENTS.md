@@ -8,7 +8,7 @@ Always read this guide. Then read only:
 
 1. the closest scoped `AGENTS.md`, when one exists for the target subtree;
 2. the canonical architecture/feature/workstream source required by the task;
-3. `.engineering/commands.json` when setup/dev/test/E2E/build/package/runtime/cleanup behavior is relevant;
+3. `.engineering/commands.json` when setup/dev/test/E2E/build/package/runtime/cleanup or publication-readiness behavior is relevant;
 4. when `product-ui` is adopted and user-facing behavior/visual semantics change, `design/ux-contract.json`, `design/brand-kit.json` and `skills/design-product-experience/SKILL.md` for meaningful UX/UI work;
 5. the owning implementation, direct consumers and nearby tests.
 
@@ -38,7 +38,7 @@ Add scoped `AGENTS.md` files only for subtrees with meaningful local invariants,
 
 ## Project operating commands
 
-Canonical repository-level command routing lives in `.engineering/commands.json`.
+Canonical repository-level command routing and the publication gate live in `.engineering/commands.json`.
 
 Use the declared intent rather than inventing a second command path:
 
@@ -53,6 +53,8 @@ Use the declared intent rather than inventing a second command path:
 Do not treat `e2e` and `smoke` as synonyms. Keep E2E small and focused on critical journeys; prefer lower-level tests for deterministic invariants.
 
 The underlying command remains native to this repository. When build/runtime/E2E behavior is affected, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup required by the local operating contract.
+
+Before publishing, use `preflight-change`: CI should confirm locally reproducible deterministic gates, not be the first normal debugging loop.
 
 ## Product experience routing
 
@@ -86,15 +88,16 @@ Do not make a screen denser or expose internal architecture merely because the i
 ## Core change workflow
 
 1. Confirm the owning boundary and smallest coherent scope.
-2. Use `plan-workstream` only for work large enough to need dependency/state coordination.
-3. Use `structured-change` before and after meaningful code changes.
-4. If `product-ui` is adopted and the change meaningfully affects UX/UI semantics, use `design-product-experience` before implementation; do not invoke a full UX exercise for a genuinely visual-only local edit.
-5. Inspect owner, direct consumers, fakes and tests before changing a shared contract.
-6. Implement one coherent vertical slice without speculative layers.
-7. Use `validate-change` to choose the narrowest sufficient validation while iterating, then expand according to blast radius.
-8. Update only the canonical durable document/design contract whose current behavior/decision changed.
-9. When an active workstream completes, use `finalize-workstream` to transfer durable knowledge and delete the plan by default.
-10. Inspect the complete diff before publishing.
+2. Resolve material ambiguity from canonical repository evidence; if meaningful product/contract alternatives remain, ask the user before implementing that decision.
+3. Use `plan-workstream` only for work large enough to need dependency/state coordination.
+4. Use `structured-change` before and after meaningful code changes.
+5. If `product-ui` is adopted and the change meaningfully affects UX/UI semantics, use `design-product-experience` before implementation; do not invoke a full UX exercise for a genuinely visual-only local edit.
+6. Inspect owner, direct consumers, fakes and tests before changing a shared contract.
+7. Implement one coherent vertical slice without speculative layers.
+8. Use `validate-change` to choose the narrowest sufficient validation while iterating; diagnose the owning invariant/root cause before patching a failure.
+9. Update only the canonical durable document/design contract whose current behavior/decision changed.
+10. When an active workstream completes, use `finalize-workstream` to transfer durable knowledge and delete the plan by default.
+11. Use `preflight-change` before publishing: refresh target base, inspect the complete diff, rerun every required locally reproducible deterministic gate on the exact head, and declare CI-only/device evidence.
 
 ## Validation routing
 
@@ -130,4 +133,4 @@ Keep this guide within the configured budget in `.engineering/documentation-poli
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass canonical command/test/E2E/build/artifact lifecycle, bypass an adopted product-experience/design-system contract, or claim evidence that was not executed.
+Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, leave a material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass canonical command/test/E2E/build/artifact lifecycle or publication gate, bypass an adopted product-experience/design-system contract, or claim evidence that was not executed.
