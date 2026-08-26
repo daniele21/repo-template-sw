@@ -20,15 +20,19 @@
 
 ## Pre-publication readiness
 
-<!-- Exact HEAD and intended target/base revision; material ambiguity resolved; full diff reviewed; target-base freshness; READY_FOR_CI or known-red reason. CI should confirm locally reproducible deterministic gates rather than discover them. -->
+<!-- Exact HEAD and intended target/base revision; material ambiguity resolved; full diff reviewed; target-base freshness. State READY_FOR_CI, READY_FOR_REMOTE_PREFLIGHT, AUTOMATED_PREFLIGHT_CONFIRMED or blocked reason truthfully. -->
 
-## Validation
+## Agent-local validation
 
-<!-- Exact check/test/e2e/build/smoke/accessibility/visual/manual/device/hardware/usability evidence executed. Use PASS/FAIL/PENDING/N/A. Never claim evidence not run. -->
+<!-- Required gates the current coding agent could execute directly. Use PASS/FAIL/N/A. -->
 
-## CI-only / real-environment evidence
+## Remote automated validation
 
-<!-- Gates that genuinely cannot run in the supported local environment (CI-only, physical device, hardware, external service, representative user). State PENDING/N/A and why. -->
+<!-- Deterministic automatable gates unavailable to the current agent locally. Record trigger/run identity and PASS/FAIL/PENDING/N/A. Do not delegate these to the user merely because the agent lacks an execution environment. -->
+
+## Real-environment evidence
+
+<!-- Physical-device/hardware/protected external/manual/usability evidence that automation cannot truthfully replace. State PASS/PENDING/N/A and why. -->
 
 ## E2E / experience evidence
 
