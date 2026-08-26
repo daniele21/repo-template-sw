@@ -22,13 +22,17 @@
 
 <!-- Exact HEAD and intended target/base revision; material ambiguity resolved; full diff reviewed; target-base freshness. State READY_FOR_CI, READY_FOR_REMOTE_PREFLIGHT, AUTOMATED_PREFLIGHT_CONFIRMED or blocked reason truthfully. -->
 
+## Validation profile
+
+<!-- AUTO resolution: LEAN / SCOPED / STRONG / FULL, why it was selected, and affected modules/components/jobs. Stronger manual override is fine; weaker-than-auto requires explicit justification. -->
+
 ## Agent-local validation
 
-<!-- Required gates the current coding agent could execute directly. Use PASS/FAIL/N/A. -->
+<!-- Required gates in the selected profile that the current coding agent could execute directly. Use PASS/FAIL/N/A. -->
 
 ## Remote automated validation
 
-<!-- Deterministic automatable gates unavailable to the current agent locally. Record trigger/run identity and PASS/FAIL/PENDING/N/A. Do not delegate these to the user merely because the agent lacks an execution environment. -->
+<!-- Deterministic automatable gates in the selected profile that were unavailable to the current agent locally. Record trigger/run identity and PASS/FAIL/PENDING/N/A. Do not delegate these to the user merely because the agent lacks an execution environment. -->
 
 ## Real-environment evidence
 
