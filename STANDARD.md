@@ -1,10 +1,10 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.6.0
+Version: 0.7.0
 
 ## Purpose
 
-This standard defines the minimum engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for software correctness, operational simplicity, bounded resource use, change safety, reproducibility, clean lifecycle behavior, product-experience quality where applicable, low context cost, and high-confidence delivery before CI.
+This standard defines the minimum engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for software correctness, operational simplicity, bounded resource use, change safety, reproducibility, clean lifecycle behavior, product-experience quality where applicable, low context cost, and high-confidence delivery through agent-accessible automation.
 
 The central rule is:
 
@@ -16,7 +16,7 @@ The operational corollary is:
 
 The delivery corollary is:
 
-> CI should confirm a reasoned, locally validated change — not be the first place deterministic repository failures are discovered.
+> Automation executes automatable work; humans make material decisions and provide genuinely real-environment evidence. CI should confirm deterministic validation when the agent has an equivalent local environment, and act as a remote execution backend when it does not.
 
 For products with a material UI:
 
@@ -24,7 +24,7 @@ For products with a material UI:
 
 The standard is intentionally not a framework. A project should adopt only the mechanisms justified by its real requirements. Common semantics do not require common build, test, design or UI tools.
 
-Detailed operational semantics live in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md). UI products may additionally adopt [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) through the optional `product-ui` profile.
+Detailed operational semantics live in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md). Validation execution ownership across agent-local, remote-automated and real-environment contexts is defined in [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md). UI products may additionally adopt [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) through the optional `product-ui` profile.
 
 ## Operating principles
 
@@ -60,13 +60,19 @@ The UI should model the user's task rather than forcing users to understand inte
 
 ### Machines enforce what machines can check
 
-Do not spend agent context reminding a model about rules that deterministic tooling can enforce. Formatting, architecture boundaries, document budgets, token budgets, command-contract shape, product-experience contract shape, tests, generated-artifact bans and similar invariants belong in scripts and CI where practical.
+Do not spend agent context reminding a model about rules that deterministic tooling can enforce. Formatting, architecture boundaries, document budgets, token budgets, command-contract shape, product-experience contract shape, tests, generated-artifact bans and similar invariants belong in scripts and automated validation where practical.
 
-### CI confirms; local preflight discovers
+### Automation executes; humans decide
 
-A coding agent must not use remote CI as its normal edit-test loop when the same failure can be reproduced locally. Before publication, locally reproducible formatting, lint/static checks, compilation, unit/integration tests and applicable builds must be executed according to blast radius. CI remains an independent confirmation environment and the home for evidence that genuinely requires CI infrastructure.
+Every required validation gate is classified for the current agent/session as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT`.
 
-A deterministic failure discovered by CI that the project could have reproduced through its canonical local commands is process feedback: improve local/CI parity or the agent preflight rather than normalizing repeated red-green patch cycles.
+When the current agent has an equivalent local execution environment, deterministic formatter/lint/compile/test/build failures should be falsified locally before CI. In that situation CI should confirm rather than become the normal edit-test loop.
+
+When the current agent lacks the required checkout, shell, SDK, platform toolchain, service or compute capability, an otherwise deterministic automatable gate becomes `REMOTE_AUTOMATED`. Repository-owned remote validation — including CI when appropriate — becomes the execution backend. The user must not become the fallback runner merely because the agent lacks local execution capability.
+
+Only evidence that genuinely depends on representative hardware, protected authority, an external environment or manual judgement belongs in `REAL_ENVIRONMENT`.
+
+A deterministic failure found remotely is process feedback only when an equivalent agent-local environment existed and should have found it. When no equivalent local capability existed, remote discovery is valid execution.
 
 ### Git is history; docs describe the system that exists
 
@@ -87,7 +93,8 @@ Required before a project is considered engineering-grade:
 - root `AGENTS.md` with bounded context and routing;
 - pinned/locked dependencies and reproducible setup where applicable;
 - a project-local operating command contract mapping canonical intents to native tooling;
-- a pre-publication readiness gate requiring local deterministic validation, complete-diff review, material-ambiguity resolution and target-base freshness;
+- a pre-publication readiness gate requiring execution-capability classification, complete-diff review, material-ambiguity resolution, target-base freshness and deterministic automated validation;
+- an agent-triggerable remote validation path when supported coding agents may lack equivalent local execution capability for required deterministic gates;
 - formatting, lint/static checks, tests and build validation appropriate to the stack;
 - E2E applicability is explicitly decided rather than accidentally absent;
 - material builds have unique build/source identity and do not silently overwrite prior builds;
@@ -121,8 +128,9 @@ L0 plus:
 - build deltas are generated for material comparable builds when artifacts are distributed/tested across runs;
 - E2E failure evidence is identity-bearing, privacy-safe and stored with bounded retention;
 - dependency/security scanning appropriate to the threat model;
-- real environment evidence for behavior that cannot be truthfully validated in CI;
-- deterministic CI jobs invoke the same canonical project-owned validation semantics used locally rather than maintaining divergent validation logic;
+- real environment evidence for behavior that cannot be truthfully validated through automation;
+- deterministic automated jobs invoke the same canonical project-owned validation semantics regardless of whether execution is agent-local or remote;
+- remote execution of change-branch code follows a least-privilege trust model and does not expose production/signing/deployment secrets;
 - when `product-ui` is adopted: critical journeys have appropriate UX/E2E evidence, high-value adaptive layouts are tested, accessibility has suitable automated/manual evidence, user-facing failures provide actionable recovery, and stable high-risk visual surfaces use regression protection where valuable.
 
 ### L2 — Reference grade
@@ -141,7 +149,8 @@ L1 plus:
 - explicit complexity/dependency review for meaningful additions;
 - reproducible benchmark/evidence identity where results influence engineering decisions;
 - automated repository policy/health validation;
-- CI first-pass health is measured or periodically reviewed so recurring formatting/compile/test/base-drift failures are moved earlier into local preflight;
+- automated first-pass health is measured or periodically reviewed so recurring avoidable formatting/compile/test/base-drift failures are moved to the earliest executor that can reproduce them;
+- execution-capability gaps are reviewed so supported coding agents do not require humans to run ordinary deterministic suites;
 - stale/duplicate documentation and completed-work detection;
 - when `product-ui` is adopted: important/high-risk workflows have representative-user usability evidence when justified, critical UX regressions are protected appropriately, and design-system/token/component drift is actively controlled.
 
@@ -220,22 +229,26 @@ Each adopted repository declares its actual operational mapping in `.engineering
 
 Not every intent is applicable to every project; genuinely irrelevant commands may be declared `n/a`. Do not introduce a generic wrapper merely to force identical command syntax. The project should map these intents to its native Gradle, Xcode, Swift, Python, Node, browser-test, shell or other established tooling.
 
-The same contract also declares the repository's pre-publication gate. It does not add a universal `preflight` wrapper command; instead it requires agents to select and execute the applicable canonical project commands through `preflight-change` before publishing.
+The same contract declares the repository publication gate, validation execution model and optional/required remote-preflight trigger. It does not require a universal local wrapper; agents select the applicable canonical project commands and execute them through the earliest capable automated environment.
 
-The detailed normative behavior for commands, pre-publication readiness, E2E, build identity, artifact lineage/lifecycle, build deltas, local runtimes, ports/processes and zero-residue cleanup is defined in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md).
+The detailed normative behavior for commands, pre-publication readiness, E2E, build identity, artifact lineage/lifecycle, build deltas, local runtimes, ports/processes and zero-residue cleanup is defined in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md). Executor selection and no-human-runner semantics are defined in [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md).
 
 ### Pre-publication readiness
 
-Before pushing a change, opening/updating a PR or intentionally triggering CI, a coding agent must establish `READY_FOR_CI` on the exact current head:
+Before publishing a change for automated validation, a coding agent must establish an exact-head readiness state:
 
 - resolve any material ambiguity that could change product behavior, public contracts, persistence, security/trust boundaries, resource/concurrency semantics, backward compatibility, acceptance criteria or meaningful UX;
 - verify ownership and inspect the complete diff rather than only the last edited files;
 - synchronize or otherwise verify against the current intended target base; stacked work remains explicitly conditional until its dependency is integrated/replayed;
-- run every locally reproducible deterministic gate required by the changed blast radius, including formatting/lint/static checks, compilation, affected tests and applicable build/package checks;
+- select every deterministic gate required by blast radius and classify it as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT` for the current agent/session;
+- execute all required `AGENT_LOCAL` gates directly;
+- route all required `REMOTE_AUTOMATED` gates through repository-owned automation rather than asking the user to execute them;
 - classify every failure and repair its owning cause instead of weakening/suppressing gates or applying unexplained symptom patches;
-- record PASS/FAIL/PENDING/N/A truthfully and declare evidence that can only run in CI, on hardware or in another representative environment.
+- record PASS/FAIL/PENDING/N/A truthfully and keep real-environment evidence distinct from automatable validation.
 
-Changing the head or material target-base relationship invalidates prior readiness evidence. CI may still discover environment-specific failures, but deterministic repository failures should normally have been falsified locally first.
+`READY_FOR_CI` applies when the current agent could execute every required deterministic gate locally and did so successfully. `READY_FOR_REMOTE_PREFLIGHT` applies when semantic/base/diff checks and available local gates pass but required deterministic gates need remote automation. `AUTOMATED_PREFLIGHT_CONFIRMED` means all required deterministic automated gates passed on the exact current head/base, regardless of execution location.
+
+Changing the head or material target-base relationship invalidates prior affected readiness evidence.
 
 ### E2E validation
 
@@ -356,7 +369,7 @@ Examples:
 - failed builds are not promoted as successful artifacts;
 - local artifact retention remains bounded.
 
-Use the narrowest useful test loop while iterating, then expand validation according to change scope. Before publication, `preflight-change` converts those scoped results into exact-head readiness evidence and reruns any locally reproducible gate invalidated by later edits or base movement.
+Use the narrowest useful test loop while iterating, then expand validation according to change scope. Before publication, `preflight-change` converts those scoped results into exact-head readiness evidence, classifies required gates by execution capability, runs available local gates and routes unavailable deterministic work through `remote-preflight`.
 
 When a test fails, do not immediately mutate production code. First establish whether the failure is caused by the current change, already exists on the target base, is environment/toolchain-specific, is flaky/non-deterministic, or exposes an incorrect assumption/contract. Fix the owner of the violated invariant and add regression evidence at the lowest useful level.
 
@@ -448,6 +461,7 @@ Core reusable Skills are:
 - `design-product-experience`;
 - `validate-change`;
 - `preflight-change`;
+- `remote-preflight`;
 - `finalize-workstream`;
 - `review-reference-quality`.
 
@@ -457,7 +471,7 @@ Project-specific Skills are justified only for recurring domain workflows that c
 
 A meaningful change progresses through applicable levels:
 
-`CODE COMPLETE -> INTEGRATION COMPLETE -> FAILURE COMPLETE -> RESOURCE COMPLETE -> OPERATIONS COMPLETE -> EXPERIENCE COMPLETE -> OBSERVABILITY COMPLETE -> LOCAL PREFLIGHT COMPLETE -> EVIDENCE COMPLETE -> PRODUCT COMPLETE`
+`CODE COMPLETE -> INTEGRATION COMPLETE -> FAILURE COMPLETE -> RESOURCE COMPLETE -> OPERATIONS COMPLETE -> EXPERIENCE COMPLETE -> OBSERVABILITY COMPLETE -> AUTOMATED PREFLIGHT COMPLETE -> EVIDENCE COMPLETE -> PRODUCT COMPLETE`
 
 Not every change needs every level, but no applicable level should be silently skipped.
 
@@ -465,7 +479,7 @@ Not every change needs every level, but no applicable level should be silently s
 
 `EXPERIENCE COMPLETE` applies when a user-facing interaction changes and means task model, information hierarchy, states/feedback, accessibility, adaptive layout, design-system/brand consistency and required UX/E2E/regression evidence agree with the claim being made.
 
-`LOCAL PREFLIGHT COMPLETE` means the exact current head has no unresolved material ambiguity, the complete diff and intended target-base relationship were reviewed, and every required locally reproducible deterministic gate for the blast radius passed. CI-only/device/hardware evidence may remain explicitly pending, but absence of local evidence is never treated as a pass.
+`AUTOMATED PREFLIGHT COMPLETE` means the exact current head has no unresolved material ambiguity, the complete diff and intended target-base relationship were reviewed, and every required deterministic automatable gate for the blast radius passed through `AGENT_LOCAL`, `REMOTE_AUTOMATED`, or both. `REAL_ENVIRONMENT` evidence may remain explicitly pending, but absence of required automated evidence is never treated as a pass.
 
 A change is not complete merely because code exists. The owning tests, integration/E2E behavior, failure/resource semantics, operational lifecycle, applicable experience semantics, documentation and evidence must agree with the claim being made.
 
@@ -473,7 +487,7 @@ A change is not complete merely because code exists. The owning tests, integrati
 
 Projects should define a canonical integration/stable path appropriate to their release model. Protect canonical branches, require pull requests and required checks, prevent force pushes/deletion except explicit administration, and keep feature branches focused and short-lived.
 
-Before `READY_FOR_CI`, verify the feature head against the current intended target base. If the target base moved after local evidence was collected, refresh/reconcile the branch as appropriate to the repository's branching model and rerun invalidated gates. Stacked branches are conditional evidence until dependencies land and the stack is replayed or otherwise proven against the canonical base.
+Before automated readiness, verify the feature head against the current intended target base. If the target base moved after evidence was collected, refresh/reconcile the branch as appropriate to the repository's branching model and rerun invalidated gates. Stacked branches are conditional evidence until dependencies land and the stack is replayed or otherwise proven against the canonical base.
 
 Release workflows should promote already-identified/validated artifacts rather than silently rebuilding or mutating an existing build identity unless the release process explicitly treats the rebuild as a new build.
 
