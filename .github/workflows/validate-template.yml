@@ -20,6 +20,8 @@ jobs:
         run: python3 template/scripts/verify_repository.py --root template --template-mode
       - name: Verify template operating contract
         run: python3 template/scripts/verify_operations.py --root template --template-mode
+      - name: Verify template E2E environment contract
+        run: python3 template/scripts/verify_e2e.py --root template --template-mode
       - name: Verify template product experience contract
         run: python3 template/scripts/verify_product_experience.py --root template --template-mode
       - name: Verify template documentation budgets
