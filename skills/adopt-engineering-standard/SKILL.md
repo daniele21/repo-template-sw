@@ -1,6 +1,6 @@
 ---
 name: adopt-engineering-standard
-description: Align a new or existing repository with repo-template-sw without blindly overwriting stronger project-specific architecture, CI, documentation, operating commands, E2E tooling, design systems or agent guidance. Audit first, select applicable profiles, create a bounded adoption DAG, then install/specialize the smallest useful baseline.
+description: Align a new or existing repository with repo-template-sw without blindly overwriting stronger project-specific architecture, CI, documentation, operating commands, E2E tooling/environment strategy, design systems or agent guidance. Audit first, select applicable profiles, create a bounded adoption DAG, then install/specialize the smallest useful baseline.
 ---
 
 # Adopt Engineering Standard
@@ -11,19 +11,20 @@ Make a repository self-contained and aligned with the Agent-Native Reference Eng
 
 ## New repository path
 
-1. Identify product/runtime, languages/platforms, persistence/network/security boundaries, build/distribution shape, expected deployment environment and whether a material user-facing UI exists.
+1. Identify product/runtime, languages/platforms, persistence/network/security boundaries, build/distribution shape, expected deployment/target environments and whether a material user-facing UI exists.
 2. Copy the universal `template/` baseline.
 3. Select only applicable profiles from `profiles/`. Add `product-ui` only when the repository has a material interface.
-4. Specialize `AGENTS.md`, `docs/architecture.md`, `SECURITY.md`, ownership maps and `.engineering/commands.json`. Remove unresolved placeholders before calling adoption complete.
+4. Specialize `AGENTS.md`, `docs/architecture.md`, `SECURITY.md`, ownership maps, `.engineering/commands.json` and `.engineering/e2e.json`. Remove unresolved placeholders before calling adoption complete.
 5. Map common command intents (`setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop`, `clean`) to native tooling; mark only genuinely inapplicable intents `n/a`.
-6. Decide E2E applicability explicitly. Add a small set of critical complete-workflow tests when lower-level tests cannot establish the full outcome; preserve stack-native tooling and prefer Playwright only for browser/web when no equally strong incumbent exists.
-7. Implement applicable project operating contracts: unique build identity, artifact lineage/retention/manifest/checksum, generated build delta, localhost/runtime cleanup and ephemeral-resource cleanup.
-8. If `product-ui` is selected, specialize `design/ux-contract.json` and `design/brand-kit.json`: identify primary users/jobs/surfaces and design source of truth; preserve the user-outcome -> task -> IA/journey -> hierarchy/disclosure/defaults -> interaction/states/feedback/recovery -> adaptive/platform -> accessibility -> design-system -> motion -> visual/graphics -> validation decision order; define motion/graphics semantics, critical states/journeys, accessibility, adaptive layout, semantic design-system ownership, concrete motion/visual language, key reference views and applicable UX regression evidence.
-9. Keep the copied `design-product-experience` Skill available and route meaningful `product-ui` work through it at proportional depth; do not force a full UX exercise for local visual-only edits.
-10. Record standard version, profiles and local Skill customization in `.engineering/baseline.json`.
-11. Configure stack-specific formatter/lint/static/test/E2E/build/smoke CI plus applicable accessibility/visual/UI evidence gates and branch protection.
-12. Run repository/operating/product-experience/docs/agent-context validation.
-13. Report current maturity truthfully; bootstrap alone establishes structure, not L1/L2 evidence.
+6. Decide E2E applicability explicitly. If applicable, define in `.engineering/e2e.json` the critical journeys, target environments/material dimensions, automated execution environments/fidelity classes, known gaps and residual real-environment confirmation. Preserve stack-native tooling and prefer Playwright only for browser/web when no equally strong incumbent exists.
+7. Design E2E so final target/device/manual validation primarily confirms residual fidelity gaps rather than becoming the first whole-system test. Use the cheapest sufficient automated environment first and stronger built/package/virtual/physical fidelity only where the claim requires it.
+8. Implement applicable project operating contracts: unique build identity, artifact lineage/retention/manifest/checksum, generated build delta, localhost/runtime cleanup and ephemeral-resource cleanup.
+9. If `product-ui` is selected, specialize `design/ux-contract.json` and `design/brand-kit.json`: identify primary users/jobs/surfaces and design source of truth; preserve the user-outcome -> task -> IA/journey -> hierarchy/disclosure/defaults -> interaction/states/feedback/recovery -> adaptive/platform -> accessibility -> design-system -> motion -> visual/graphics -> validation decision order; define motion/graphics semantics, critical states/journeys, accessibility, adaptive layout, semantic design-system ownership, concrete motion/visual language, key reference views and applicable UX regression evidence.
+10. Keep the copied `design-product-experience` Skill available and route meaningful `product-ui` work through it at proportional depth; do not force a full UX exercise for local visual-only edits.
+11. Record standard version, profiles and local Skill customization in `.engineering/baseline.json`.
+12. Configure stack-specific formatter/lint/static/test/E2E/build/smoke CI plus applicable E2E-environment, accessibility/visual/UI evidence gates and branch protection.
+13. Run repository/operating/E2E-fidelity/product-experience/docs/agent-context validation.
+14. Report current maturity truthfully; bootstrap alone establishes structure, not L1/L2 evidence.
 
 ## Existing repository path
 
@@ -34,7 +35,8 @@ Inspect:
 - existing `AGENTS.md`/agent instructions and Skills;
 - README/architecture/ADRs/current plans;
 - current setup/dev/check/test/E2E/build/package/clean commands and scripts;
-- existing E2E framework, critical journeys and failure evidence/retention;
+- existing E2E framework, critical journeys, execution environments/devices/browsers, final/manual test process and failure evidence/retention;
+- which defects are currently first discovered on real devices/production-like/manual environments and whether they are automatable earlier;
 - CI, branch/release policy and package/build configuration;
 - build/version naming, artifact storage/retention and release flow;
 - local servers, ports, helper processes, PID/lock/temp state and shutdown paths;
@@ -54,7 +56,9 @@ For each baseline concern mark:
 - `N/A` — not applicable;
 - `CONFLICT` — existing practice contradicts a required invariant and needs an explicit decision.
 
-Never replace a stronger existing mechanism merely to make repositories look identical. Common contracts standardize semantics, not the underlying build/E2E/design tool or visual style.
+Never replace a stronger existing mechanism merely to make repositories look identical. Common contracts standardize semantics, not the underlying build/E2E/design tool, environment provider or visual style.
+
+For E2E, preserve strong existing suites/device farms/browser grids/emulator strategies. Add the missing target/fidelity metadata and routing around them instead of introducing a second framework.
 
 ### 3. Build an adoption DAG
 
@@ -64,6 +68,7 @@ Create a temporary workstream only when migration spans multiple coordinated cha
 - canonical command and agent routing;
 - deterministic validation/CI;
 - critical-workflow E2E gaps where lower-level tests are insufficient;
+- E2E environment-fidelity gaps where final target/manual testing currently discovers automatable whole-system failures;
 - build/artifact identity and release/retention gaps;
 - runtime/process/port/ephemeral cleanup gaps;
 - if `product-ui`: user-outcome/task/IA/accessibility/critical-state/design-system gaps that materially affect usability/correctness, before motion/visual polish gaps;
@@ -74,21 +79,29 @@ Expose dependencies and non-conflicting parallel lanes.
 
 ### 4. Install/specialize
 
-Copy only missing/useful universal files and core Skills. Merge project-specific `AGENTS.md`, CI, SECURITY, docs and design contracts semantically.
+Copy only missing/useful universal files and core Skills. Merge project-specific `AGENTS.md`, CI, SECURITY, docs, `.engineering/e2e.json` and design contracts semantically.
 
-Preserve native Gradle/Xcode/Python/Node/etc. workflows, strong E2E suites and established design systems/Figma/code-first sources. Do not replace them merely to resemble the template.
+Preserve native Gradle/Xcode/Python/Node/etc. workflows, strong E2E suites/environment providers and established design systems/Figma/code-first sources. Do not replace them merely to resemble the template.
+
+For each applicable critical journey, map:
+
+`claim -> target environment/material dimensions -> automated environment(s)/fidelity -> known gaps -> required residual target confirmation`.
+
+Do not overstate evidence. A built APK on an emulator may prove package/install/workflow behavior while still not proving physical-device thermals/OEM/native-hardware behavior.
 
 For existing artifact/build systems, migrate identity/retention/delta behavior incrementally. For existing UI systems, use `design/ux-contract.json` and `design/brand-kit.json` as routing/contract metadata pointing to real owners; do not create a second design truth. Preserve existing motion/visual tokens when they are strong and map them rather than replacing them with arbitrary template values.
 
 ### 5. Validate and finalize
 
-Run project tests plus baseline health checks. For `product-ui`, run `verify_product_experience.py` and the UI evidence relevant to the adoption claim. For full-workflow changes run applicable `e2e`; for runtime/build migrations execute an applicable `build`/`smoke`/`stop` cycle and verify no project-owned process/listener/browser/device/temp residue remains.
+Run project tests plus baseline health checks, including `verify_e2e.py`. For `product-ui`, run `verify_product_experience.py` and the UI evidence relevant to the adoption claim. For full-workflow changes run applicable `e2e` at the declared environment fidelity; for runtime/build migrations execute an applicable `build`/`smoke`/`stop` cycle and verify no project-owned process/listener/browser/device/temp residue remains.
 
 Transfer durable changes, delete adoption workstream by default, and leave the repository self-contained.
 
 ## Non-goals
 
-- forcing identical layouts, build tools, E2E frameworks, design tools or visual styles;
+- forcing identical layouts, build tools, E2E frameworks, emulator/device-farm providers, design tools or visual styles;
+- requiring every E2E fidelity rung on every change;
+- treating emulator/simulator evidence as physical/target evidence;
 - introducing wrappers solely to normalize command names;
 - introducing Playwright where no browser E2E boundary exists or an equally strong incumbent already works;
 - introducing a UI/design framework solely for compliance aesthetics;
