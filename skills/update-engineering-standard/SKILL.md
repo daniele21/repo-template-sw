@@ -11,20 +11,20 @@ An adopted repository is self-contained. Standard updates are explicit migration
 
 ## Workflow
 
-1. Read the project's `.engineering/baseline.json`, `.engineering/commands.json` and current local Skills/guides; read `design/ux-contract.json` and `design/brand-kit.json` when `product-ui` is adopted.
+1. Read the project's `.engineering/baseline.json`, `.engineering/commands.json`, `.engineering/e2e.json` when present and current local Skills/guides; read `design/ux-contract.json` and `design/brand-kit.json` when `product-ui` is adopted.
 2. Read `VERSION`, `CHANGELOG.md`, `STANDARD.md` and changed focused contracts in `repo-template-sw` from recorded version to target version.
 3. Classify each delta:
    - `APPLY` — directly relevant and local copy is unmodified;
-   - `MERGE` — relevant but local file/Skill/operating/design mechanism is customized;
+   - `MERGE` — relevant but local file/Skill/operating/E2E/design mechanism is customized;
    - `N/A` — profile/concern not used by the project;
    - `DEFER` — valid change intentionally postponed with a named reason/owner;
    - `CONFLICT` — requires an explicit architecture/product decision.
-4. Inspect local behavior before replacing text. Never overwrite a customized Skill, project-specific `AGENTS.md`, native build tooling, E2E framework, design system/source of truth or release flow wholesale.
+4. Inspect local behavior before replacing text. Never overwrite a customized Skill, project-specific `AGENTS.md`, native build tooling, E2E framework/environment provider, design system/source of truth or release flow wholesale.
 5. Map common semantics onto existing native mechanisms before adding wrappers/frameworks. Preserve stronger local build/runtime/artifact/E2E/design mechanisms.
 6. Implement the smallest migration that establishes the new invariant/behavior.
-7. Run baseline health checks plus project-specific validation affected by the migration. Run applicable E2E for full workflows, product-experience evidence for UI changes, and build/smoke/stop for build/runtime lifecycle changes.
+7. Run baseline health checks plus project-specific validation affected by the migration. Run applicable E2E at the declared environment fidelity for full workflows, product-experience evidence for UI changes, and build/smoke/stop for build/runtime lifecycle changes.
 8. Update `.engineering/baseline.json` source version and per-Skill `source_version`; preserve `customized: true` where local divergence remains intentional.
-9. Update `.engineering/commands.json` or design contract versions/mappings only after corresponding behavior is real.
+9. Update `.engineering/commands.json`, `.engineering/e2e.json` or design contract versions/mappings only after corresponding behavior is real.
 10. Update durable project docs/design contracts only when current behavior/ownership changed.
 11. If a migration workstream was required, finalize and delete it by default.
 
@@ -143,6 +143,39 @@ Do not make developers or repository owners choose a label on every PR just to c
 
 A metadata-only 0.7 bump, a `/preflight` trigger that always runs the entire repository, or a process that still asks the user to run automatable commands is not a valid migration.
 
+## 0.8 E2E environment-fidelity migration guidance
+
+When migrating from 0.7.x to 0.8.x, preserve the existing E2E framework and add an explicit environment-fidelity model around it. The goal is to move ordinary whole-system discovery earlier while keeping genuinely target-specific evidence truthful.
+
+Explicitly classify and merge:
+
+- `E2E-ENVIRONMENT-CONTRACT.md` semantics;
+- `.engineering/e2e.json` applicability and concrete specialization;
+- each material target environment and the device/platform/browser/runtime/hardware dimensions that affect product claims;
+- existing E2E execution environments (host/fake, emulator/simulator, browser grid, container/VM, device farm, physical lab, target environment) that should be `KEEP`;
+- a fidelity class for each execution environment without confusing it with `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT` executor classification;
+- each critical journey's complete outcome, target environment refs, automated environment refs and minimum expected automated fidelity;
+- built/package-artifact E2E where install/distribution/runtime packaging is part of the claim;
+- known fidelity gaps and whether residual target/real-environment confirmation is `required`, `conditional` or `not_required`;
+- explicit `automation_gap_reason` when a required journey genuinely has no automatable execution environment;
+- `verify_e2e.py` in repository health;
+- `validate-change` and `preflight-change` routing so E2E fidelity escalates from the cheapest sufficient environment only when blast radius/claim requires it;
+- Android/local-AI profile specialization where applicable.
+
+Review the current final/manual/device test process. For failures that are repeatedly found there, classify each as:
+
+- reproducible earlier in an existing automated environment -> move the regression E2E earlier;
+- reproducible earlier with a stronger practical automated environment -> add/strengthen that environment when the value justifies the cost;
+- genuinely dependent on residual physical/OEM/hardware/thermal/protected-external/manual judgement -> keep as real-environment evidence.
+
+Do not replace Espresso/Compose UI Test/UI Automator, XCTest/XCUITest, Playwright, device farms or other strong incumbent tooling just to satisfy the contract. `.engineering/e2e.json` is routing/claim metadata around real mechanisms, not a new E2E framework.
+
+Do not claim `representative_physical` or `target_environment` merely because an automated CI job is green. Executor and environment fidelity are independent axes.
+
+For Android, a built APK on an emulator may prove packaging/install/workflow behavior but remains `simulated_or_emulated` for physical-device claims. For local AI, a small deterministic model may prove orchestration while production-model/hardware memory, throughput and thermal claims remain residual evidence.
+
+A metadata-only 0.8 bump, a copied placeholder `e2e.json`, or a process where the final device/manual run still acts as the first undocumented complete-system test is not a valid migration.
+
 ## Output
 
 Report:
@@ -150,8 +183,9 @@ Report:
 - old -> new baseline version;
 - deltas applied/merged/deferred/not applicable;
 - local customizations preserved;
-- operating/E2E/product-experience/execution-capability mappings and migrations;
+- operating/E2E-environment/product-experience/execution-capability mappings and migrations;
 - selected validation profile and why;
+- selected critical E2E journey/environment fidelity and residual gaps where applicable;
 - validation/evidence executed locally, remotely and in real environments;
 - unresolved conflicts/deferred migrations.
 
