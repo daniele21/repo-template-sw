@@ -91,6 +91,21 @@ def validate_refs(
     return refs
 
 
+def read_json(path: Path, label: str, errors: list[str]) -> dict:
+    if not path.is_file():
+        errors.append(f"missing required file: {path.name if path.parent.name == '.engineering' else path}")
+        return {}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        errors.append(f"invalid {label}: {exc}")
+        return {}
+    if not isinstance(value, dict):
+        errors.append(f"{label} must contain a JSON object")
+        return {}
+    return value
+
+
 def main() -> int:
     args = parse_args()
     root = Path(args.root).resolve()
@@ -110,6 +125,11 @@ def main() -> int:
         print(f"FAIL: invalid .engineering/e2e.json: {exc}")
         return 1
 
+    if not isinstance(data, dict):
+        print("E2E environment fidelity contract check")
+        print("FAIL: .engineering/e2e.json must contain a JSON object")
+        return 1
+
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
     if data.get("contract_version") != "0.1.0":
@@ -124,6 +144,19 @@ def main() -> int:
         errors.append(f"applicability.status must be one of {sorted(APPLICABILITY)}")
     if not non_empty_string(applicability.get("reason")):
         errors.append("applicability.reason is required")
+
+    commands_path = root / ".engineering" / "commands.json"
+    commands_data = read_json(commands_path, ".engineering/commands.json", errors)
+    command_entry = (commands_data.get("commands") or {}).get("e2e") if commands_data else None
+    command_status = command_entry.get("status") if isinstance(command_entry, dict) else None
+    if commands_data and not isinstance(command_entry, dict):
+        errors.append("commands.json must declare commands.e2e")
+    elif status == "n/a" and command_status != "n/a":
+        errors.append("E2E applicability n/a requires commands.e2e.status = n/a")
+    elif status in {"required", "recommended"} and command_status == "n/a":
+        errors.append("E2E-applicable repositories may not set commands.e2e.status = n/a")
+    elif status == "required" and command_status not in {None, "required"}:
+        errors.append("E2E applicability required requires commands.e2e.status = required")
 
     principles = data.get("principles")
     if not isinstance(principles, dict):
@@ -253,6 +286,7 @@ def main() -> int:
     print("E2E environment fidelity contract check")
     print(f"root: {root}")
     print(f"applicability: {status}")
+    print(f"commands.e2e.status: {command_status}")
     for warning in warnings:
         print(f"WARN: {warning}")
     for error in errors:
