@@ -29,7 +29,36 @@ The common project operating contract also applies to model runtimes and local i
 - post-stop verification must distinguish an actually closed project listener/process from normal kernel states;
 - build/runtime artifacts, E2E evidence and benchmarks must preserve software build identity plus model/dataset/configuration identity.
 
-Prefer deterministic fixtures/small representative models for routine E2E when they preserve the workflow invariant. Use representative production hardware/model evidence separately when the claim depends on memory, throughput, thermals or backend-specific behavior.
+## Local-AI E2E environment fidelity
+
+Specialize `.engineering/e2e.json` so correctness evidence and hardware/performance evidence are not collapsed into one generic "local AI E2E" claim.
+
+Prefer deterministic fixtures/small representative models for routine automated E2E when they preserve the workflow invariant. These runs can prove orchestration such as load -> infer/transcribe -> persist/return -> unload/release even when they cannot prove production-model memory, throughput or thermal behavior.
+
+Declare model/backend/hardware dimensions as material target dimensions only when they affect the claim. Useful dimensions include:
+
+- model/artifact family and quantization;
+- runtime/backend implementation;
+- CPU architecture/ABI;
+- GPU/NPU/accelerator availability;
+- memory/VRAM/unified-memory capacity;
+- operating-system/device lifecycle behavior;
+- production-sized context/input/output shape;
+- thermal/power constraints for sustained workloads.
+
+A useful progression is:
+
+```text
+small deterministic model/fixture E2E
+-> real packaged runtime with representative backend
+-> representative production model/config where affordable
+-> representative physical hardware
+-> residual target-device performance/thermal confirmation
+```
+
+Not every rung runs on every PR. Automated E2E should catch ordinary orchestration, persistence, cancellation, cleanup, model-identity and public-boundary failures before target hardware testing. Physical hardware should primarily resolve the remaining claims that depend on real memory pressure, backend support, throughput, latency, thermals or device/OEM behavior.
+
+Do not promote a small-model or emulator result into a production-model/hardware performance claim. Record the known fidelity gap explicitly in `.engineering/e2e.json` and carry model/configuration/build identity with the evidence.
 
 For model caches, distinguish durable user-selected model storage from ephemeral build/test/E2E/runtime cache. Do not delete durable model artifacts during generic `clean`; only clean resources whose project/run ownership is explicit.
 
