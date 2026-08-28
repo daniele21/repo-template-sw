@@ -29,6 +29,7 @@ REQUIRED = (
     ".engineering/baseline.json",
     ".engineering/documentation-policy.json",
     ".engineering/commands.json",
+    ".engineering/e2e.json",
     ".github/pull_request_template.md",
     ".github/workflows/repository-health.yml",
     "docs/README.md",
@@ -38,6 +39,7 @@ REQUIRED = (
     "docs/adr/README.md",
     "docs/workstreams/README.md",
     "scripts/verify_operations.py",
+    "scripts/verify_e2e.py",
     "scripts/verify_product_experience.py",
 )
 
@@ -87,8 +89,8 @@ def main() -> int:
             standard = baseline.get("standard", {})
             if standard.get("source") != "daniele21/repo-template-sw":
                 errors.append("baseline standard.source must identify daniele21/repo-template-sw")
-            if standard.get("version") != "0.7.0":
-                errors.append("baseline standard.version must be 0.7.0")
+            if standard.get("version") != "0.8.0":
+                errors.append("baseline standard.version must be 0.8.0")
             if baseline.get("target_level") not in {"L0", "L1", "L2"}:
                 errors.append("target_level must be L0, L1 or L2")
             profiles = baseline.get("profiles")
