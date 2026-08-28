@@ -34,14 +34,22 @@
 
 <!-- Deterministic automatable gates in the selected profile that were unavailable to the current agent locally. Record trigger/run identity and PASS/FAIL/PENDING/N/A. Do not delegate these to the user merely because the agent lacks an execution environment. -->
 
+## E2E environment / fidelity evidence
+
+<!-- For each affected critical journey: .engineering/e2e.json journey id, execution-environment id, fidelity class, built/package surface used, PASS/FAIL/PENDING/N/A, and residual target-environment gaps. Do not promote emulator/simulator evidence into physical/target evidence. Otherwise N/A. -->
+
 ## Real-environment evidence
 
-<!-- Physical-device/hardware/protected external/manual/usability evidence that automation cannot truthfully replace. State PASS/PENDING/N/A and why. -->
+<!-- Physical-device/hardware/protected external/manual/usability evidence that automation cannot truthfully replace. Tie it to residual E2E fidelity gaps when applicable. State PASS/PENDING/N/A and why. -->
 
-## E2E / experience evidence
+## Product-experience evidence
 
-<!-- If a complete critical workflow or stable high-risk UI surface was affected: journey(s), environment/artifact tested, accessibility/visual/usability evidence, cleanup verification, and trace/screenshot/video/log retention policy. Otherwise N/A. -->
+<!-- If a stable high-risk UI surface was affected: accessibility/visual/usability evidence and relevant critical-journey evidence. Otherwise N/A. -->
+
+## Evidence lifecycle
+
+<!-- Cleanup verification plus trace/screenshot/video/log identity, privacy and bounded-retention policy when applicable. -->
 
 ## Documentation / design lifecycle
 
-<!-- Durable docs/design contracts updated, or why none are required. Completed workstream deleted/finalized when applicable. Generated screenshots are evidence, not default durable design truth. -->
+<!-- Durable docs/design/E2E contracts updated, or why none are required. Completed workstream deleted/finalized when applicable. Generated screenshots are evidence, not default durable design truth. -->
