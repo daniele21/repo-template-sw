@@ -14,7 +14,9 @@ See [`docs/architecture.md`](docs/architecture.md) for current boundaries and ow
 
 The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.engineering/commands.json`](.engineering/commands.json). It exposes `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean` while keeping this project's native tooling underneath.
 
-Do not add a second undocumented command path for the same intent.
+E2E applicability, target environments, execution environments, fidelity gaps and critical-journey mappings live in [`.engineering/e2e.json`](.engineering/e2e.json). Execution capability and environment fidelity are separate: an automated emulator/simulator run does not become physical/target-environment evidence merely because CI executed it.
+
+Do not add a second undocumented command or E2E-environment truth for the same intent.
 
 ## Product experience
 
@@ -43,14 +45,17 @@ Start with repository health checks:
 ```bash
 python3 scripts/verify_repository.py
 python3 scripts/verify_operations.py
+python3 scripts/verify_e2e.py
 python3 scripts/verify_product_experience.py
 python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-`verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
+`verify_e2e.py` validates the declared E2E target/execution environment and critical-journey contract. `verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
 
-Then use `check`/`test` while iterating. Use `e2e` when a critical complete workflow must be proven across assembled system boundaries, `build` when runnable output is affected, and `smoke` when minimum viability of the built/running artifact must be proven.
+Then use `check`/`test` while iterating. Use `e2e` when a critical complete workflow must be proven across assembled system boundaries, selecting the cheapest sufficient automated environment declared in `.engineering/e2e.json` and escalating fidelity only when the claim depends on a missing target dimension. Use `build` when runnable output is affected, and `smoke` when minimum viability of the built/running artifact must be proven.
+
+Final device/manual/target-environment validation should primarily confirm the residual fidelity gaps that could not be reproduced earlier. Do not promote emulator/simulator evidence into a stronger physical/target claim.
 
 For UI changes, also validate applicable states, accessibility, layout contexts, critical journeys and design-system consistency. A happy-path screenshot alone is not production-ready experience evidence.
 
