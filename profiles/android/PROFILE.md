@@ -47,11 +47,38 @@ When no equivalent agent-local environment exists, GitHub Actions or another sec
 
 For PR-comment remote preflight, prefer trusted requesters, exact PR-head pinning, same-repository heads by default, no production/signing/deployment secrets in the code-execution job, read-only/no write credentials while PR code executes, and a separate reporting job if PR write permission is required.
 
-Keep E2E small and critical: first launch, primary create/use/save flow, persistence/restart, import/export or a representative failure/recovery journey when those behaviors are product-critical. Prefer unit/integration tests for deterministic lower-level behavior.
+## Android E2E environment fidelity
 
-When the product claim depends on the real APK/device surface, execute E2E on the built artifact and on a representative physical device when emulator evidence is insufficient. Device/emulator E2E must clean run-owned app data, test fixtures, helper processes and localhost listeners according to the zero-residue contract.
+Specialize `.engineering/e2e.json` around the Android target/device dimensions that materially affect the product rather than treating every connected test as equivalent evidence.
 
-Physical-device/thermal/performance/TalkBack evidence may remain explicitly pending after `AUTOMATED_PREFLIGHT_CONFIRMED` when it cannot truthfully run through ordinary automation; it still blocks stronger product-complete claims that require it.
+A useful Android fidelity ladder is normally:
+
+```text
+host/JVM or fake-backed workflow
+-> emulator/instrumentation workflow
+-> built APK installed on emulator
+-> automated representative physical device/device farm when justified
+-> residual target/OEM physical-device confirmation
+```
+
+Not every project needs every rung and not every change runs every rung. Use the cheapest environment that can prove the changed critical journey, then escalate when ABI/native backend, package/install behavior, process lifecycle, permissions, hardware, OEM behavior, memory, thermals or another device-specific dimension is material.
+
+Typical `.engineering/e2e.json` mappings:
+
+- Android emulator/AVD: `simulated_or_emulated`;
+- CI runner exercising Android host logic: `host_or_fake` unless the actual Android runtime is present;
+- real supported APK on a representative physical device farm: `representative_physical`;
+- the actual supported/OEM device configuration used for final acceptance: `target_environment` for the claims it truly represents.
+
+Keep E2E small and critical: first launch, primary create/use/save flow, persistence/restart, IPC/Binder or consumer-app integration, import/export or a representative failure/recovery journey when those behaviors are product-critical. Prefer unit/integration tests for deterministic lower-level behavior.
+
+When the product claim depends on the real APK/device surface, execute E2E on the built artifact as early as practical. A built APK on an emulator is stronger artifact evidence but remains emulator evidence for physical-device claims.
+
+The final physical-device test should primarily validate residual device-specific gaps. Broken navigation, persistence, Binder/IPC wiring, install/launch, request/response flow or ordinary restart/recovery defects should be moved into earlier automated E2E whenever technically practical.
+
+Device/emulator E2E must clean run-owned app data, test fixtures, helper processes and localhost listeners according to the zero-residue contract.
+
+Physical-device/OEM/native-backend/thermal/performance/TalkBack evidence may remain explicitly pending after `AUTOMATED_PREFLIGHT_CONFIRMED` when it cannot truthfully run through ordinary automation; it still blocks stronger product-complete claims that require it.
 
 Each material APK/AAB build must carry a unique build identity distinct from the product version. Put product version, build ID and source revision in the artifact name/manifest; use Android `versionCode`/`versionName` consistently with release requirements rather than incrementing the marketing version for every local build.
 

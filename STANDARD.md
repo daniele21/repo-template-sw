@@ -1,6 +1,6 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.7.0
+Version: 0.8.0
 
 ## Purpose
 
@@ -18,13 +18,17 @@ The delivery corollary is:
 
 > Automation executes automatable work; humans make material decisions and provide genuinely real-environment evidence. CI should confirm deterministic validation when the agent has an equivalent local environment, and act as a remote execution backend when it does not.
 
+The E2E corollary is:
+
+> Final target-environment validation should confirm residual environment-specific claims, not become the first time the complete workflow is exercised.
+
 For products with a material UI:
 
 > Make the user's next decision obvious, reveal complexity progressively, communicate state clearly, and keep the interface consistent, accessible and recoverable.
 
 The standard is intentionally not a framework. A project should adopt only the mechanisms justified by its real requirements. Common semantics do not require common build, test, design or UI tools.
 
-Detailed operational semantics live in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md). Validation execution ownership across agent-local, remote-automated and real-environment contexts is defined in [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md). UI products may additionally adopt [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) through the optional `product-ui` profile.
+Detailed operational semantics live in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md). E2E target-environment and fidelity semantics live in [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md). Validation execution ownership across agent-local, remote-automated and real-environment contexts is defined in [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md). UI products may additionally adopt [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) through the optional `product-ui` profile.
 
 ## Operating principles
 
@@ -60,7 +64,7 @@ The UI should model the user's task rather than forcing users to understand inte
 
 ### Machines enforce what machines can check
 
-Do not spend agent context reminding a model about rules that deterministic tooling can enforce. Formatting, architecture boundaries, document budgets, token budgets, command-contract shape, product-experience contract shape, tests, generated-artifact bans and similar invariants belong in scripts and automated validation where practical.
+Do not spend agent context reminding a model about rules that deterministic tooling can enforce. Formatting, architecture boundaries, document budgets, token budgets, command-contract shape, E2E-environment contract shape, product-experience contract shape, tests, generated-artifact bans and similar invariants belong in scripts and automated validation where practical.
 
 ### Automation executes; humans decide
 
@@ -73,6 +77,14 @@ When the current agent lacks the required checkout, shell, SDK, platform toolcha
 Only evidence that genuinely depends on representative hardware, protected authority, an external environment or manual judgement belongs in `REAL_ENVIRONMENT`.
 
 A deterministic failure found remotely is process feedback only when an equivalent agent-local environment existed and should have found it. When no equivalent local capability existed, remote discovery is valid execution.
+
+### Environment fidelity is a separate axis
+
+Execution capability answers who/where can run a gate. Environment fidelity answers how closely the environment used by that gate represents the target relevant to the claim. These must not be conflated.
+
+A CI emulator can be `REMOTE_AUTOMATED` while only providing simulated/emulated fidelity. An automated physical-device farm can also be `REMOTE_AUTOMATED` while providing representative-physical evidence. A manual run on the actual supported target can be `REAL_ENVIRONMENT` and target-environment evidence.
+
+Critical E2E journeys declare their target environment, automated execution environments and known fidelity gaps in `.engineering/e2e.json`. Prefer the cheapest sufficient automated environment during iteration, then escalate fidelity only when a material target dimension requires it. Final real-environment testing should primarily close the residual fidelity gap rather than discover ordinary whole-system defects that could have been automated earlier.
 
 ### Git is history; docs describe the system that exists
 
@@ -97,6 +109,7 @@ Required before a project is considered engineering-grade:
 - an agent-triggerable remote validation path when supported coding agents may lack equivalent local execution capability for required deterministic gates;
 - formatting, lint/static checks, tests and build validation appropriate to the stack;
 - E2E applicability is explicitly decided rather than accidentally absent;
+- E2E-applicable repositories explicitly declare target environments, execution environments, fidelity classes/gaps and critical journeys rather than treating all E2E environments as equivalent;
 - material builds have unique build/source identity and do not silently overwrite prior builds;
 - local generated/build artifacts are bounded and do not accumulate indefinitely;
 - local runtimes/processes/listeners and other ephemeral resources have deterministic cleanup where applicable;
@@ -118,6 +131,8 @@ L0 plus:
 - integration/contract tests for critical internal boundaries;
 - automated E2E evidence for critical workflows when lower-level tests cannot establish the complete user/system outcome;
 - critical E2E journeys are intentionally small/high-value rather than broad UI-script coverage for its own sake;
+- critical E2E journeys map the relevant target environment to one or more automated environments and explicitly record residual fidelity gaps;
+- target/real-environment confirmation is required only where the product claim depends on dimensions automation cannot truthfully reproduce at sufficient fidelity;
 - migration and backward-compatibility strategy where data/contracts persist;
 - failure, cancellation and shutdown tests for critical lifecycle components;
 - backup/restore or recovery procedures where user/business data requires them;
@@ -144,12 +159,14 @@ L1 plus:
 - repeatability/cleanliness evidence for important dev/test/e2e/build/smoke/runtime lifecycles;
 - critical E2E journeys include representative failure/retry/recovery paths where those paths materially affect product correctness;
 - E2E runs exercise the real built/package/device surface when the stronger product claim depends on it and this is technically practical;
+- the highest practical automated environment fidelity is used before final target validation for high-value critical journeys, so residual manual/device evidence is intentionally narrow;
 - representative device/hardware evidence when hardware materially changes behavior;
-- machine-enforced documentation, agent-context, operating-contract and applicable product-experience checks;
+- machine-enforced documentation, agent-context, operating-contract, E2E-environment-contract and applicable product-experience checks;
 - explicit complexity/dependency review for meaningful additions;
 - reproducible benchmark/evidence identity where results influence engineering decisions;
 - automated repository policy/health validation;
 - automated first-pass health is measured or periodically reviewed so recurring avoidable formatting/compile/test/base-drift failures are moved to the earliest executor that can reproduce them;
+- repeated target-environment discoveries that are reproducible in a declared automated environment are treated as E2E-fidelity gaps and moved earlier;
 - execution-capability gaps are reviewed so supported coding agents do not require humans to run ordinary deterministic suites;
 - stale/duplicate documentation and completed-work detection;
 - when `product-ui` is adopted: important/high-risk workflows have representative-user usability evidence when justified, critical UX regressions are protected appropriately, and design-system/token/component drift is actively controlled.
@@ -231,7 +248,7 @@ Not every intent is applicable to every project; genuinely irrelevant commands m
 
 The same contract declares the repository publication gate, validation execution model and optional/required remote-preflight trigger. It does not require a universal local wrapper; agents select the applicable canonical project commands and execute them through the earliest capable automated environment.
 
-The detailed normative behavior for commands, pre-publication readiness, E2E, build identity, artifact lineage/lifecycle, build deltas, local runtimes, ports/processes and zero-residue cleanup is defined in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md). Executor selection and no-human-runner semantics are defined in [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md).
+The detailed normative behavior for commands, pre-publication readiness, E2E, build identity, artifact lineage/lifecycle, build deltas, local runtimes, ports/processes and zero-residue cleanup is defined in [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md). E2E target-environment/fidelity selection is defined in [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md) and `.engineering/e2e.json`. Executor selection and no-human-runner semantics are defined in [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md).
 
 ### Pre-publication readiness
 
@@ -241,20 +258,25 @@ Before publishing a change for automated validation, a coding agent must establi
 - verify ownership and inspect the complete diff rather than only the last edited files;
 - synchronize or otherwise verify against the current intended target base; stacked work remains explicitly conditional until its dependency is integrated/replayed;
 - select every deterministic gate required by blast radius and classify it as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT` for the current agent/session;
+- when E2E is required, select the affected critical journey and cheapest sufficient declared environment fidelity separately from executor classification;
 - execute all required `AGENT_LOCAL` gates directly;
 - route all required `REMOTE_AUTOMATED` gates through repository-owned automation rather than asking the user to execute them;
 - classify every failure and repair its owning cause instead of weakening/suppressing gates or applying unexplained symptom patches;
 - record PASS/FAIL/PENDING/N/A truthfully and keep real-environment evidence distinct from automatable validation.
 
-`READY_FOR_CI` applies when the current agent could execute every required deterministic gate locally and did so successfully. `READY_FOR_REMOTE_PREFLIGHT` applies when semantic/base/diff checks and available local gates pass but required deterministic gates need remote automation. `AUTOMATED_PREFLIGHT_CONFIRMED` means all required deterministic automated gates passed on the exact current head/base, regardless of execution location.
+`READY_FOR_CI` applies when the current agent could execute every required deterministic gate locally and did so successfully. `READY_FOR_REMOTE_PREFLIGHT` applies when semantic/base/diff checks and available local gates pass but required deterministic gates need remote automation. `AUTOMATED_PREFLIGHT_CONFIRMED` means all required deterministic automated gates passed on the exact current head/base at the required declared E2E fidelity, regardless of execution location.
 
-Changing the head or material target-base relationship invalidates prior affected readiness evidence.
+Changing the head, material target-base relationship or a target/environment assumption relevant to the claim invalidates prior affected readiness evidence.
 
 ### E2E validation
 
 `e2e` is a complete workflow validation boundary, not a synonym for all tests and not a synonym for smoke.
 
 Use E2E when correctness depends on the assembled system and cannot be established adequately by unit/integration/contract tests alone. Keep most invariants in lower-level tests and reserve E2E for a small set of critical journeys.
+
+E2E-applicable repositories declare target environments, execution environments, fidelity classes/gaps and critical-journey mappings in `.engineering/e2e.json`. Execution capability and environment fidelity remain separate axes: a remote automated emulator is not physical-device evidence simply because CI executed it.
+
+Prefer the cheapest automated environment that can prove the claim during normal iteration. Escalate to built/package execution and stronger virtual/physical fidelity when the changed invariant depends on those dimensions. Final target/real-environment validation should primarily close residual fidelity gaps that cannot truthfully be automated earlier.
 
 The standard does not mandate one framework. Prefer stack-native tooling. Browser/web projects should generally prefer Playwright unless an equally strong established solution already exists; native mobile/desktop and server/CLI projects should use the appropriate native or protocol-level equivalent.
 
@@ -352,6 +374,8 @@ Use a layered strategy:
 
 Do not shift deterministic low-level behavior into E2E merely because E2E feels more realistic. Prefer the cheapest test level capable of proving the claim.
 
+For E2E, also prefer the cheapest environment fidelity capable of proving the changed claim. Escalate from host/fake or simulated/emulated environments to representative virtual/physical/target environments only when a material target dimension requires it. Keep residual target-environment evidence explicit.
+
 Examples:
 
 - an active resource cannot be evicted;
@@ -363,13 +387,14 @@ Examples:
 - repeated lifecycle operations do not leak resident resources;
 - a critical create/use/save/reopen journey works end to end when that is a product-critical flow;
 - E2E failure cleanup leaves no project-owned server/browser/helper/temp residue;
+- E2E evidence reports the environment/fidelity actually exercised and does not overclaim a stronger device/target result;
 - loading/empty/error/disabled states remain usable and understandable on critical UI flows;
 - keyboard/focus/accessibility semantics remain valid where applicable;
 - start -> smoke -> stop leaves no project-owned listener/process/temp residue;
 - failed builds are not promoted as successful artifacts;
 - local artifact retention remains bounded.
 
-Use the narrowest useful test loop while iterating, then expand validation according to change scope. Before publication, `preflight-change` converts those scoped results into exact-head readiness evidence, classifies required gates by execution capability, runs available local gates and routes unavailable deterministic work through `remote-preflight`.
+Use the narrowest useful test loop while iterating, then expand validation according to change scope. Before publication, `preflight-change` converts those scoped results into exact-head readiness evidence, selects required E2E journey/environment fidelity when applicable, classifies required gates by execution capability, runs available local gates and routes unavailable deterministic work through `remote-preflight`.
 
 When a test fails, do not immediately mutate production code. First establish whether the failure is caused by the current change, already exists on the target base, is environment/toolchain-specific, is flaky/non-deterministic, or exposes an incorrect assumption/contract. Fix the owner of the violated invariant and add regression evidence at the lowest useful level.
 
@@ -384,6 +409,8 @@ Artifact/build deltas should surface meaningful size/performance changes when th
 ## Reproducibility
 
 A clean checkout should have a documented path to setup, test, E2E when applicable, build and run. Pin toolchains where practical, commit lockfiles, validate configuration and avoid environment-specific hidden state. Benchmark/evidence artifacts used for decisions should include enough identity to be reproduced.
+
+E2E-applicable repositories should make `.engineering/e2e.json` sufficient to identify which target/execution environments and fidelity gaps are relevant to each critical journey without relying on unwritten tribal knowledge.
 
 Material build manifests should identify source revision and enough toolchain/configuration context to diagnose why two builds differ. Local/global environment pollution should be avoided; prefer project-scoped environments and explicit configuration.
 
@@ -405,6 +432,7 @@ Recommended active documentation:
 - `docs/current-state.md`: short volatile repository-level status;
 - `docs/workstreams/`: only active, bounded implementation plans;
 - `design/`: product-experience contracts and bounded key references when `product-ui` is adopted;
+- `.engineering/e2e.json`: machine-readable current E2E target/execution environment and critical-journey mapping;
 - runbooks/evidence docs only when the project requires them.
 
 A completed workstream follows:
@@ -417,7 +445,7 @@ Do not create a document solely to record that a PR or isolated implementation s
 
 ### Root guide
 
-`AGENTS.md` is a routing layer, not a repository encyclopedia. It contains only durable repository-wide invariants, ownership/routing, task reading rules and validation selection. It points to `.engineering/commands.json` for canonical operational commands and to `design/ux-contract.json` for UI-product experience constraints when `product-ui` is adopted.
+`AGENTS.md` is a routing layer, not a repository encyclopedia. It contains only durable repository-wide invariants, ownership/routing, task reading rules and validation selection. It points to `.engineering/commands.json` for canonical operational commands, `.engineering/e2e.json` for E2E environment/fidelity routing and to `design/ux-contract.json` for UI-product experience constraints when `product-ui` is adopted.
 
 ### Scoped guides
 
@@ -475,11 +503,11 @@ A meaningful change progresses through applicable levels:
 
 Not every change needs every level, but no applicable level should be silently skipped.
 
-`OPERATIONS COMPLETE` means applicable canonical commands, E2E boundary, build/artifact identity, build delta, runtime shutdown and ephemeral cleanup agree with the behavior being claimed.
+`OPERATIONS COMPLETE` means applicable canonical commands, E2E boundary/environment fidelity, build/artifact identity, build delta, runtime shutdown and ephemeral cleanup agree with the behavior being claimed.
 
 `EXPERIENCE COMPLETE` applies when a user-facing interaction changes and means task model, information hierarchy, states/feedback, accessibility, adaptive layout, design-system/brand consistency and required UX/E2E/regression evidence agree with the claim being made.
 
-`AUTOMATED PREFLIGHT COMPLETE` means the exact current head has no unresolved material ambiguity, the complete diff and intended target-base relationship were reviewed, and every required deterministic automatable gate for the blast radius passed through `AGENT_LOCAL`, `REMOTE_AUTOMATED`, or both. `REAL_ENVIRONMENT` evidence may remain explicitly pending, but absence of required automated evidence is never treated as a pass.
+`AUTOMATED PREFLIGHT COMPLETE` means the exact current head has no unresolved material ambiguity, the complete diff and intended target-base relationship were reviewed, and every required deterministic automatable gate for the blast radius passed through `AGENT_LOCAL`, `REMOTE_AUTOMATED`, or both at the required declared E2E fidelity. `REAL_ENVIRONMENT` evidence may remain explicitly pending, but absence of required automated evidence is never treated as a pass.
 
 A change is not complete merely because code exists. The owning tests, integration/E2E behavior, failure/resource semantics, operational lifecycle, applicable experience semantics, documentation and evidence must agree with the claim being made.
 
@@ -493,8 +521,8 @@ Release workflows should promote already-identified/validated artifacts rather t
 
 ## Adoption philosophy
 
-For a new project, copy the smallest applicable core and selected profiles, then specialize all project-specific placeholders including `.engineering/commands.json`. UI products should add `product-ui` only when a material user-facing interface exists and then specialize the design contracts rather than leaving generic placeholders.
+For a new project, copy the smallest applicable core and selected profiles, then specialize all project-specific placeholders including `.engineering/commands.json` and `.engineering/e2e.json`. UI products should add `product-ui` only when a material user-facing interface exists and then specialize the design contracts rather than leaving generic placeholders.
 
-For an existing project, audit before copying. Preserve good existing practices, native build/test tooling, design systems and stronger local mechanisms; identify conflicts and gaps and migrate incrementally. Never overwrite project-specific architecture, CI, command tooling, E2E framework, brand/design source or documentation blindly.
+For an existing project, audit before copying. Preserve good existing practices, native build/test tooling, design systems and stronger local mechanisms; identify conflicts and gaps and migrate incrementally. Never overwrite project-specific architecture, CI, command tooling, E2E framework/environment strategy, brand/design source or documentation blindly.
 
 A project is self-contained after adoption. Template updates are explicit migrations, not runtime dependencies.

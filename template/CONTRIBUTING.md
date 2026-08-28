@@ -12,7 +12,9 @@ Resolve material ambiguity from canonical repository evidence before implementat
 
 `.engineering/commands.json` is the canonical repository-level mapping for `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean`, and declares publication readiness, validation execution classes and remote-preflight routing.
 
-Use the project's native tooling behind those intents. Do not introduce a second undocumented build/test/E2E/run path merely for convenience.
+`.engineering/e2e.json` is the canonical E2E environment/fidelity mapping: applicability, target environments, automated execution environments, material fidelity gaps and critical journeys.
+
+Use the project's native tooling behind those intents. Do not introduce a second undocumented build/test/E2E/run path or parallel E2E-environment truth merely for convenience.
 
 ## Product experience changes
 
@@ -33,6 +35,7 @@ Run repository health checks before publishing engineering-governance changes:
 ```bash
 python3 scripts/verify_repository.py
 python3 scripts/verify_operations.py
+python3 scripts/verify_e2e.py
 python3 scripts/verify_product_experience.py
 python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
@@ -50,6 +53,10 @@ Do not ask the user to run an automatable deterministic command merely because t
 
 Use E2E only when a complete critical user/system outcome needs to be proven across assembled boundaries and lower-level tests are insufficient. `smoke` proves minimum built/runtime viability and is not a substitute for E2E.
 
+When E2E is required, read `.engineering/e2e.json` and select the affected critical journey plus the cheapest automated environment whose fidelity is sufficient for the changed claim. Escalate to built/package, stronger virtual or representative physical evidence only when a material target dimension requires it. Report the execution environment ID/fidelity class and keep residual target-environment gaps explicit.
+
+Execution capability and environment fidelity are independent. A CI emulator can be `REMOTE_AUTOMATED` while still only `simulated_or_emulated`; do not present it as physical-device evidence.
+
 For UI changes, validate only the experience layers relevant to the claim: component/state behavior, critical-journey E2E, accessibility, adaptive layout, visual regression for stable high-risk surfaces, and usability evidence when the risk/value justifies it. A happy-path screenshot alone is not sufficient.
 
 When E2E runs, verify cleanup of project-owned servers/listeners, browser/device sessions, test data, downloads/temp state and generated evidence. Failure traces/screenshots/videos/logs must have bounded retention and remain privacy-safe.
@@ -64,7 +71,9 @@ If every required deterministic gate can run in the current agent environment an
 
 If required deterministic gates are automatable but unavailable to the current agent, record `READY_FOR_REMOTE_PREFLIGHT` after semantic/base/diff and available local checks pass, then use `skills/remote-preflight/SKILL.md` to trigger repository-owned remote automation. The agent should inspect failures, fix the owning cause and retrigger without delegating the loop to the user.
 
-`AUTOMATED_PREFLIGHT_CONFIRMED` requires every required deterministic automated gate to pass on the exact head/base. Real-environment evidence may remain explicitly pending and still blocks stronger claims that depend on it.
+`AUTOMATED_PREFLIGHT_CONFIRMED` requires every required deterministic automated gate to pass on the exact head/base at the required declared E2E fidelity. Real-environment evidence may remain explicitly pending and still blocks stronger claims that depend on it.
+
+Final physical/manual/target-environment testing should primarily close declared residual fidelity gaps. If it repeatedly discovers ordinary workflow failures reproducible in an automated environment, move that evidence earlier instead of normalizing final testing as the first whole-system check.
 
 ## Dependencies and architecture
 
@@ -72,7 +81,7 @@ Avoid dynamic versions and speculative dependencies. New abstractions/dependenci
 
 ## Pull requests
 
-Keep PRs focused. Describe what changed, why, user/developer impact, relevant failure/resource/operating/experience implications, and validation executed. Distinguish agent-local, remote-automated and real-environment evidence and do not claim hardware/device/user evidence that was not run.
+Keep PRs focused. Describe what changed, why, user/developer impact, relevant failure/resource/operating/experience implications, and validation executed. Distinguish agent-local, remote-automated and real-environment evidence; for E2E also state the selected environment/fidelity and residual gaps. Do not claim hardware/device/user evidence that was not run.
 
 Record preflight head/base identity and the actual readiness state: `READY_FOR_CI`, `READY_FOR_REMOTE_PREFLIGHT`, `AUTOMATED_PREFLIGHT_CONFIRMED` or a blocked state. A known-red draft may be published for explicit collaboration/investigation, but must not be represented as ready.
 

@@ -39,6 +39,14 @@ Keep E2E focused on a small set of critical journeys whose complete outcome depe
 
 When the claim concerns production output, run E2E against the built/served production artifact when practical rather than only the dev server.
 
+## Browser E2E environment fidelity
+
+Specialize `.engineering/e2e.json` around material browser/runtime/deployment dimensions: supported browser engine/version family, viewport/device class when behavior changes materially, built production output vs dev server, backend/API implementation, authentication/external services and network/deployment topology when part of the claim.
+
+A CI browser running the supported production build can be `representative_virtual` for browser/application behavior when the browser/OS/deployment dimensions are sufficiently representative. Browser emulation of viewport/device characteristics does not become physical-device evidence. Real browser/device farms can be `representative_physical` when hardware/input/device behavior is material; a real deployed/customer-equivalent target is `target_environment` only for the dimensions it actually represents.
+
+Final production-like/manual validation should primarily close residual deployment, real-device/input, protected-service or external-topology gaps. Navigation, persistence, API wiring, authentication flow, built-asset loading and ordinary recovery paths should be automated earlier whenever practical.
+
 Playwright/browser E2E cleanup must close browser/context processes and project-owned servers/listeners, and isolate/remove run-owned profiles, storage, downloads and temporary data. Traces/screenshots/videos/logs produced on failure are bounded CI evidence artifacts with build/run identity, not permanent repository content.
 
 Local dev/test servers bind to loopback by default unless external access is intentional, use configurable collision-aware ports, and leave no project-owned listener or worker after stop/failure/interrupt.

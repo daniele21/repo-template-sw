@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.8.0 — 2026-08-28
+
+Makes E2E validation explicitly environment-aware so final physical/manual/target testing confirms residual environment-specific risk instead of becoming the first time a complete workflow is exercised:
+
+- introduces `E2E-ENVIRONMENT-CONTRACT.md` with the governing rule **final target-environment validation should confirm residual environment-specific claims, not become the first complete-system test**;
+- separates **execution capability** (`AGENT_LOCAL`, `REMOTE_AUTOMATED`, `REAL_ENVIRONMENT`) from **environment fidelity** (`host_or_fake`, `simulated_or_emulated`, `representative_virtual`, `representative_physical`, `target_environment`);
+- adds `.engineering/e2e.json` as the machine-readable owner for E2E applicability, target environments, execution environments, material dimensions, fidelity gaps and critical-journey mappings;
+- adds zero-dependency `verify_e2e.py` and wires it into template/adopter repository-health CI;
+- requires E2E-applicable repositories to identify the target environment and the automated environments used before final validation instead of treating all E2E runs as equivalent evidence;
+- updates `validate-change` and `preflight-change` so E2E selection follows both blast radius and the cheapest sufficient declared environment fidelity, escalating only when the product claim depends on missing target dimensions;
+- requires E2E evidence to report the actual environment/fidelity used and prevents emulator/simulator evidence from being promoted into physical/target-environment claims;
+- strengthens L1/L2 maturity so critical journeys explicitly retain residual fidelity gaps and high-value workflows use the highest practical automated fidelity before final target validation;
+- specializes Android guidance around host/JVM -> emulator -> built APK on emulator -> representative physical device -> target/OEM confirmation, while preserving native Compose UI Test/Espresso/UI Automator tooling;
+- specializes local-AI guidance so small deterministic model/runtime E2E proves orchestration while representative model/backend/hardware evidence remains required for memory, throughput, thermals and accelerator-specific claims;
+- updates adoption/migration guidance so existing strong E2E frameworks are preserved while target/fidelity semantics are layered onto them rather than replaced.
+
+The E2E model is now: **prove invariants low -> prove the complete workflow automatically -> increase environment fidelity only where material -> leave only irreducible target-environment deltas for final confirmation.**
+
 ## 0.7.0 — 2026-08-26
 
 Makes preflight execution-capability and blast-radius aware so strong validation neither turns the repository owner into a manual CI runner nor forces full CI on every ordinary PR:
