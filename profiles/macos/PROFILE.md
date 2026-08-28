@@ -32,6 +32,14 @@ Typical mapping:
 
 Keep E2E focused on critical workflows that cross real application boundaries. When a product claim depends on packaged/runtime behavior, run E2E against the built `.app` or packaged artifact when technically practical, not only an Xcode/source launch.
 
+## macOS E2E environment fidelity
+
+Specialize `.engineering/e2e.json` around the macOS dimensions material to the claim: supported OS/version family, architecture, packaged-vs-dev runtime, permissions/sandbox/entitlements, graphics/audio/video hardware and attached peripherals when applicable.
+
+A real built `.app` exercised on an automated macOS runner may be `representative_virtual` for software/runtime claims when the runner represents the supported OS/architecture closely enough. Real Apple hardware used automatically can be `representative_physical`; the actual supported hardware/peripheral configuration used for final acceptance is `target_environment` only for the dimensions it really represents.
+
+Do not promote a virtualized macOS runner into hardware/audio/GPU/peripheral evidence. Final physical/manual validation should primarily cover those residual dimensions; ordinary packaged launch, persistence, helper-process, IPC, restart/recovery and file-workflow failures should move into automated E2E when practical.
+
 E2E must clean run-owned app state, temporary documents, helper processes, permissions/test state that the harness safely owns, loopback servers/listeners and generated evidence. Screenshots/logs/diagnostics from failures are bounded CI artifacts with build/run identity.
 
 Every material `.app`/package build gets a unique build ID and artifact name/manifest containing source identity. Successful artifacts are immutable; failed staging output is never promoted as valid.
