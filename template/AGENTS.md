@@ -9,9 +9,10 @@ Always read this guide. Then read only:
 1. the closest scoped `AGENTS.md`, when one exists for the target subtree;
 2. the canonical architecture/feature/workstream source required by the task;
 3. `.engineering/commands.json` when setup/dev/test/E2E/build/package/runtime/cleanup, execution capability or publication-readiness behavior is relevant;
-4. `skills/preflight-change/SKILL.md` before publication and `skills/remote-preflight/SKILL.md` when required deterministic gates cannot run in the current agent environment;
-5. when `product-ui` is adopted and user-facing behavior/visual semantics change, `design/ux-contract.json`, `design/brand-kit.json` and `skills/design-product-experience/SKILL.md` for meaningful UX/UI work;
-6. the owning implementation, direct consumers and nearby tests.
+4. `.engineering/e2e.json` when a change affects a complete workflow, E2E selection, target platform/device/browser/runtime assumptions or real-environment evidence;
+5. `skills/preflight-change/SKILL.md` before publication and `skills/remote-preflight/SKILL.md` when required deterministic gates cannot run in the current agent environment;
+6. when `product-ui` is adopted and user-facing behavior/visual semantics change, `design/ux-contract.json`, `design/brand-kit.json` and `skills/design-product-experience/SKILL.md` for meaningful UX/UI work;
+7. the owning implementation, direct consumers and nearby tests.
 
 Do not load every plan or all documentation for a local change.
 
@@ -39,7 +40,7 @@ Add scoped `AGENTS.md` files only for subtrees with meaningful local invariants,
 
 ## Project operating commands
 
-Canonical repository-level command routing, publication gate and validation execution model live in `.engineering/commands.json`.
+Canonical repository-level command routing, publication gate and validation execution model live in `.engineering/commands.json`. E2E target environments, execution environments, fidelity classes/gaps and critical-journey mappings live in `.engineering/e2e.json`.
 
 Use the declared intent rather than inventing a second command path:
 
@@ -53,9 +54,13 @@ Use the declared intent rather than inventing a second command path:
 
 Do not treat `e2e` and `smoke` as synonyms. Keep E2E small and focused on critical journeys; prefer lower-level tests for deterministic invariants.
 
+For E2E, do not confuse execution capability with environment fidelity. `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` describe who/where can execute a gate for the current agent/session. `.engineering/e2e.json` describes how representative the selected host/emulator/simulator/virtual/physical/target environment is for the claim. A green emulator run is not physical-device evidence.
+
+The target-environment test should primarily confirm residual fidelity gaps that could not be reproduced earlier. Ordinary complete-workflow failures should be moved into automated E2E at the highest practical fidelity declared for the critical journey.
+
 The underlying command remains native to this repository. When build/runtime/E2E behavior is affected, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup required by the local operating contract.
 
-Before publishing, use `preflight-change` to classify every required gate as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT` for the current agent/session.
+Before publishing, use `preflight-change` to classify every required gate as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT` for the current agent/session and select the required E2E journey/environment fidelity from `.engineering/e2e.json`.
 
 If a deterministic gate is automatable but unavailable to the current agent, use `remote-preflight`. Do not ask the user to become the test runner solely because the agent lacks a shell, checkout, SDK or platform toolchain.
 
@@ -98,10 +103,11 @@ Do not make a screen denser or expose internal architecture merely because the i
 6. Inspect owner, direct consumers, fakes and tests before changing a shared contract.
 7. Implement one coherent vertical slice without speculative layers.
 8. Use `validate-change` to choose the narrowest sufficient validation while iterating; diagnose the owning invariant/root cause before patching a failure.
-9. Update only the canonical durable document/design contract whose current behavior/decision changed.
-10. When an active workstream completes, use `finalize-workstream` to transfer durable knowledge and delete the plan by default.
-11. Use `preflight-change` before publishing: refresh target base, inspect the complete diff and classify required validation by current execution capability.
-12. Run all required `AGENT_LOCAL` gates. If deterministic gates are `REMOTE_AUTOMATED`, establish `READY_FOR_REMOTE_PREFLIGHT`, invoke `remote-preflight`, inspect failures, repair the owning cause and retrigger until automated evidence is complete or a genuine blocker appears.
+9. When a critical journey is affected, use `.engineering/e2e.json` to choose the cheapest sufficient automated environment and escalate fidelity only when the changed claim depends on a missing environment dimension.
+10. Update only the canonical durable document/design/E2E contract whose current behavior/decision changed.
+11. When an active workstream completes, use `finalize-workstream` to transfer durable knowledge and delete the plan by default.
+12. Use `preflight-change` before publishing: refresh target base, inspect the complete diff and classify required validation by current execution capability.
+13. Run all required `AGENT_LOCAL` gates. If deterministic gates are `REMOTE_AUTOMATED`, establish `READY_FOR_REMOTE_PREFLIGHT`, invoke `remote-preflight`, inspect failures, repair the owning cause and retrigger until automated evidence is complete or a genuine blocker appears.
 
 ## Validation routing
 
@@ -109,10 +115,11 @@ Run the repository-health checks, including:
 
 ```bash
 python3 scripts/verify_operations.py
+python3 scripts/verify_e2e.py
 python3 scripts/verify_product_experience.py
 ```
 
-`verify_product_experience.py` is `N/A` unless `product-ui` is adopted. Use `.engineering/commands.json` for project-specific targeted/full command routing instead of duplicating command strings here.
+`verify_e2e.py` verifies that E2E applicability, target environments, execution environments, fidelity gaps and critical-journey mappings are explicit. `verify_product_experience.py` is `N/A` unless `product-ui` is adopted. Use `.engineering/commands.json` for project-specific targeted/full command routing instead of duplicating command strings here.
 
 Execution evidence is reported separately:
 
@@ -120,7 +127,7 @@ Execution evidence is reported separately:
 - `REMOTE_AUTOMATED` — executed by repository-owned remote automation;
 - `REAL_ENVIRONMENT` — physical/device/external/manual evidence that automation cannot truthfully replace.
 
-A missing real-device/hardware/usability run must be reported as pending; never promote synthetic evidence into a stronger claim. E2E/visual traces/screenshots/videos/logs are bounded evidence artifacts, not durable repository docs.
+Environment fidelity is reported separately from executor classification using `.engineering/e2e.json`. A missing real-device/hardware/usability run must be reported as pending when the journey requires it; never promote synthetic/emulator evidence into a stronger claim. E2E/visual traces/screenshots/videos/logs are bounded evidence artifacts, not durable repository docs.
 
 ## Documentation lifecycle
 
@@ -130,6 +137,7 @@ A missing real-device/hardware/usability run must be reported as pending; never 
 - `docs/current-state.md` is the single short repository-level operational ledger.
 - `docs/workstreams/` contains only active bounded implementation plans.
 - `design/` owns project experience/brand contracts and bounded key reference views when `product-ui` is adopted.
+- `.engineering/e2e.json` owns current E2E environment/fidelity routing; do not duplicate it in narrative test-plan docs.
 - Completed plans are deleted after durable behavior/decisions are transferred. Archive only with independent audit/regulatory/release/historical justification.
 - Git history owns implementation history.
 
@@ -143,4 +151,4 @@ Keep this guide within the configured budget in `.engineering/documentation-poli
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, leave a material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass canonical command/test/E2E/build/artifact lifecycle or publication gate, delegate automatable deterministic validation to the user merely because the agent lacks execution capability, bypass an adopted product-experience/design-system contract, or claim evidence that was not executed.
+Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, leave a material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass canonical command/test/E2E/environment-fidelity/build/artifact lifecycle or publication gate, delegate automatable deterministic validation to the user merely because the agent lacks execution capability, bypass an adopted product-experience/design-system contract, or claim evidence that was not executed.
