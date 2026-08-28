@@ -16,6 +16,7 @@ FIDELITY_ORDER = [
     "target_environment",
 ]
 FIDELITY_CLASSES = set(FIDELITY_ORDER)
+FIDELITY_RANK = {name: index for index, name in enumerate(FIDELITY_ORDER)}
 APPLICABILITY = {"required", "recommended", "n/a"}
 AUTOMATION = {"automated", "real_environment"}
 REAL_CONFIRMATION = {"required", "conditional", "not_required"}
@@ -147,9 +148,14 @@ def main() -> int:
 
     commands_path = root / ".engineering" / "commands.json"
     commands_data = read_json(commands_path, ".engineering/commands.json", errors)
-    command_entry = (commands_data.get("commands") or {}).get("e2e") if commands_data else None
+    commands_section = commands_data.get("commands") if commands_data else None
+    if commands_data and not isinstance(commands_section, dict):
+        errors.append("commands.json commands must be an object")
+        command_entry = None
+    else:
+        command_entry = commands_section.get("e2e") if isinstance(commands_section, dict) else None
     command_status = command_entry.get("status") if isinstance(command_entry, dict) else None
-    if commands_data and not isinstance(command_entry, dict):
+    if commands_data and isinstance(commands_section, dict) and not isinstance(command_entry, dict):
         errors.append("commands.json must declare commands.e2e")
     elif status == "n/a" and command_status != "n/a":
         errors.append("E2E applicability n/a requires commands.e2e.status = n/a")
@@ -250,16 +256,27 @@ def main() -> int:
             errors,
             allow_empty=True,
         )
+        automated_fidelity_ranks: list[int] = []
         for ref in automated_refs:
-            if ref in executions and executions[ref].get("automation") != "automated":
+            environment = executions.get(ref)
+            if environment and environment.get("automation") != "automated":
                 errors.append(
                     f"critical_journeys.{journey_id}.automated_environment_refs must reference automated environments: {ref}"
                 )
+            if environment and environment.get("automation") == "automated":
+                fidelity = environment.get("fidelity_class")
+                if fidelity in FIDELITY_RANK:
+                    automated_fidelity_ranks.append(FIDELITY_RANK[fidelity])
         minimum = journey.get("minimum_automated_fidelity")
         if minimum not in FIDELITY_CLASSES:
             errors.append(
                 f"critical_journeys.{journey_id}.minimum_automated_fidelity must be one of {FIDELITY_ORDER}"
             )
+        elif automated_refs and automated_fidelity_ranks:
+            if max(automated_fidelity_ranks) < FIDELITY_RANK[minimum]:
+                errors.append(
+                    f"critical_journeys.{journey_id} does not reach minimum_automated_fidelity {minimum}"
+                )
         confirmation = journey.get("real_environment_confirmation")
         if confirmation not in REAL_CONFIRMATION:
             errors.append(
