@@ -1,17 +1,17 @@
 # <PROJECT_NAME> — Coding Agent Guide
 
-This file is the repository-wide navigation layer for coding agents. It owns durable invariants, routing and validation selection. It is not a project-status ledger or a substitute for architecture/feature documentation.
+This is the repository-wide routing layer for coding agents. It owns durable invariants, routing and validation selection, not project status or detailed architecture.
 
 ## Read only what the task requires
 
 Always read this guide. Then read only:
 
-1. the closest scoped `AGENTS.md`, when one exists for the target subtree;
+1. the closest scoped `AGENTS.md` for the target subtree, if present;
 2. the canonical architecture/feature/workstream source required by the task;
-3. `.engineering/commands.json` when setup/dev/test/E2E/build/package/runtime/cleanup, execution capability or publication-readiness behavior is relevant;
-4. `.engineering/e2e.json` when a change affects a complete workflow, E2E selection, target platform/device/browser/runtime assumptions or real-environment evidence;
-5. `skills/preflight-change/SKILL.md` before publication and `skills/remote-preflight/SKILL.md` when required deterministic gates cannot run in the current agent environment;
-6. when `product-ui` is adopted and user-facing behavior/visual semantics change, `design/ux-contract.json`, `design/brand-kit.json` and `skills/design-product-experience/SKILL.md` for meaningful UX/UI work;
+3. `.engineering/commands.json` for setup/dev/test/E2E/build/runtime/cleanup, execution capability or publication readiness;
+4. `.engineering/e2e.json` for complete-workflow, target device/platform/browser/runtime or E2E-fidelity questions;
+5. `skills/preflight-change/SKILL.md` before publication and `skills/remote-preflight/SKILL.md` when required deterministic gates cannot run locally;
+6. when `product-ui` is adopted and user-facing semantics change, `design/ux-contract.json`, `design/brand-kit.json` and `skills/design-product-experience/SKILL.md`;
 7. the owning implementation, direct consumers and nearby tests.
 
 Do not load every plan or all documentation for a local change.
@@ -24,7 +24,7 @@ Do not load every plan or all documentation for a local change.
 
 <REPLACE_WITH_PROJECT_SPECIFIC_DURABLE_INVARIANTS>
 
-Keep this list short. Do not copy generic advice already enforced by the standard, Skills or CI unless the project needs a local specialization.
+Keep this list short. Do not copy generic rules already enforced by the standard, Skills or CI unless this project needs a specialization.
 
 ## Ownership and routing
 
@@ -34,41 +34,35 @@ Keep this list short. Do not copy generic advice already enforced by the standar
 | <runtime/lifecycle> | <owner path> | <adapters/persistence/tests> |
 | <persistence/data lifecycle> | <owner path> | <migrations/consumers/tests> |
 | <UI/transport adapter> | <owner path> | <owning domain contract/tests> |
-| <product experience / design system, if applicable> | `design/ux-contract.json` | `skills/design-product-experience/SKILL.md` + <canonical design/component source + critical journeys> |
+| <product experience / design system, if applicable> | `design/ux-contract.json` | `skills/design-product-experience/SKILL.md` + <canonical design/component source> |
 
-Add scoped `AGENTS.md` files only for subtrees with meaningful local invariants, hazards, ownership or validation commands.
+Add scoped guides only where a subtree has meaningful local invariants, hazards, ownership or validation commands.
 
 ## Project operating commands
 
-Canonical repository-level command routing, publication gate and validation execution model live in `.engineering/commands.json`. E2E target environments, execution environments, fidelity classes/gaps and critical-journey mappings live in `.engineering/e2e.json`.
+`.engineering/commands.json` owns command/publication/execution routing. `.engineering/e2e.json` owns target environments, execution environments, fidelity gaps and critical-journey mapping.
 
-Use the declared intent rather than inventing a second command path:
+Use the declared intent rather than inventing another path:
 
-- `check` for broad cheap validation while iterating;
-- `test` for unit/integration/contract behavioral validation;
-- `e2e` when the claim crosses a complete critical user/system workflow boundary and lower-level tests are insufficient;
-- `build` when runnable/build output is affected;
-- `smoke` when minimal runtime/built-artifact viability must be proven;
-- `package` only when distributable output is relevant;
-- `stop`/`clean` for project-owned runtime/generated state.
+- `check` — broad cheap iteration validation;
+- `test` — unit/integration/contract behavior;
+- `e2e` — complete critical workflow when lower-level tests are insufficient;
+- `build` — runnable/build output;
+- `smoke` — minimum built/runtime viability;
+- `package` — distributable output when relevant;
+- `stop`/`clean` — project-owned runtime/generated state.
 
-Do not treat `e2e` and `smoke` as synonyms. Keep E2E small and focused on critical journeys; prefer lower-level tests for deterministic invariants.
+Do not treat `e2e` and `smoke` as synonyms. Keep E2E small and critical.
 
-For E2E, do not confuse execution capability with environment fidelity. `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` describe who/where can execute a gate for the current agent/session. `.engineering/e2e.json` describes how representative the selected host/emulator/simulator/virtual/physical/target environment is for the claim. A green emulator run is not physical-device evidence.
+For E2E, executor and environment fidelity are independent. `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` say who/where executes a gate. `.engineering/e2e.json` says how representative its host/emulator/simulator/virtual/physical/target environment is. A green emulator run is not physical-device evidence.
 
-The target-environment test should primarily confirm residual fidelity gaps that could not be reproduced earlier. Ordinary complete-workflow failures should be moved into automated E2E at the highest practical fidelity declared for the critical journey.
+Use the cheapest automated E2E environment that proves the claim and escalate only when a material target dimension requires it. Final target-environment testing should primarily confirm declared residual gaps, not discover ordinary complete-workflow failures reproducible earlier.
 
-The underlying command remains native to this repository. When build/runtime/E2E behavior is affected, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup required by the local operating contract.
-
-Before publishing, use `preflight-change` to classify every required gate as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT` for the current agent/session and select the required E2E journey/environment fidelity from `.engineering/e2e.json`.
-
-If a deterministic gate is automatable but unavailable to the current agent, use `remote-preflight`. Do not ask the user to become the test runner solely because the agent lacks a shell, checkout, SDK or platform toolchain.
+When build/runtime/E2E behavior changes, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup. Before publishing, `preflight-change` selects required gates, E2E journey/fidelity and executor class. Use `remote-preflight` for deterministic gates unavailable locally; do not turn the user into the test runner because the agent lacks tooling.
 
 ## Product experience routing
 
-When `.engineering/baseline.json` includes `product-ui`, `design/ux-contract.json` and `design/brand-kit.json` are canonical routing surfaces for user-facing experience and brand/design-system constraints.
-
-For meaningful UX/UI work, use `design-product-experience` and preserve this decision order at the depth justified by the change:
+When `product-ui` is adopted, `design/ux-contract.json` and `design/brand-kit.json` own experience/brand routing. Meaningful UX/UI work follows, at proportional depth:
 
 ```text
 user outcome
@@ -85,33 +79,31 @@ user outcome
 -> validation
 ```
 
-Classify the change first:
-
 - structural UX — use the full sequence;
-- interaction — start from the owning task/journey and cover changed interaction/state/accessibility/motion layers;
-- visual-only — preserve the settled flow, start from the design-system/brand owner and keep the change local.
+- interaction — start from the owning task/journey and affected layers;
+- visual-only — preserve settled flow/semantics and start from the design-system/brand owner.
 
-Do not make a screen denser or expose internal architecture merely because the implementation exposes more options. Do not create a new visual component when the canonical design system already owns the semantic role. Do not use animation, graphics or polish to compensate for an unresolved task flow, hierarchy or feedback model.
+Do not expose implementation complexity, create duplicate semantic components, or use animation/graphics/polish to compensate for unresolved task flow, hierarchy or feedback.
 
 ## Core change workflow
 
 1. Confirm the owning boundary and smallest coherent scope.
-2. Resolve material ambiguity from canonical repository evidence; if meaningful product/contract alternatives remain, ask the user before implementing that decision.
-3. Use `plan-workstream` only for work large enough to need dependency/state coordination.
+2. Resolve material ambiguity from canonical repository evidence; ask the user only when meaningful product/contract alternatives remain.
+3. Use `plan-workstream` only when dependency/state coordination is useful.
 4. Use `structured-change` before and after meaningful code changes.
-5. If `product-ui` is adopted and the change meaningfully affects UX/UI semantics, use `design-product-experience` before implementation; do not invoke a full UX exercise for a genuinely visual-only local edit.
-6. Inspect owner, direct consumers, fakes and tests before changing a shared contract.
+5. For meaningful `product-ui` changes, use `design-product-experience` at proportional depth.
+6. Inspect owner, direct consumers, fakes and tests before changing shared contracts.
 7. Implement one coherent vertical slice without speculative layers.
-8. Use `validate-change` to choose the narrowest sufficient validation while iterating; diagnose the owning invariant/root cause before patching a failure.
-9. When a critical journey is affected, use `.engineering/e2e.json` to choose the cheapest sufficient automated environment and escalate fidelity only when the changed claim depends on a missing environment dimension.
-10. Update only the canonical durable document/design/E2E contract whose current behavior/decision changed.
-11. When an active workstream completes, use `finalize-workstream` to transfer durable knowledge and delete the plan by default.
-12. Use `preflight-change` before publishing: refresh target base, inspect the complete diff and classify required validation by current execution capability.
-13. Run all required `AGENT_LOCAL` gates. If deterministic gates are `REMOTE_AUTOMATED`, establish `READY_FOR_REMOTE_PREFLIGHT`, invoke `remote-preflight`, inspect failures, repair the owning cause and retrigger until automated evidence is complete or a genuine blocker appears.
+8. Use `validate-change` for the narrowest sufficient iteration loop; diagnose the owning invariant before patching failures.
+9. For affected critical journeys, use `.engineering/e2e.json` to select the cheapest sufficient automated fidelity and explicit residual gaps.
+10. Update only canonical durable documents/contracts whose current behavior changed.
+11. Finalize completed workstreams and delete plans by default after durable knowledge transfer.
+12. Before publication, use `preflight-change`: refresh target base, inspect the full diff, classify required gates and run all `AGENT_LOCAL` work.
+13. Route required `REMOTE_AUTOMATED` gates through `remote-preflight`; inspect, fix and retrigger until complete or genuinely blocked.
 
 ## Validation routing
 
-Run the repository-health checks, including:
+Run repository-health checks, including:
 
 ```bash
 python3 scripts/verify_operations.py
@@ -119,36 +111,33 @@ python3 scripts/verify_e2e.py
 python3 scripts/verify_product_experience.py
 ```
 
-`verify_e2e.py` verifies that E2E applicability, target environments, execution environments, fidelity gaps and critical-journey mappings are explicit. `verify_product_experience.py` is `N/A` unless `product-ui` is adopted. Use `.engineering/commands.json` for project-specific targeted/full command routing instead of duplicating command strings here.
+`verify_e2e.py` verifies E2E applicability/environment/fidelity/journey routing. `verify_product_experience.py` is `N/A` unless `product-ui` is adopted. Project commands remain in `.engineering/commands.json`.
 
-Execution evidence is reported separately:
+Report evidence separately:
 
-- `AGENT_LOCAL` — executed by the current agent;
-- `REMOTE_AUTOMATED` — executed by repository-owned remote automation;
-- `REAL_ENVIRONMENT` — physical/device/external/manual evidence that automation cannot truthfully replace.
+- `AGENT_LOCAL` — current agent executed it;
+- `REMOTE_AUTOMATED` — repository-owned automation executed it;
+- `REAL_ENVIRONMENT` — physical/device/external/manual evidence automation cannot truthfully replace.
 
-Environment fidelity is reported separately from executor classification using `.engineering/e2e.json`. A missing real-device/hardware/usability run must be reported as pending when the journey requires it; never promote synthetic/emulator evidence into a stronger claim. E2E/visual traces/screenshots/videos/logs are bounded evidence artifacts, not durable repository docs.
+For E2E also report the environment/fidelity from `.engineering/e2e.json` and residual gaps. Missing required real-device/hardware/usability evidence stays pending; synthetic/emulator evidence cannot satisfy a stronger claim. Traces/screenshots/videos/logs are bounded evidence artifacts, not durable docs.
 
 ## Documentation lifecycle
 
-- `docs/architecture.md` owns current architecture/ownership.
-- `docs/features/` owns durable feature behavior when additional documentation is needed.
-- `docs/adr/` owns accepted durable architectural decisions.
-- `docs/current-state.md` is the single short repository-level operational ledger.
-- `docs/workstreams/` contains only active bounded implementation plans.
-- `design/` owns project experience/brand contracts and bounded key reference views when `product-ui` is adopted.
-- `.engineering/e2e.json` owns current E2E environment/fidelity routing; do not duplicate it in narrative test-plan docs.
-- Completed plans are deleted after durable behavior/decisions are transferred. Archive only with independent audit/regulatory/release/historical justification.
-- Git history owns implementation history.
+- `docs/architecture.md` — current architecture/ownership.
+- `docs/features/` — durable feature behavior when needed.
+- `docs/adr/` — accepted durable decisions.
+- `docs/current-state.md` — single short repository-level operational ledger.
+- `docs/workstreams/` — active bounded implementation plans only.
+- `design/` — product experience/brand contracts and bounded key references when `product-ui` is adopted.
+- `.engineering/e2e.json` — current E2E environment/fidelity routing.
+- Git history — implementation history.
 
-Do not create plan/progress/status documents that duplicate the same workstream. Generated per-build `BUILD_CHANGELOG.md` files and per-run E2E/visual evidence are artifact evidence, not project-status docs.
+Completed plans are deleted after durable truth is transferred unless independent audit/regulatory/release/historical value justifies retention. Generated build deltas and E2E/visual evidence are artifacts, not project-status docs.
 
 ## Agent context discipline
 
-Prefer scoped search (`rg`, targeted file reads, symbol/caller discovery) over broad file ingestion. Do not read generated outputs, dependency trees, vendored code or large artifacts unless the task requires them.
-
-Keep this guide within the configured budget in `.engineering/documentation-policy.json`. Put conditional procedures in Skills and deterministic rules in scripts/CI rather than growing this file.
+Prefer scoped search and targeted reads over broad ingestion. Do not read generated outputs, dependencies, vendored code or large artifacts unless required. Keep this guide within `.engineering/documentation-policy.json`; conditional procedures belong in Skills and deterministic rules in scripts/CI.
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a requested change would violate a durable invariant/accepted ADR, leave a material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required review for destructive/migrating behavior, bypass canonical command/test/E2E/environment-fidelity/build/artifact lifecycle or publication gate, delegate automatable deterministic validation to the user merely because the agent lacks execution capability, bypass an adopted product-experience/design-system contract, or claim evidence that was not executed.
+Surface the conflict instead of improvising when a request would violate a durable invariant/ADR, leave material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required destructive/migration review, bypass canonical command/test/E2E/environment-fidelity/build/artifact/publication rules, delegate automatable deterministic validation to the user because the agent lacks execution capability, bypass an adopted product-experience contract, or claim evidence that was not executed.
