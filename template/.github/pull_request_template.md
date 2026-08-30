@@ -18,9 +18,25 @@
 
 <!-- If applicable: canonical command intents affected; build identity; artifact manifest/checksum/build delta/retention; localhost/process/port/temp cleanup. Otherwise N/A. -->
 
+## Documentation impact
+
+<!-- Assess from resulting behavior, not filenames. Use UPDATED or N/A; give a short reason when impact was plausible. README identity and usage are deliberately separate. -->
+
+- README_IDENTITY: <!-- title/summary/Why this exists; update only if core purpose, audience or primary outcome changed -->
+- README_USAGE: <!-- setup/run/use/configuration/public CLI/API/UI examples; update whenever old instructions became incomplete, wrong or misleading -->
+- FEATURE_DOCS: <!-- durable non-obvious feature behavior -->
+- ARCHITECTURE: <!-- boundaries/ownership -->
+- ADR: <!-- durable decision/rationale -->
+- SECURITY_DATA: <!-- trust/privacy/security/data lifecycle -->
+- OPERATIONS: <!-- canonical command/operational semantics -->
+- PRODUCT_EXPERIENCE: <!-- adopted design/UX/brand contract -->
+- CURRENT_STATE: <!-- integrated/blocked/next truth -->
+
+DOCS_CURRENT_WITH_IMPLEMENTATION: <!-- PASS/FAIL -->
+
 ## Pre-publication readiness
 
-<!-- Exact HEAD and intended target/base revision; material ambiguity resolved; full diff reviewed; target-base freshness. State READY_FOR_CI, READY_FOR_REMOTE_PREFLIGHT, AUTOMATED_PREFLIGHT_CONFIRMED or blocked reason truthfully. -->
+<!-- Exact HEAD and intended target/base revision; material ambiguity resolved; full diff reviewed; documentation current; target-base freshness. State READY_FOR_CI, READY_FOR_REMOTE_PREFLIGHT, AUTOMATED_PREFLIGHT_CONFIRMED or blocked reason truthfully. -->
 
 ## Validation profile
 
@@ -52,4 +68,4 @@
 
 ## Documentation / design lifecycle
 
-<!-- Durable docs/design/E2E contracts updated, or why none are required. Completed workstream deleted/finalized when applicable. Generated screenshots are evidence, not default durable design truth. -->
+<!-- Completed workstream deleted/finalized when applicable; generated screenshots remain evidence rather than default durable design truth. -->
