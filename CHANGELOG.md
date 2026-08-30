@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+Strengthens documentation freshness as part of implementation completeness without forcing blanket README churn:
+
+- introduces an explicit documentation-impact contract in `template/docs/README.md` so code and durable documentation ship together;
+- splits README ownership into **identity** (title/summary/why, primary audience/outcome) and **usage** (setup/run/use/configuration/public examples), allowing usage changes without opportunistically rewriting stable mission/positioning;
+- requires existing feature documentation to update in the same change whenever the durable behavior it describes changes, while still avoiding one-document-per-trivial-feature churn;
+- updates `template/AGENTS.md` and `finalize-workstream` so documentation impact is assessed from resulting behavior and mapped to the correct canonical owner before a change/workstream is considered complete;
+- updates `preflight-change` with an explicit `DOCUMENTATION_IMPACT` matrix and `DOCS_CURRENT_WITH_IMPLEMENTATION` gate; stale affected documentation blocks publication readiness;
+- updates the adopter README template with explicit `Use` and `Configuration` surfaces so the shortest successful public path has a clear owner distinct from architecture/history;
+- updates the pull-request template to report README identity/usage, feature docs, architecture, ADR, security/data, operations, product-experience and current-state impact independently;
+- deliberately keeps semantic freshness in review/preflight rather than pretending a static documentation checker can prove that prose matches behavior.
+
+Baseline version remains **0.8.0** for this compatible governance clarification; no machine-readable operating/E2E/product-experience contract schema changes are introduced. A future release that changes baseline contract semantics should bump `VERSION` normally.
+
 ## 0.8.0 — 2026-08-28
 
 Makes E2E validation explicitly environment-aware so final physical/manual/target testing confirms residual environment-specific risk instead of becoming the first time a complete workflow is exercised:

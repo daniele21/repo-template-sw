@@ -10,6 +10,8 @@
 
 See [`docs/architecture.md`](docs/architecture.md) for current boundaries and ownership. Keep this README focused on purpose, setup and public usage rather than implementation history.
 
+Documentation ownership and change-impact rules live in [`docs/README.md`](docs/README.md). In particular, title/summary/`Why this exists` are README **identity** and should change only when the project's core purpose, primary audience or primary outcome changes. Setup/run/use/configuration/examples are README **usage** and must stay current whenever those interfaces change.
+
 ## Project commands
 
 The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.engineering/commands.json`](.engineering/commands.json). It exposes `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean` while keeping this project's native tooling underneath.
@@ -28,11 +30,27 @@ If `product-ui` is not adopted, this section/design baseline is not applicable a
 
 ## Setup
 
-Use the command declared as `setup` in `.engineering/commands.json`, then `doctor` when environment diagnostics are needed.
+<REPLACE_WITH_THE_SHORTEST_RELIABLE_INSTALL_OR_BOOTSTRAP_PATH_FOR_A_NEW_USER_OR_DEVELOPER>
+
+Use the command declared as `setup` in `.engineering/commands.json`, then `doctor` when environment diagnostics are needed. Keep prerequisites, required versions and first-run steps here current with the repository.
 
 ## Run
 
+<REPLACE_WITH_THE_SHORTEST_RELIABLE_START_OR_LAUNCH_PATH>
+
 Use the declared `dev` command when applicable. Local servers/processes must follow the repository's runtime/cleanup contract and leave no project-owned listeners/processes after stop.
+
+## Use
+
+<REPLACE_WITH_THE_SHORTEST_SUCCESSFUL_PUBLIC_USAGE_PATH: CLI/API/UI FLOW OR COPY-PASTE EXAMPLE>
+
+Document the normal user/developer path, required inputs and the smallest useful example here. Link to deeper feature/API documentation rather than duplicating large contracts. If a feature change makes this path incomplete, wrong or misleading, update this section in the same change.
+
+## Configuration
+
+<REPLACE_WITH_PUBLIC_CONFIGURATION_THAT_A_NORMAL_USER_OR_DEVELOPER_MUST_KNOW, OR REMOVE_THIS_SECTION_IF_NOT_APPLICABLE>
+
+Document supported public options/defaults and required environment/configuration inputs. Internal implementation knobs that are not part of supported usage belong with their canonical technical owner instead.
 
 ## Build and artifacts
 
