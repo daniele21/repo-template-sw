@@ -7,7 +7,7 @@ This is the repository-wide routing layer for coding agents. It owns durable inv
 Always read this guide. Then read only:
 
 1. the closest scoped `AGENTS.md` for the target subtree, if present;
-2. the canonical architecture/feature/workstream source required by the task;
+2. the canonical architecture/feature/workstream source required by the task; use `docs/README.md` when documentation ownership or impact is unclear;
 3. `.engineering/commands.json` for setup/dev/test/E2E/build/runtime/cleanup, execution capability or publication readiness;
 4. `.engineering/e2e.json` for complete-workflow, target device/platform/browser/runtime or E2E-fidelity questions;
 5. `skills/preflight-change/SKILL.md` before publication and `skills/remote-preflight/SKILL.md` when required deterministic gates cannot run locally;
@@ -96,10 +96,11 @@ Do not expose implementation complexity, create duplicate semantic components, o
 7. Implement one coherent vertical slice without speculative layers.
 8. Use `validate-change` for the narrowest sufficient iteration loop; diagnose the owning invariant before patching failures.
 9. For affected critical journeys, use `.engineering/e2e.json` to select the cheapest sufficient automated fidelity and explicit residual gaps.
-10. Update only canonical durable documents/contracts whose current behavior changed.
-11. Finalize completed workstreams and delete plans by default after durable knowledge transfer.
-12. Before publication, use `preflight-change`: refresh target base, inspect the full diff, classify required gates and run all `AGENT_LOCAL` work.
-13. Route required `REMOTE_AUTOMATED` gates through `remote-preflight`; inspect, fix and retrigger until complete or genuinely blocked.
+10. Assess documentation impact from the resulting behavior. Update every affected canonical owner in the same change and leave unaffected owners untouched.
+11. For README specifically, treat identity and usage separately: update title/summary/`Why this exists` only when core purpose/audience/outcome changed; update setup/run/use/configuration/public examples whenever those instructions changed.
+12. Finalize completed workstreams and delete plans by default after durable knowledge transfer.
+13. Before publication, use `preflight-change`: refresh target base, inspect the full diff, verify documentation freshness, classify required gates and run all `AGENT_LOCAL` work.
+14. Route required `REMOTE_AUTOMATED` gates through `remote-preflight`; inspect, fix and retrigger until complete or genuinely blocked.
 
 ## Validation routing
 
@@ -123,14 +124,20 @@ For E2E also report the environment/fidelity from `.engineering/e2e.json` and re
 
 ## Documentation lifecycle
 
+`docs/README.md` owns documentation routing and the documentation-impact contract.
+
+- README identity — title/summary/`Why this exists`; stable unless core purpose, primary audience or primary outcome changes.
+- README usage — setup/run/use/configuration/public examples; must remain executable and truthful for the current repository.
 - `docs/architecture.md` — current architecture/ownership.
-- `docs/features/` — durable feature behavior when needed.
+- `docs/features/` — durable feature behavior when needed; existing feature owners change with the behavior they describe.
 - `docs/adr/` — accepted durable decisions.
 - `docs/current-state.md` — single short repository-level operational ledger.
 - `docs/workstreams/` — active bounded implementation plans only.
 - `design/` — product experience/brand contracts and bounded key references when `product-ui` is adopted.
 - `.engineering/e2e.json` — current E2E environment/fidelity routing.
 - Git history — implementation history.
+
+Code and durable documentation ship together. Do not rewrite stable README identity copy merely because usage changed, and do not leave stale setup/run/use instructions merely because mission copy remains valid.
 
 Completed plans are deleted after durable truth is transferred unless independent audit/regulatory/release/historical value justifies retention. Generated build deltas and E2E/visual evidence are artifacts, not project-status docs.
 
@@ -140,4 +147,4 @@ Prefer scoped search and targeted reads over broad ingestion. Do not read genera
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a request would violate a durable invariant/ADR, leave material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required destructive/migration review, bypass canonical command/test/E2E/environment-fidelity/build/artifact/publication rules, delegate automatable deterministic validation to the user because the agent lacks execution capability, bypass an adopted product-experience contract, or claim evidence that was not executed.
+Surface the conflict instead of improvising when a request would violate a durable invariant/ADR, leave material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required destructive/migration review, bypass canonical command/test/E2E/environment-fidelity/build/artifact/publication rules, delegate automatable deterministic validation to the user because the agent lacks execution capability, bypass an adopted product-experience contract, publish behavior with stale affected canonical documentation, or claim evidence that was not executed.
