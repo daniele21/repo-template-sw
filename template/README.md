@@ -18,7 +18,7 @@ The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.eng
 
 E2E applicability, target environments, execution environments, fidelity gaps and critical-journey mappings live in [`.engineering/e2e.json`](.engineering/e2e.json). Execution capability and environment fidelity are separate: an automated emulator/simulator run does not become physical/target-environment evidence merely because CI executed it.
 
-For every UI-bearing critical E2E journey, complete run evidence requires both stable screenshot checkpoints and a complete journey video as identity-bearing, privacy-safe bounded artifacts. Assertions passing without either artifact class is incomplete E2E evidence.
+For every UI-bearing critical E2E journey, complete run evidence requires both stable screenshot checkpoints and a complete journey video as identity-bearing, privacy-safe bounded artifacts. Assertions passing while either artifact class is missing means incomplete E2E evidence.
 
 Do not add a second undocumented command or E2E-environment truth for the same intent.
 
@@ -50,7 +50,7 @@ Document the normal user/developer path, required inputs and the smallest useful
 
 ## Configuration
 
-<REPLACE_WITH_PUBLIC_CONFIGURATION_THAT_A_NORMAL_USER_OR_DEVELOPER_MUST_KNOW, OR_REMOVE_THIS_SECTION_IF_NOT_APPLICABLE>
+<REPLACE_WITH_PUBLIC_CONFIGURATION_THAT_A_NORMAL_USER_OR_DEVELOPER_MUST_KNOW, OR REMOVE_THIS_SECTION_IF_NOT_APPLICABLE>
 
 Document supported public options/defaults and required environment/configuration inputs. Internal implementation knobs that are not part of supported usage belong with their canonical technical owner instead.
 
