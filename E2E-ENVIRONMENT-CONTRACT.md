@@ -1,6 +1,6 @@
 # E2E Environment Fidelity Contract
 
-Version: 0.1.0
+Version: 0.1.1
 
 This contract defines how adopted repositories choose end-to-end execution environments so automated E2E evidence becomes progressively representative of the real target rather than leaving ordinary whole-system defects for final manual/device validation.
 
