@@ -57,7 +57,9 @@ When E2E is required, read `.engineering/e2e.json` and select the affected criti
 
 Execution capability and environment fidelity are independent. A CI emulator can be `REMOTE_AUTOMATED` while still only `simulated_or_emulated`; do not present it as physical-device evidence.
 
-For UI changes, validate only the experience layers relevant to the claim: component/state behavior, critical-journey E2E, accessibility, adaptive layout, visual regression for stable high-risk surfaces, and usability evidence when the risk/value justifies it. A happy-path screenshot alone is not sufficient.
+For every critical E2E journey that traverses a UI, publish both required media artifact classes: stable screenshot checkpoints covering materially important states/final reachable outcome, and one complete journey video from meaningful start through success or terminal failure. Tie both to journey/run/build/environment identity, keep them privacy-safe and use bounded artifact retention. Passing assertions with either artifact class missing is `E2E_EVIDENCE_INCOMPLETE`, not complete E2E PASS evidence.
+
+For UI changes, validate the experience layers relevant to the claim: component/state behavior, critical-journey E2E, accessibility, adaptive layout, visual regression for stable high-risk surfaces, and usability evidence when the risk/value justifies it. Screenshot/video artifacts make the executed journey inspectable but do not replace these additional claims when they are applicable.
 
 When E2E runs, verify cleanup of project-owned servers/listeners, browser/device sessions, test data, downloads/temp state and generated evidence. Failure traces/screenshots/videos/logs must have bounded retention and remain privacy-safe.
 
@@ -71,7 +73,7 @@ If every required deterministic gate can run in the current agent environment an
 
 If required deterministic gates are automatable but unavailable to the current agent, record `READY_FOR_REMOTE_PREFLIGHT` after semantic/base/diff and available local checks pass, then use `skills/remote-preflight/SKILL.md` to trigger repository-owned remote automation. The agent should inspect failures, fix the owning cause and retrigger without delegating the loop to the user.
 
-`AUTOMATED_PREFLIGHT_CONFIRMED` requires every required deterministic automated gate to pass on the exact head/base at the required declared E2E fidelity. Real-environment evidence may remain explicitly pending and still blocks stronger claims that depend on it.
+`AUTOMATED_PREFLIGHT_CONFIRMED` requires every required deterministic automated gate to pass on the exact head/base at the required declared E2E fidelity. For UI-bearing E2E journeys it also requires both screenshot and complete-video artifacts. Real-environment evidence may remain explicitly pending and still blocks stronger claims that depend on it.
 
 Final physical/manual/target-environment testing should primarily close declared residual fidelity gaps. If it repeatedly discovers ordinary workflow failures reproducible in an automated environment, move that evidence earlier instead of normalizing final testing as the first whole-system check.
 
@@ -81,7 +83,7 @@ Avoid dynamic versions and speculative dependencies. New abstractions/dependenci
 
 ## Pull requests
 
-Keep PRs focused. Describe what changed, why, user/developer impact, relevant failure/resource/operating/experience implications, and validation executed. Distinguish agent-local, remote-automated and real-environment evidence; for E2E also state the selected environment/fidelity and residual gaps. Do not claim hardware/device/user evidence that was not run.
+Keep PRs focused. Describe what changed, why, user/developer impact, relevant failure/resource/operating/experience implications, and validation executed. Distinguish agent-local, remote-automated and real-environment evidence; for E2E also state the selected environment/fidelity, residual gaps and screenshot/video artifact references for UI-bearing journeys. Do not claim hardware/device/user evidence that was not run.
 
 Record preflight head/base identity and the actual readiness state: `READY_FOR_CI`, `READY_FOR_REMOTE_PREFLIGHT`, `AUTOMATED_PREFLIGHT_CONFIRMED` or a blocked state. A known-red draft may be published for explicit collaboration/investigation, but must not be represented as ready.
 
