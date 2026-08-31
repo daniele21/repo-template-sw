@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-Strengthens documentation freshness as part of implementation completeness without forcing blanket README churn:
+## 0.8.1 — 2026-08-31
+
+Strengthens implementation/documentation completeness and makes inspectable UI E2E media evidence mandatory without replacing project-native E2E tooling:
 
 - introduces an explicit documentation-impact contract in `template/docs/README.md` so code and durable documentation ship together;
 - splits README ownership into **identity** (title/summary/why, primary audience/outcome) and **usage** (setup/run/use/configuration/public examples), allowing usage changes without opportunistically rewriting stable mission/positioning;
@@ -11,9 +13,18 @@ Strengthens documentation freshness as part of implementation completeness witho
 - updates `preflight-change` with an explicit `DOCUMENTATION_IMPACT` matrix and `DOCS_CURRENT_WITH_IMPLEMENTATION` gate; stale affected documentation blocks publication readiness;
 - updates the adopter README template with explicit `Use` and `Configuration` surfaces so the shortest successful public path has a clear owner distinct from architecture/history;
 - updates the pull-request template to report README identity/usage, feature docs, architecture, ADR, security/data, operations, product-experience and current-state impact independently;
-- deliberately keeps semantic freshness in review/preflight rather than pretending a static documentation checker can prove that prose matches behavior.
+- deliberately keeps semantic documentation freshness in review/preflight rather than pretending a static documentation checker can prove that prose matches behavior;
+- upgrades `E2E-ENVIRONMENT-CONTRACT.md` to `0.1.1` and establishes the rule that every critical journey traversing a UI must produce **both screenshot checkpoints and a complete journey video** as bounded evidence artifacts;
+- defines screenshots as fast inspection evidence for materially important UI checkpoints/final reachable state, while the continuous video preserves sequence, navigation, transitions, loading/progress behavior and terminal success/failure context;
+- makes a UI E2E run with passing assertions but missing screenshots or video `E2E_EVIDENCE_INCOMPLETE`, preventing it from satisfying complete preflight/release evidence;
+- adds machine-readable `.engineering/e2e.json` principle `ui_journey_screenshot_and_video_artifacts_required` and enforces it in `verify_e2e.py`;
+- updates `validate-change` and `preflight-change` so artifact presence/identity/privacy/retention is checked before `AUTOMATED_PREFLIGHT_CONFIRMED`, with explicit `E2E_MEDIA_ARTIFACTS` reporting;
+- updates the PR template to expose inspectable screenshot and video artifact references per UI-bearing journey;
+- specializes Android E2E guidance around native/established screenshot capture plus emulator/device screen recording, without forcing a new cross-platform E2E framework;
+- updates adoption, usage and migration guidance so existing repositories preserve stronger E2E tooling while adding only missing screenshot/video capture, CI upload and evidence-gating behavior;
+- bumps the reference baseline to **0.8.1**, with `validate-change` and `preflight-change` source versions updated accordingly.
 
-Baseline version remains **0.8.0** for this compatible governance clarification; no machine-readable operating/E2E/product-experience contract schema changes are introduced. A future release that changes baseline contract semantics should bump `VERSION` normally.
+The UI E2E evidence rule is now: **assertions prove the outcome; screenshots make key states inspectable; video proves the executed sequence; all three are required for complete automated UI-journey evidence.**
 
 ## 0.8.0 — 2026-08-28
 
@@ -40,7 +51,7 @@ Makes preflight execution-capability and blast-radius aware so strong validation
 - introduces `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` validation execution classes through `EXECUTION-CAPABILITY-CONTRACT.md`;
 - establishes the **no-human-runner principle**: an automatable deterministic gate must not be delegated to the user solely because the current coding agent cannot execute it locally;
 - keeps **CI should confirm, not discover** when the agent has an equivalent local environment, while explicitly allowing CI/repository automation to become the execution backend when it does not;
-- introduces blast-radius validation profiles `LEAN`, `SCOPED`, `STRONG` and `FULL`, with deterministic `auto` selection as the normal path;
+- introduces blast-radius validation profiles `LEAN`, `SCOPED`, `STRONG`, `FULL`, with deterministic `auto` selection as the normal path;
 - defines `LEAN` for docs/governance/cheap universal guards, `SCOPED` for contained owner/module changes, `STRONG` for cross-boundary/release-sensitive changes, and `FULL` for promotion/release or changes where narrowing cannot safely be trusted;
 - requires selectors to fail safe stronger for unknown executable paths and to force `FULL` when CI-scope/global-build/dependency-inventory/toolchain machinery that controls skipping is itself modified;
 - allows automatic escalation and explicit stronger overrides, while forbidding silent downgrade below the `auto` profile;
@@ -59,7 +70,7 @@ The delivery model is now: **reason -> determine blast radius -> select the narr
 Moves coding-agent quality assurance decisively before remote CI and makes delivery readiness a first-class engineering contract:
 
 - introduces the rule **CI should confirm, not discover** for deterministic repository failures that can be reproduced locally;
-- adds a machine-readable `publication_gate` to `.engineering/commands.json` without forcing a universal wrapper command or replacing stack-native tooling;
+- introduces a machine-readable `publication_gate` to `.engineering/commands.json` without forcing a universal wrapper command or replacing stack-native tooling;
 - adds the core `preflight-change` Skill, which establishes `READY_FOR_CI` only after material ambiguity is resolved, the intended target base is fresh, the complete diff is reviewed, and every required locally reproducible deterministic gate passes on the exact head;
 - distinguishes iteration validation (`validate-change`) from final publication readiness (`preflight-change`);
 - adds an explicit material-ambiguity protocol: inspect canonical repository evidence first, then ask the user when unresolved alternatives would materially change behavior, contracts, persistence, security, lifecycle, compatibility, acceptance criteria or UX;
@@ -157,5 +168,5 @@ Initial agent-native reference engineering baseline:
 - core reusable coding-agent skills;
 - token and documentation budgets;
 - zero-dependency repository health checks;
-- adoption and update workflows;
+- adoption/update workflows;
 - optional stack/domain profile model.
