@@ -72,11 +72,20 @@ Typical `.engineering/e2e.json` mappings:
 
 Keep E2E small and critical: first launch, primary create/use/save flow, persistence/restart, IPC/Binder or consumer-app integration, import/export or a representative failure/recovery journey when those behaviors are product-critical. Prefer unit/integration tests for deterministic lower-level behavior.
 
+For every Android E2E journey that traverses the app UI, produce **both** artifact classes on each executed run:
+
+- screenshots at stable, meaningful checkpoints, including the final reachable success state (or last useful failure state when technically possible);
+- one continuous screen-recording video covering the meaningful journey start through success or terminal failure.
+
+Use native/established Android test and device tooling (for example instrumentation screenshot capture plus emulator/device screen recording) rather than introducing a cross-platform framework solely for media capture. Artifact names/metadata must identify the journey and exact run/build/environment. Upload screenshots and video through the repository's normal CI artifact mechanism with bounded retention and privacy-safe content.
+
+A connected/instrumentation test that passes assertions but does not publish both required media artifact classes is `E2E_EVIDENCE_INCOMPLETE` and cannot satisfy automated preflight. If the app fails before a UI can render or recording can begin, preserve the ordinary failure evidence and classify the absence of media as a pre-UI/pre-recording failure rather than claiming E2E PASS.
+
 When the product claim depends on the real APK/device surface, execute E2E on the built artifact as early as practical. A built APK on an emulator is stronger artifact evidence but remains emulator evidence for physical-device claims.
 
 The final physical-device test should primarily validate residual device-specific gaps. Broken navigation, persistence, Binder/IPC wiring, install/launch, request/response flow or ordinary restart/recovery defects should be moved into earlier automated E2E whenever technically practical.
 
-Device/emulator E2E must clean run-owned app data, test fixtures, helper processes and localhost listeners according to the zero-residue contract.
+Device/emulator E2E must clean run-owned app data, test fixtures, helper processes and localhost listeners according to the zero-residue contract. Screenshot/video evidence follows bounded artifact retention and is not committed as durable repository design truth.
 
 Physical-device/OEM/native-backend/thermal/performance/TalkBack evidence may remain explicitly pending after `AUTOMATED_PREFLIGHT_CONFIRMED` when it cannot truthfully run through ordinary automation; it still blocks stronger product-complete claims that require it.
 
