@@ -1,6 +1,6 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.8.0
+Version: 0.8.1
 
 ## Purpose
 
@@ -86,6 +86,8 @@ A CI emulator can be `REMOTE_AUTOMATED` while only providing simulated/emulated 
 
 Critical E2E journeys declare their target environment, automated execution environments and known fidelity gaps in `.engineering/e2e.json`. Prefer the cheapest sufficient automated environment during iteration, then escalate fidelity only when a material target dimension requires it. Final real-environment testing should primarily close the residual fidelity gap rather than discover ordinary whole-system defects that could have been automated earlier.
 
+For a critical journey that traverses a UI, complete E2E evidence also requires identity-bearing, privacy-safe screenshot checkpoints and a complete journey video as bounded artifacts. Missing either artifact class means the UI E2E evidence is incomplete even when assertions passed.
+
 ### Git is history; docs describe the system that exists
 
 Active documentation explains current behavior, durable decisions, operations and active work. Completed implementation plans are deleted by default after durable knowledge is transferred. Archive only material with independent audit, regulatory, release or historical value.
@@ -132,6 +134,7 @@ L0 plus:
 - automated E2E evidence for critical workflows when lower-level tests cannot establish the complete user/system outcome;
 - critical E2E journeys are intentionally small/high-value rather than broad UI-script coverage for its own sake;
 - critical E2E journeys map the relevant target environment to one or more automated environments and explicitly record residual fidelity gaps;
+- every UI-bearing critical E2E journey publishes both screenshot checkpoint artifacts and a complete journey video; missing either keeps the journey evidence incomplete;
 - target/real-environment confirmation is required only where the product claim depends on dimensions automation cannot truthfully reproduce at sufficient fidelity;
 - migration and backward-compatibility strategy where data/contracts persist;
 - failure, cancellation and shutdown tests for critical lifecycle components;
@@ -259,12 +262,13 @@ Before publishing a change for automated validation, a coding agent must establi
 - synchronize or otherwise verify against the current intended target base; stacked work remains explicitly conditional until its dependency is integrated/replayed;
 - select every deterministic gate required by blast radius and classify it as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT` for the current agent/session;
 - when E2E is required, select the affected critical journey and cheapest sufficient declared environment fidelity separately from executor classification;
+- for UI-bearing E2E journeys, require both screenshot checkpoint and complete journey video artifacts before marking automated E2E evidence complete;
 - execute all required `AGENT_LOCAL` gates directly;
 - route all required `REMOTE_AUTOMATED` gates through repository-owned automation rather than asking the user to execute them;
 - classify every failure and repair its owning cause instead of weakening/suppressing gates or applying unexplained symptom patches;
 - record PASS/FAIL/PENDING/N/A truthfully and keep real-environment evidence distinct from automatable validation.
 
-`READY_FOR_CI` applies when the current agent could execute every required deterministic gate locally and did so successfully. `READY_FOR_REMOTE_PREFLIGHT` applies when semantic/base/diff checks and available local gates pass but required deterministic gates need remote automation. `AUTOMATED_PREFLIGHT_CONFIRMED` means all required deterministic automated gates passed on the exact current head/base at the required declared E2E fidelity, regardless of execution location.
+`READY_FOR_CI` applies when the current agent could execute every required deterministic gate locally and did so successfully. `READY_FOR_REMOTE_PREFLIGHT` applies when semantic/base/diff checks and available local gates pass but required deterministic gates need remote automation. `AUTOMATED_PREFLIGHT_CONFIRMED` means all required deterministic automated gates passed on the exact current head/base at the required declared E2E fidelity, regardless of execution location; for UI-bearing E2E, required screenshot and video artifacts must also be present.
 
 Changing the head, material target-base relationship or a target/environment assumption relevant to the claim invalidates prior affected readiness evidence.
 
@@ -280,7 +284,7 @@ Prefer the cheapest automated environment that can prove the claim during normal
 
 The standard does not mandate one framework. Prefer stack-native tooling. Browser/web projects should generally prefer Playwright unless an equally strong established solution already exists; native mobile/desktop and server/CLI projects should use the appropriate native or protocol-level equivalent.
 
-E2E runs must have deterministic cleanup and bounded failure evidence. When the claim concerns a distributable artifact, run E2E against the built/package artifact when technically practical.
+E2E runs must have deterministic cleanup and bounded failure evidence. When the claim concerns a distributable artifact, run E2E against the built/package artifact when technically practical. Every UI-bearing journey must produce inspectable screenshot checkpoints plus a continuous journey video, both tied to journey/run/build/environment identity and stored with bounded retention. Assertions passing without either required media artifact is incomplete E2E evidence.
 
 ### Build identity
 
@@ -388,6 +392,7 @@ Examples:
 - a critical create/use/save/reopen journey works end to end when that is a product-critical flow;
 - E2E failure cleanup leaves no project-owned server/browser/helper/temp residue;
 - E2E evidence reports the environment/fidelity actually exercised and does not overclaim a stronger device/target result;
+- every UI-bearing E2E journey exposes both screenshot checkpoints and complete journey video artifacts tied to the exact run;
 - loading/empty/error/disabled states remain usable and understandable on critical UI flows;
 - keyboard/focus/accessibility semantics remain valid where applicable;
 - start -> smoke -> stop leaves no project-owned listener/process/temp residue;
@@ -507,7 +512,7 @@ Not every change needs every level, but no applicable level should be silently s
 
 `EXPERIENCE COMPLETE` applies when a user-facing interaction changes and means task model, information hierarchy, states/feedback, accessibility, adaptive layout, design-system/brand consistency and required UX/E2E/regression evidence agree with the claim being made.
 
-`AUTOMATED PREFLIGHT COMPLETE` means the exact current head has no unresolved material ambiguity, the complete diff and intended target-base relationship were reviewed, and every required deterministic automatable gate for the blast radius passed through `AGENT_LOCAL`, `REMOTE_AUTOMATED`, or both at the required declared E2E fidelity. `REAL_ENVIRONMENT` evidence may remain explicitly pending, but absence of required automated evidence is never treated as a pass.
+`AUTOMATED PREFLIGHT COMPLETE` means the exact current head has no unresolved material ambiguity, the complete diff and intended target-base relationship were reviewed, and every required deterministic automatable gate for the blast radius passed through `AGENT_LOCAL`, `REMOTE_AUTOMATED`, or both at the required declared E2E fidelity. For UI-bearing E2E journeys, required screenshot and video artifacts must also be present. `REAL_ENVIRONMENT` evidence may remain explicitly pending, but absence of required automated evidence is never treated as a pass.
 
 A change is not complete merely because code exists. The owning tests, integration/E2E behavior, failure/resource semantics, operational lifecycle, applicable experience semantics, documentation and evidence must agree with the claim being made.
 
@@ -518,11 +523,3 @@ Projects should define a canonical integration/stable path appropriate to their 
 Before automated readiness, verify the feature head against the current intended target base. If the target base moved after evidence was collected, refresh/reconcile the branch as appropriate to the repository's branching model and rerun invalidated gates. Stacked branches are conditional evidence until dependencies land and the stack is replayed or otherwise proven against the canonical base.
 
 Release workflows should promote already-identified/validated artifacts rather than silently rebuilding or mutating an existing build identity unless the release process explicitly treats the rebuild as a new build.
-
-## Adoption philosophy
-
-For a new project, copy the smallest applicable core and selected profiles, then specialize all project-specific placeholders including `.engineering/commands.json` and `.engineering/e2e.json`. UI products should add `product-ui` only when a material user-facing interface exists and then specialize the design contracts rather than leaving generic placeholders.
-
-For an existing project, audit before copying. Preserve good existing practices, native build/test tooling, design systems and stronger local mechanisms; identify conflicts and gaps and migrate incrementally. Never overwrite project-specific architecture, CI, command tooling, E2E framework/environment strategy, brand/design source or documentation blindly.
-
-A project is self-contained after adoption. Template updates are explicit migrations, not runtime dependencies.
