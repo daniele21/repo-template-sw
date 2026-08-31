@@ -53,10 +53,14 @@ Add when the claim crosses a complete user/system workflow boundary and lower-le
 - the cheapest declared automated environment in `.engineering/e2e.json` that can truthfully prove the changed claim;
 - fidelity escalation when the claim depends on a device/platform/browser/runtime/artifact dimension missing from the cheaper environment;
 - built/package artifact execution when the claim depends on distributable behavior and this is technically practical;
+- for every UI-bearing journey, screenshot artifacts for materially important UI checkpoints and the final reachable user-visible outcome;
+- for every UI-bearing journey, one complete journey video covering the meaningful start through final success or terminal failure;
 - zero-residue cleanup of app/server/browser/device/test state owned by the run;
 - bounded failure evidence with build/run/environment identity and declared fidelity class.
 
 Execution capability and environment fidelity are separate. `REMOTE_AUTOMATED` says where/who executed the gate; `simulated_or_emulated`, `representative_virtual`, `representative_physical` and `target_environment` say what environment claim the evidence supports. Never treat a green emulator/simulator run as physical/target-environment evidence.
+
+For UI-bearing journeys, screenshots and video are both mandatory evidence. A test assertion PASS with either artifact class missing is `E2E_EVIDENCE_INCOMPLETE`, not a complete E2E PASS. On failure, preserve the last useful reachable screenshot when technically possible and the video up to the failure; if the failure occurs before UI rendering or recording can begin, report that pre-UI/pre-recording failure explicitly instead of fabricating media evidence.
 
 Do not require E2E for every change. Prefer unit/integration coverage when it can prove the same invariant more deterministically and cheaply.
 
@@ -129,7 +133,7 @@ Depending on blast radius, inspect/prove:
 - visual regression for stable high-risk surfaces where useful;
 - representative-user usability evidence for important/high-risk workflows when justified.
 
-A screenshot can support a visual claim but cannot by itself prove interaction, accessibility, recovery, adaptive behavior or usability.
+Screenshots and video support inspection of the executed UI but do not by themselves prove accessibility, recovery, adaptive behavior or usability. They are nevertheless mandatory artifacts for UI-bearing E2E journeys.
 
 ## Smoke vs E2E
 
@@ -167,6 +171,7 @@ When the change affects runtime/build/package/E2E/lifecycle behavior, validate a
 - `dev`/`e2e`/`smoke`/`stop` leave no project-owned child process or listener behind;
 - browser/device profiles, test data, downloads, temporary workspaces, locks and other owned ephemeral resources are cleaned after success and failure paths;
 - E2E/visual traces/screenshots/videos/logs have bounded retention and do not become permanent repository clutter;
+- UI-bearing E2E runs expose both required screenshot and video artifacts tied to journey/run/build/environment identity;
 - E2E evidence identifies the execution environment/fidelity actually used and does not overclaim stronger target evidence;
 - failed/partial artifacts cannot be mistaken for valid outputs.
 
@@ -183,11 +188,12 @@ A strong E2E extends that lifecycle with one complete critical workflow before t
 5. On failure, classify cause and owner before editing again.
 6. Expand only when the change crosses a boundary or is ready for final integration.
 7. Use E2E only when the full product/system outcome is part of the claim; when used, select the declared critical journey and cheapest sufficient environment fidelity.
-8. Escalate E2E fidelity only when target dimensions materially affect the claim; preserve residual real-environment evidence separately.
-9. Add accessibility/adaptive/motion/visual/usability evidence only when the changed experience claim requires it.
-10. If a deterministic gate cannot run in the current agent environment, record the exact missing capability and mark it for `REMOTE_AUTOMATED` routing; do not silently pass it and do not default to asking the user to execute it.
-11. Report exact validation executed, E2E environment/fidelity used and evidence still pending.
-12. Before publication, hand the accumulated evidence to `preflight-change`; it will classify executor capability and invoke `remote-preflight` when required.
+8. For UI-bearing E2E journeys, verify screenshot and video artifacts exist and are inspectable before recording complete PASS evidence.
+9. Escalate E2E fidelity only when target dimensions materially affect the claim; preserve residual real-environment evidence separately.
+10. Add accessibility/adaptive/motion/visual/usability evidence only when the changed experience claim requires it.
+11. If a deterministic gate cannot run in the current agent environment, record the exact missing capability and mark it for `REMOTE_AUTOMATED` routing; do not silently pass it and do not default to asking the user to execute it.
+12. Report exact validation executed, E2E environment/fidelity used, screenshot/video artifact evidence for UI journeys and evidence still pending.
+13. Before publication, hand the accumulated evidence to `preflight-change`; it will classify executor capability and invoke `remote-preflight` when required.
 
 ## Output
 
@@ -198,4 +204,4 @@ An iteration/final change summary should distinguish:
 - PENDING — required but not yet executed;
 - N/A — genuinely not applicable.
 
-Also record whether a pending gate is expected to be `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT`. For E2E evidence, record the `.engineering/e2e.json` environment ID/fidelity class and any residual gaps. Absence of agent-local execution is not evidence that a user must run the gate.
+Also record whether a pending gate is expected to be `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT`. For E2E evidence, record the `.engineering/e2e.json` environment ID/fidelity class, any residual gaps and, for UI-bearing journeys, where the screenshot and video artifacts can be inspected. Absence of agent-local execution is not evidence that a user must run the gate.
