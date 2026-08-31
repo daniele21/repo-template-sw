@@ -58,6 +58,8 @@ For E2E, executor and environment fidelity are independent. `AGENT_LOCAL`, `REMO
 
 Use the cheapest automated E2E environment that proves the claim and escalate only when a material target dimension requires it. Final target-environment testing should primarily confirm declared residual gaps, not discover ordinary complete-workflow failures reproducible earlier.
 
+If a critical E2E journey traverses a UI, the run must retain identity-bearing, privacy-safe screenshots of the materially important UI checkpoints and final reachable outcome as bounded artifacts. Missing required screenshots means E2E evidence is incomplete even when test assertions passed. Videos may supplement but do not replace the screenshots.
+
 When build/runtime/E2E behavior changes, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup. Before publishing, `preflight-change` selects required gates, E2E journey/fidelity and executor class. Use `remote-preflight` for deterministic gates unavailable locally; do not turn the user into the test runner because the agent lacks tooling.
 
 ## Product experience routing
@@ -96,11 +98,12 @@ Do not expose implementation complexity, create duplicate semantic components, o
 7. Implement one coherent vertical slice without speculative layers.
 8. Use `validate-change` for the narrowest sufficient iteration loop; diagnose the owning invariant before patching failures.
 9. For affected critical journeys, use `.engineering/e2e.json` to select the cheapest sufficient automated fidelity and explicit residual gaps.
-10. Assess documentation impact from the resulting behavior. Update every affected canonical owner in the same change and leave unaffected owners untouched.
-11. For README specifically, treat identity and usage separately: update title/summary/`Why this exists` only when core purpose/audience/outcome changed; update setup/run/use/configuration/public examples whenever those instructions changed.
-12. Finalize completed workstreams and delete plans by default after durable knowledge transfer.
-13. Before publication, use `preflight-change`: refresh target base, inspect the full diff, verify documentation freshness, classify required gates and run all `AGENT_LOCAL` work.
-14. Route required `REMOTE_AUTOMATED` gates through `remote-preflight`; inspect, fix and retrigger until complete or genuinely blocked.
+10. For UI-bearing E2E journeys, verify the run emitted the required screenshot artifacts before treating its evidence as complete.
+11. Assess documentation impact from the resulting behavior. Update every affected canonical owner in the same change and leave unaffected owners untouched.
+12. For README specifically, treat identity and usage separately: update title/summary/`Why this exists` only when core purpose/audience/outcome changed; update setup/run/use/configuration/public examples whenever those instructions changed.
+13. Finalize completed workstreams and delete plans by default after durable knowledge transfer.
+14. Before publication, use `preflight-change`: refresh target base, inspect the full diff, verify documentation freshness, classify required gates and run all `AGENT_LOCAL` work.
+15. Route required `REMOTE_AUTOMATED` gates through `remote-preflight`; inspect, fix and retrigger until complete or genuinely blocked.
 
 ## Validation routing
 
@@ -112,7 +115,7 @@ python3 scripts/verify_e2e.py
 python3 scripts/verify_product_experience.py
 ```
 
-`verify_e2e.py` verifies E2E applicability/environment/fidelity/journey routing. `verify_product_experience.py` is `N/A` unless `product-ui` is adopted. Project commands remain in `.engineering/commands.json`.
+`verify_e2e.py` verifies static E2E applicability/environment/fidelity/journey routing. Runtime UI screenshot evidence is verified from the actual E2E run/preflight artifacts because a static repository checker cannot prove that screenshots were generated. `verify_product_experience.py` is `N/A` unless `product-ui` is adopted. Project commands remain in `.engineering/commands.json`.
 
 Report evidence separately:
 
@@ -120,7 +123,7 @@ Report evidence separately:
 - `REMOTE_AUTOMATED` — repository-owned automation executed it;
 - `REAL_ENVIRONMENT` — physical/device/external/manual evidence automation cannot truthfully replace.
 
-For E2E also report the environment/fidelity from `.engineering/e2e.json` and residual gaps. Missing required real-device/hardware/usability evidence stays pending; synthetic/emulator evidence cannot satisfy a stronger claim. Traces/screenshots/videos/logs are bounded evidence artifacts, not durable docs.
+For E2E also report the environment/fidelity from `.engineering/e2e.json`, residual gaps and, for UI journeys, the screenshot artifact evidence. Missing required real-device/hardware/usability evidence stays pending; synthetic/emulator evidence cannot satisfy a stronger claim. Traces/screenshots/videos/logs are bounded evidence artifacts, not durable docs.
 
 ## Documentation lifecycle
 
@@ -147,4 +150,4 @@ Prefer scoped search and targeted reads over broad ingestion. Do not read genera
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a request would violate a durable invariant/ADR, leave material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required destructive/migration review, bypass canonical command/test/E2E/environment-fidelity/build/artifact/publication rules, delegate automatable deterministic validation to the user because the agent lacks execution capability, bypass an adopted product-experience contract, publish behavior with stale affected canonical documentation, or claim evidence that was not executed.
+Surface the conflict instead of improvising when a request would violate a durable invariant/ADR, leave material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required destructive/migration review, bypass canonical command/test/E2E/environment-fidelity/build/artifact/publication rules, delegate automatable deterministic validation to the user because the agent lacks execution capability, bypass an adopted product-experience contract, publish behavior with stale affected canonical documentation, claim a UI-bearing E2E PASS without the required screenshot artifacts, or claim evidence that was not executed.
