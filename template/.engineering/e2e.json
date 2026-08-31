@@ -50,6 +50,11 @@
     {
       "id": "<REPLACE_WITH_CRITICAL_JOURNEY_ID>",
       "claim": "<REPLACE_WITH_COMPLETE_USER_OR_SYSTEM_OUTCOME>",
+      "ui_surface": true,
+      "required_media_artifacts": [
+        "screenshots",
+        "video"
+      ],
       "target_environment_refs": [
         "<REPLACE_WITH_TARGET_ENVIRONMENT_ID>"
       ],
