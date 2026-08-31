@@ -8,6 +8,10 @@ The governing rule is:
 
 > Final target-environment validation should confirm residual environment-specific claims, not become the first time the complete workflow is exercised.
 
+For critical journeys that traverse a user interface, there is an additional evidence rule:
+
+> A UI E2E journey is not complete evidence unless the run produces inspectable UI screenshots as bounded artifacts.
+
 This contract complements, rather than replaces, the project operating contract and execution-capability model.
 
 - `OPERATING-CONTRACT.md` defines what `e2e` means and how the run behaves.
@@ -83,6 +87,8 @@ For every critical journey declare:
 - known fidelity gaps that automation does not cover;
 - whether real-environment confirmation is `required`, `conditional` or `not_required`.
 
+When the journey traverses a material UI, the E2E implementation must also define stable screenshot checkpoints appropriate to that workflow. Keep these checkpoints outcome-oriented rather than mirroring every implementation step. At minimum, retain enough screenshots to inspect the materially important UI states and the final user-visible outcome.
+
 When no automated environment can truthfully exercise a required journey, record the automation-capability gap explicitly. Do not silently convert the entire workflow into an informal human test.
 
 ## 5. Fidelity ladder
@@ -143,6 +149,17 @@ E2E evidence should identify enough context to understand what was actually prov
 - known gaps or residual real-environment requirement;
 - relevant privacy-safe logs/traces/screenshots/videos.
 
+For every critical journey that traverses a UI, screenshots are **required evidence artifacts**, not optional decoration:
+
+- capture the stable, materially important UI checkpoints needed to understand the journey and always include the final reachable user-visible outcome for a successful run;
+- preserve screenshot filenames/metadata so they can be tied to the journey, run/build identity and execution environment rather than becoming anonymous images;
+- publish/retain them through the repository's normal local/CI artifact mechanism with bounded retention; they are evidence, not durable design documentation or a second design source of truth;
+- keep screenshots privacy-safe and free of secrets or unnecessary sensitive user data;
+- capture the last useful reachable UI state on failure when technically possible, together with the normal failure trace/log evidence; if the run fails before any UI can render, record that screenshot capture was unavailable because the UI was never reached rather than fabricating evidence;
+- videos may complement screenshots but do not replace the required screenshot artifacts.
+
+A UI journey whose tests executed but whose required screenshots are missing has **incomplete E2E evidence**. It must not be reported as a complete E2E PASS for preflight/release readiness until the screenshot artifact gap is closed or the run is truthfully classified as a pre-UI failure where no UI screenshot could exist.
+
 Do not report a generic `E2E PASS` when materially different environment claims remain unresolved.
 
 ## 9. Platform specialization
@@ -156,7 +173,7 @@ Examples:
 - browser/web distinguishes mocked/dev-server flows from supported browser/OS/deployment combinations.
 - local-AI systems distinguish small deterministic model/runtime E2E from representative model/backend/hardware evidence for memory, throughput, thermals and accelerator-specific behavior.
 
-The common requirement is **same semantics, native implementation**.
+The common requirement is **same semantics, native implementation**. UI screenshot capture should use the established platform/framework-native E2E tooling rather than forcing one universal screenshot library.
 
 ## 10. Completion rule
 
@@ -164,6 +181,7 @@ A critical journey is ready for the strongest product/release claim only when:
 
 - required lower-level deterministic evidence passes;
 - required automated E2E passes at the declared environment fidelity;
+- for UI journeys, required screenshot artifacts are present, identity-bearing and privacy-safe;
 - built/package execution is covered when material;
 - residual fidelity gaps are explicitly known;
 - required target/real-environment confirmation passes.
