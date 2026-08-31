@@ -28,6 +28,7 @@ REQUIRED_PRINCIPLES = (
     "critical_journeys_only",
     "built_artifact_when_material",
     "residual_fidelity_gaps_explicit",
+    "ui_journey_screenshot_and_video_artifacts_required",
 )
 
 
@@ -133,8 +134,8 @@ def main() -> int:
 
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
-    if data.get("contract_version") != "0.1.0":
-        errors.append("contract_version must be 0.1.0")
+    if data.get("contract_version") != "0.1.1":
+        errors.append("contract_version must be 0.1.1")
 
     applicability = data.get("applicability")
     if not isinstance(applicability, dict):
