@@ -176,6 +176,27 @@ For Android, a built APK on an emulator may prove packaging/install/workflow beh
 
 A metadata-only 0.8 bump, a copied placeholder `e2e.json`, or a process where the final device/manual run still acts as the first undocumented complete-system test is not a valid migration.
 
+## 0.8.1 UI E2E media-evidence migration guidance
+
+When migrating from 0.8.0 to 0.8.1, keep the existing E2E framework/environment strategy and strengthen the evidence produced by UI-bearing critical journeys.
+
+Explicitly classify and merge:
+
+- `E2E-ENVIRONMENT-CONTRACT.md` 0.1.1 semantics;
+- `.engineering/e2e.json` principle `ui_journey_screenshot_and_video_artifacts_required`;
+- stable screenshot checkpoints covering materially important UI states and the final reachable outcome;
+- one continuous journey video from meaningful start through success or terminal failure;
+- platform/framework-native capture where an adequate mechanism already exists;
+- artifact identity tying screenshots/video to journey, source/build/run and execution environment;
+- privacy-safe media content and bounded local/CI retention;
+- `validate-change` and `preflight-change` behavior that reports `E2E_EVIDENCE_INCOMPLETE` when assertions pass but either media artifact class is missing;
+- PR/evidence output that exposes inspectable screenshot and video artifact references;
+- Android specialization using established instrumentation/device screenshot and screen-recording capabilities where applicable.
+
+For a headless or otherwise non-UI journey, media evidence is `N/A`; do not invent screenshots/video. If a run fails before any UI can render or recording can begin, report the pre-UI/pre-recording failure truthfully rather than fabricating media evidence, but do not call the journey a successful E2E PASS.
+
+A metadata-only 0.8.1 bump without real screenshot + video artifacts for applicable UI journeys is not a valid migration.
+
 ## Output
 
 Report:
@@ -186,6 +207,7 @@ Report:
 - operating/E2E-environment/product-experience/execution-capability mappings and migrations;
 - selected validation profile and why;
 - selected critical E2E journey/environment fidelity and residual gaps where applicable;
+- screenshot/video artifact completeness for UI-bearing E2E journeys;
 - validation/evidence executed locally, remotely and in real environments;
 - unresolved conflicts/deferred migrations.
 
