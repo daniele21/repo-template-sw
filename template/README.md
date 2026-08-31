@@ -50,7 +50,7 @@ Document the normal user/developer path, required inputs and the smallest useful
 
 ## Configuration
 
-<REPLACE_WITH_PUBLIC_CONFIGURATION_THAT_A_NORMAL_USER_OR_DEVELOPER_MUST_KNOW, OR REMOVE_THIS_SECTION_IF_NOT_APPLICABLE>
+<REPLACE_WITH_PUBLIC_CONFIGURATION_THAT_A_NORMAL_USER_OR_DEVELOPER_MUST_KNOW, OR_REMOVE_THIS_SECTION_IF_NOT_APPLICABLE>
 
 Document supported public options/defaults and required environment/configuration inputs. Internal implementation knobs that are not part of supported usage belong with their canonical technical owner instead.
 
@@ -85,4 +85,4 @@ See [`SECURITY.md`](SECURITY.md) and architecture/data-lifecycle documentation f
 
 ## Development state
 
-See [`docs/current-state.md`](docs/current-state.md). Active implementation coordination lives only in [`docs/workstreams/`](docs/workstreams/`); completed implementation plans are deleted by default after durable knowledge transfer.
+See [`docs/current-state.md`](docs/current-state.md). Active implementation coordination lives only in [`docs/workstreams/`](docs/workstreams/); completed implementation plans are deleted by default after durable knowledge transfer.
