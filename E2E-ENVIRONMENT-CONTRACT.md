@@ -1,12 +1,16 @@
 # E2E Environment Fidelity Contract
 
-Version: 0.1.0
+Version: 0.1.1
 
 This contract defines how adopted repositories choose end-to-end execution environments so automated E2E evidence becomes progressively representative of the real target rather than leaving ordinary whole-system defects for final manual/device validation.
 
 The governing rule is:
 
 > Final target-environment validation should confirm residual environment-specific claims, not become the first time the complete workflow is exercised.
+
+For critical journeys that traverse a user interface, there is an additional evidence rule:
+
+> A UI E2E journey is not complete evidence unless the run produces both inspectable UI screenshots and a complete journey video as bounded artifacts.
 
 This contract complements, rather than replaces, the project operating contract and execution-capability model.
 
@@ -77,11 +81,15 @@ E2E remains intentionally small. Keep deterministic local invariants in unit/int
 For every critical journey declare:
 
 - the user/system outcome being claimed;
+- whether it traverses a UI through `ui_surface`;
+- `required_media_artifacts`, which must be `[]` for non-UI journeys and contain `screenshots` plus `video` for UI journeys;
 - the target environment(s) relevant to that claim;
 - the automated environment(s) used before final target validation;
 - the minimum automated fidelity expected for normal release confidence;
 - known fidelity gaps that automation does not cover;
 - whether real-environment confirmation is `required`, `conditional` or `not_required`.
+
+When `ui_surface` is `true`, the E2E implementation must define stable screenshot checkpoints and record the complete journey video. Keep screenshot checkpoints outcome-oriented rather than mirroring every implementation step. At minimum, retain enough screenshots to inspect the materially important UI states and the final user-visible outcome, while the video must cover the journey continuously from its meaningful start through success or the terminal failure state.
 
 When no automated environment can truthfully exercise a required journey, record the automation-capability gap explicitly. Do not silently convert the entire workflow into an informal human test.
 
@@ -143,6 +151,17 @@ E2E evidence should identify enough context to understand what was actually prov
 - known gaps or residual real-environment requirement;
 - relevant privacy-safe logs/traces/screenshots/videos.
 
+For every critical journey whose `.engineering/e2e.json` entry sets `ui_surface: true`, **screenshots and video are both required evidence artifacts**, not optional decoration:
+
+- capture stable, materially important screenshot checkpoints and always include the final reachable user-visible outcome for a successful run;
+- record one continuous video covering the meaningful journey from start through the final success state or terminal failure state, so navigation, transitions, loading/progress behavior and interaction sequencing remain inspectable;
+- preserve screenshot/video filenames or metadata so both can be tied to the journey, run/build identity and execution environment rather than becoming anonymous media;
+- publish/retain them through the repository's normal local/CI artifact mechanism with bounded retention; they are evidence, not durable design documentation or a second design source of truth;
+- keep both artifact types privacy-safe and free of secrets or unnecessary sensitive user data;
+- on failure, preserve the last useful screenshot state when technically possible and the video up to the failure, together with normal failure trace/log evidence; if the run fails before any UI can render or before recording can start, report the pre-UI/pre-recording failure truthfully rather than fabricating evidence.
+
+A UI journey whose assertions executed but whose required screenshots **or** video are missing has **incomplete E2E evidence**. It must not be reported as a complete E2E PASS for preflight/release readiness until both artifact classes are present, except for a truthfully classified pre-UI/pre-recording failure where those artifacts could not exist.
+
 Do not report a generic `E2E PASS` when materially different environment claims remain unresolved.
 
 ## 9. Platform specialization
@@ -156,7 +175,7 @@ Examples:
 - browser/web distinguishes mocked/dev-server flows from supported browser/OS/deployment combinations.
 - local-AI systems distinguish small deterministic model/runtime E2E from representative model/backend/hardware evidence for memory, throughput, thermals and accelerator-specific behavior.
 
-The common requirement is **same semantics, native implementation**.
+The common requirement is **same semantics, native implementation**. UI screenshot and video capture should use the established platform/framework-native E2E tooling rather than forcing one universal media library.
 
 ## 10. Completion rule
 
@@ -164,6 +183,7 @@ A critical journey is ready for the strongest product/release claim only when:
 
 - required lower-level deterministic evidence passes;
 - required automated E2E passes at the declared environment fidelity;
+- for UI journeys, required screenshot and video artifacts are present, identity-bearing and privacy-safe;
 - built/package execution is covered when material;
 - residual fidelity gaps are explicitly known;
 - required target/real-environment confirmation passes.

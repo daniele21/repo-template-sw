@@ -30,6 +30,7 @@ Do not load every profile or Skill when changing one concern.
 - When an equivalent local environment exists, local execution should precede CI confirmation; when it does not, repository-owned remote automation is a valid execution backend.
 - E2E execution capability and E2E environment fidelity are independent dimensions; emulator/simulator evidence must not be promoted into physical/target-environment evidence.
 - Critical E2E journeys must declare the target environment, automated execution environments and residual fidelity gaps so final real-environment validation primarily confirms what automation cannot faithfully reproduce.
+- Critical E2E journeys that traverse a UI must emit identity-bearing, privacy-safe screenshot **and complete journey video** artifacts; a run missing either artifact class is incomplete E2E evidence even when the test assertions themselves passed.
 - Remote execution of change-branch code must preserve least privilege and must not gain production/signing/deployment secrets merely for convenience.
 - Product-experience semantics define clarity/accessibility/recoverability, not one visual style or component framework.
 - `product-ui` is opt-in and only appropriate for repositories with a material user-facing interface.
@@ -40,7 +41,7 @@ Do not load every profile or Skill when changing one concern.
 - `AGENTS.md` is routing/invariants, `.engineering/commands.json` is project operation/execution routing, `.engineering/e2e.json` is E2E environment/fidelity routing, `design/*` is product-experience/brand routing when applicable, Skills are conditional procedures, docs are durable facts, scripts/CI are deterministic enforcement/execution.
 - Completed implementation plans are deleted by default after durable knowledge transfer; Git is implementation history.
 - Material builds/artifacts/runtimes follow operating-contract identity, bounded-retention and zero-residue invariants without prescribing stack-native implementation details.
-- UI products should use a declared design source of truth, semantic tokens, progressive disclosure and appropriate accessibility/critical-journey evidence without creating a second visual truth in generated screenshots.
+- UI products should use a declared design source of truth, semantic tokens, progressive disclosure and appropriate accessibility/critical-journey evidence without creating a second visual truth in generated screenshots/videos.
 - Do not add a template file because it is merely common. Add it only when it protects a meaningful cross-project invariant or recurring workflow.
 - Profiles add the smallest justified stack/domain/product delta; they do not become internal frameworks.
 - Changes to required invariants, copied Skills or machine-readable semantics require a baseline version/changelog decision.
@@ -52,7 +53,7 @@ Do not load every profile or Skill when changing one concern.
 3. Prefer a small compatible change. If adopter behavior changes materially, update `VERSION` and `CHANGELOG.md` coherently.
 4. Keep template files usable after project-specific specialization; do not bake repository-specific paths, build systems, design tools or visual styles into the universal core.
 5. When changing operating/execution semantics, update machine-readable defaults, verifier, applicable Skills/profiles and adoption/update guidance together.
-6. When changing E2E environment-fidelity semantics, update `E2E-ENVIRONMENT-CONTRACT.md`, `.engineering/e2e.json`, `verify_e2e.py`, validation/preflight routing and applicable profile/adoption/update guidance together.
+6. When changing E2E environment-fidelity/evidence semantics, update `E2E-ENVIRONMENT-CONTRACT.md`, `.engineering/e2e.json` when its routing shape changes, validation/preflight routing and applicable profile/adoption/update guidance together. Runtime-only evidence requirements such as UI screenshot/video artifacts must still be reflected in the copied validation/preflight workflow even when the static `.engineering/e2e.json` schema does not change.
 7. When changing product-experience semantics, update `PRODUCT-EXPERIENCE-CONTRACT.md`, `product-ui`, design templates, verifier, Skills and adoption/update guidance together.
 8. Run template validation before publishing.
 

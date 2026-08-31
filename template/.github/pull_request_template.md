@@ -54,6 +54,12 @@ DOCS_CURRENT_WITH_IMPLEMENTATION: <!-- PASS/FAIL -->
 
 <!-- For each affected critical journey: .engineering/e2e.json journey id, execution-environment id, fidelity class, built/package surface used, PASS/FAIL/PENDING/N/A, and residual target-environment gaps. Do not promote emulator/simulator evidence into physical/target evidence. Otherwise N/A. -->
 
+## E2E UI media artifacts
+
+<!-- For every UI-bearing E2E journey, record BOTH required artifact classes: screenshot checkpoint artifact/ref and complete journey video artifact/ref. Missing either means E2E_EVIDENCE_INCOMPLETE and blocks complete automated preflight. Use N/A only for journeys with no UI. -->
+
+- <journey>: screenshots=<!-- PASS/FAIL/N/A + artifact ref --> video=<!-- PASS/FAIL/N/A + artifact ref -->
+
 ## Real-environment evidence
 
 <!-- Physical-device/hardware/protected external/manual/usability evidence that automation cannot truthfully replace. Tie it to residual E2E fidelity gaps when applicable. State PASS/PENDING/N/A and why. -->
@@ -68,4 +74,4 @@ DOCS_CURRENT_WITH_IMPLEMENTATION: <!-- PASS/FAIL -->
 
 ## Documentation / design lifecycle
 
-<!-- Completed workstream deleted/finalized when applicable; generated screenshots remain evidence rather than default durable design truth. -->
+<!-- Completed workstream deleted/finalized when applicable; generated screenshots/videos remain evidence rather than default durable design truth. -->

@@ -18,6 +18,8 @@ The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.eng
 
 E2E applicability, target environments, execution environments, fidelity gaps and critical-journey mappings live in [`.engineering/e2e.json`](.engineering/e2e.json). Execution capability and environment fidelity are separate: an automated emulator/simulator run does not become physical/target-environment evidence merely because CI executed it.
 
+For every UI-bearing critical E2E journey, complete run evidence requires both stable screenshot checkpoints and a complete journey video as identity-bearing, privacy-safe bounded artifacts. Assertions passing while either artifact class is missing means incomplete E2E evidence.
+
 Do not add a second undocumented command or E2E-environment truth for the same intent.
 
 ## Product experience
@@ -69,17 +71,17 @@ python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-`verify_e2e.py` validates the declared E2E target/execution environment and critical-journey contract. `verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
+`verify_e2e.py` validates the declared E2E target/execution environment and critical-journey contract, including the principle that UI journeys require screenshot + video artifacts. `verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
 
-Then use `check`/`test` while iterating. Use `e2e` when a critical complete workflow must be proven across assembled system boundaries, selecting the cheapest sufficient automated environment declared in `.engineering/e2e.json` and escalating fidelity only when the claim depends on a missing target dimension. Use `build` when runnable output is affected, and `smoke` when minimum viability of the built/running artifact must be proven.
+Then use `check`/`test` while iterating. Use `e2e` when a critical complete workflow must be proven across assembled system boundaries, selecting the cheapest sufficient automated environment declared in `.engineering/e2e.json` and escalating fidelity only when the claim depends on a missing target dimension. For UI-bearing E2E, verify both screenshot checkpoints and complete-video artifacts before calling the journey evidence complete. Use `build` when runnable output is affected, and `smoke` when minimum viability of the built/running artifact must be proven.
 
 Final device/manual/target-environment validation should primarily confirm the residual fidelity gaps that could not be reproduced earlier. Do not promote emulator/simulator evidence into a stronger physical/target claim.
 
-For UI changes, also validate applicable states, accessibility, layout contexts, critical journeys and design-system consistency. A happy-path screenshot alone is not production-ready experience evidence.
+For UI changes, also validate applicable states, accessibility, layout contexts, critical journeys and design-system consistency. Screenshot/video run artifacts make the executed flow inspectable but do not replace broader experience evidence when those claims are applicable.
 
 ## Security and data
 
-See [`SECURITY.md`](SECURITY.md) and architecture/data-lifecycle documentation for trust boundaries, sensitive data handling and reporting. E2E/visual logs/screenshots/traces must remain privacy-safe and bounded-retention evidence.
+See [`SECURITY.md`](SECURITY.md) and architecture/data-lifecycle documentation for trust boundaries, sensitive data handling and reporting. E2E/visual logs/screenshots/videos/traces must remain privacy-safe and bounded-retention evidence.
 
 ## Development state
 

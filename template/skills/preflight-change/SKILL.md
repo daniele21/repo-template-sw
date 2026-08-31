@@ -19,6 +19,8 @@ The governing rules are:
 
 > E2E environment fidelity follows the claim: use the cheapest declared automated environment that represents the material target dimensions, then leave only irreducible fidelity gaps for real-environment confirmation.
 
+> UI-bearing E2E evidence is complete only when both screenshot checkpoints and the complete journey video are available as inspectable bounded artifacts.
+
 > CI should confirm locally reproducible deterministic failures when the agent has equivalent execution capability.
 
 > An automatable deterministic gate must not be delegated to the user merely because the current agent cannot run it locally.
@@ -123,7 +125,8 @@ For each affected critical journey:
 4. select the cheapest declared automated execution environment whose fidelity is sufficient for the changed claim;
 5. require built/package-artifact execution when the claim depends on distribution/install/package behavior;
 6. escalate to a stronger automated environment when the change depends on dimensions missing from the cheaper environment;
-7. preserve declared residual gaps and required/conditional real-environment confirmation separately.
+7. if the journey traverses a UI, require screenshot checkpoints for the materially important states/final reachable outcome and one complete journey video from meaningful start to success or terminal failure;
+8. preserve declared residual gaps and required/conditional real-environment confirmation separately.
 
 Do not confuse this with execution capability. An Android emulator in CI may be `REMOTE_AUTOMATED` while still only `simulated_or_emulated` fidelity. A physical device farm may also be `REMOTE_AUTOMATED` but `representative_physical`. The executor class does not upgrade the environment claim.
 
@@ -172,6 +175,15 @@ If one or more required deterministic gates are `REMOTE_AUTOMATED` and all seman
 Do **not** ask the user to run an automatable deterministic command solely because the agent lacks a shell, checkout, SDK or toolchain.
 
 If a required deterministic gate is unavailable both locally and through repository-owned remote automation, status is `NOT_READY_FOR_AUTOMATED_PREFLIGHT` with `AUTOMATION_CAPABILITY_GAP`. If blast radius cannot be classified safely, report `VALIDATION_SCOPE_GAP` and fail safe stronger while the selector is repaired.
+
+For every UI-bearing E2E run that otherwise passes, inspect the produced evidence before marking the journey complete:
+
+- required screenshot artifacts are present and correspond to the intended checkpoints/final reachable UI state;
+- the complete journey video is present and covers the meaningful flow continuously through success or terminal failure;
+- screenshot/video identity ties them to the exact journey, run/build and execution environment;
+- media is privacy-safe and stored under the bounded artifact-retention policy.
+
+If either screenshots or video are missing, mark the journey `E2E_EVIDENCE_INCOMPLETE` and keep automated preflight incomplete. A pre-UI/pre-recording failure may truthfully explain absent media, but that run is still not a successful E2E PASS.
 
 `REAL_ENVIRONMENT` evidence may remain pending after automated validation, but still blocks any stronger claim that depends on it. A target-device/manual run should primarily cover the residual fidelity gap declared for the journey, not act as the first complete workflow execution unless an explicit automation capability gap makes that unavoidable.
 
@@ -230,6 +242,8 @@ PROFILE_REASON: <reason>
 EXECUTION_CAPABILITY: local|mixed|remote-only
 E2E_JOURNEYS:
   <journey>: <environment-id> / <fidelity-class> / PASS|FAIL|PENDING|N/A
+E2E_MEDIA_ARTIFACTS:
+  <journey>: screenshots=<PASS|FAIL|N/A> video=<PASS|FAIL|N/A> <artifact refs/paths when applicable>
 E2E_RESIDUAL_GAPS:
   <journey>: <gap or N/A>
 AGENT_LOCAL:
@@ -245,8 +259,8 @@ Readiness meanings:
 
 - `READY_FOR_CI` — documentation is current and all deterministic gates required by the selected profile could run agent-local and passed; CI can confirm independently;
 - `READY_FOR_REMOTE_PREFLIGHT` — semantic/base/diff/documentation checks and all available local gates passed; required deterministic remote gates from the selected profile must now be triggered by the agent;
-- `AUTOMATED_PREFLIGHT_CONFIRMED` — documentation is current and every deterministic automated gate required by the selected profile passed on the exact head/base at the required declared E2E fidelity, regardless of execution location;
-- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — an affected canonical document is stale, a required gate failed, profile/fidelity selection is unsafe, a material ambiguity/base/diff issue remains, or required automation routing is missing.
+- `AUTOMATED_PREFLIGHT_CONFIRMED` — documentation is current and every deterministic automated gate required by the selected profile passed on the exact head/base at the required declared E2E fidelity, and every UI-bearing E2E journey has complete screenshot + video evidence, regardless of execution location;
+- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — an affected canonical document is stale, a required gate failed, required UI E2E media evidence is incomplete, profile/fidelity selection is unsafe, a material ambiguity/base/diff issue remains, or required automation routing is missing.
 
 Any later edit, rebase/merge/replay, dependency change or material target-base/environment relationship change invalidates the affected evidence and requires rechecking documentation impact as well as applicable validation/fidelity.
 

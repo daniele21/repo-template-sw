@@ -129,6 +129,8 @@ prove invariants cheaply
 
 Do **not** execute every rung on every change. Blast radius chooses the validation depth; the claim chooses the required environment fidelity.
 
+For every critical journey that traverses a UI, complete E2E evidence additionally requires **both** screenshot checkpoints and one complete journey video. Screenshots should cover materially important states and the final reachable outcome; the video should continuously cover the meaningful journey start through success or terminal failure. Both are bounded, identity-bearing, privacy-safe run artifacts. If either class is missing, the journey is `E2E_EVIDENCE_INCOMPLETE` even when assertions passed.
+
 The final device/manual/production-like test should mainly find defects caused by the remaining reality delta: physical hardware, OEM behavior, thermals, accelerators, protected external environments or genuinely manual judgement. Broken navigation, persistence, IPC/protocol wiring, install/launch, request/response integration and ordinary restart/recovery should be moved into earlier automated E2E whenever practical.
 
 ---
@@ -195,12 +197,13 @@ Before implementing product features:
 5. create a project-specific AGENTS.md with real ownership/routing;
 6. map .engineering/commands.json to native tooling;
 7. decide E2E applicability; if applicable, specialize .engineering/e2e.json with critical journeys, target environments, automated environments/fidelity and residual gaps;
-8. implement build identity, artifact lifecycle/build delta and zero-residue runtime behavior where applicable;
-9. for product-ui, define users/jobs, IA/journeys, hierarchy/disclosure/defaults, critical states, accessibility, adaptive/platform behavior, design-system ownership, motion/graphics semantics and key reference views;
-10. configure stack-specific format/lint/test/E2E/build/smoke/UI evidence gates;
-11. record baseline version/profiles and Skill metadata;
-12. run repository, operating, E2E-fidelity, product-experience, documentation and agent-context health checks;
-13. report maturity truthfully.
+8. for every UI-bearing E2E journey, configure screenshot checkpoints and complete journey video capture/upload as bounded artifacts;
+9. implement build identity, artifact lifecycle/build delta and zero-residue runtime behavior where applicable;
+10. for product-ui, define users/jobs, IA/journeys, hierarchy/disclosure/defaults, critical states, accessibility, adaptive/platform behavior, design-system ownership, motion/graphics semantics and key reference views;
+11. configure stack-specific format/lint/test/E2E/build/smoke/UI evidence gates;
+12. record baseline version/profiles and Skill metadata;
+13. run repository, operating, E2E-fidelity, product-experience, documentation and agent-context health checks;
+14. report maturity truthfully.
 
 Do not leave placeholders. Do not add profiles, wrappers, E2E/design frameworks or device providers without a real need.
 ```
@@ -241,6 +244,7 @@ Inspect:
 - resource/concurrency/failure/security/data lifecycle;
 - critical user/system journeys and E2E evidence;
 - current E2E execution environments/device farms/browser grids/emulators;
+- screenshot and complete-video artifact coverage for every UI-bearing E2E journey;
 - final manual/device/production-like validation and what defects are first discovered there;
 - if UI exists: users/jobs, IA/journeys, progressive disclosure/defaults/action hierarchy, critical states, accessibility, adaptive behavior, design/brand truth, tokens/components, motion/imagery and UX evidence.
 
@@ -262,6 +266,7 @@ claim
 -> target environment/material dimensions
 -> existing/new automated environment + fidelity
 -> built/package artifact requirement
+-> UI media evidence requirement (screenshots + video when UI-bearing)
 -> known gaps
 -> residual target-environment confirmation
 ```
@@ -276,7 +281,7 @@ Examples:
 
 ```text
 Strong Playwright/XCUITest/Espresso suite
--> KEEP; map environments/journeys into e2e.json
+-> KEEP; map environments/journeys into e2e.json and ensure UI journeys publish screenshots + complete video
 
 Android emulator E2E
 -> KEEP; classify simulated_or_emulated, not physical
@@ -332,7 +337,7 @@ Redesign model settings so advanced parameters are progressively disclosed.
 
 The repository should already encode how to reason about and validate the work.
 
-For UI changes, do not stop at a screenshot. Validate applicable behavior/states, accessibility, layout contexts, motion/performance/reduced-motion semantics, critical journeys and design-system consistency according to the claim.
+For UI-bearing E2E, do not stop at assertion output or a single ad-hoc screenshot: the run must publish the required screenshot checkpoints **and** complete journey video. Separately validate applicable behavior/states, accessibility, layout contexts, motion/performance/reduced-motion semantics, critical journeys and design-system consistency according to the claim.
 
 Use `plan-workstream` only when coordination/dependencies make it useful. Completed plans are deleted after durable knowledge transfer by default.
 
@@ -354,6 +359,25 @@ Classify each delta APPLY / MERGE / N/A / DEFER / CONFLICT.
 Preserve stronger local mechanisms and customizations.
 Implement semantic changes, validate them, then update metadata.
 ```
+
+## 0.8.0 -> 0.8.1
+
+The 0.8.1 migration strengthens **UI E2E evidence completeness** without replacing the existing E2E framework or environment strategy.
+
+For repositories with UI-bearing critical journeys:
+
+```text
+- update the E2E contract/principle to require screenshot + video artifacts;
+- define stable screenshot checkpoints for materially important states and final reachable outcome;
+- record one complete journey video from meaningful start through success or terminal failure;
+- use existing platform-native/framework-native capture mechanisms when possible;
+- tie media filenames/metadata to journey, run/build and execution environment;
+- upload media through the normal CI artifact path with bounded retention and privacy-safe content;
+- update validate-change/preflight-change so missing either artifact class yields E2E_EVIDENCE_INCOMPLETE;
+- update PR/evidence reporting to expose artifact references.
+```
+
+For headless/non-UI journeys, the media requirement is `N/A`; do not manufacture screenshots/video merely to satisfy the baseline. A metadata-only `0.8.1` bump without implementing media evidence for applicable UI journeys is not a valid migration.
 
 ## 0.7.x -> 0.8.x
 
@@ -403,6 +427,7 @@ Assess:
 - engineering maturity;
 - validation executor coverage and remote-preflight capability;
 - critical E2E journeys and environment fidelity;
+- screenshot + complete-video artifact coverage for UI-bearing E2E journeys;
 - whether final target/manual tests discover failures that practical automation should catch earlier;
 - build/artifact/runtime cleanup;
 - when UI exists: users/jobs/task model/IA, progressive disclosure, states/recovery, accessibility, adaptive behavior, design-system ownership, purposeful motion/graphics and UX evidence.
@@ -447,7 +472,7 @@ Machine-checkable rules belong in code/CI when practical. Subjective product qua
 
 ```text
 unit + contract
- -> emulator E2E
+ -> emulator E2E + screenshot/video artifacts for UI journeys
  -> built APK E2E on emulator
  -> representative physical device when justified
  -> residual OEM/hardware/memory/thermal target confirmation
@@ -461,7 +486,7 @@ The exact ladder is project-specific. Do not run every rung mechanically.
 select stack + product-ui
  -> specialize baseline + e2e/design contracts
  -> define critical journeys/states/accessibility
- -> map commands/environments
+ -> map commands/environments + screenshot/video evidence
  -> implement product
  -> validate engineering + experience
 ```
