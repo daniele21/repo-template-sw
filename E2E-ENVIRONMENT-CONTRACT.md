@@ -81,13 +81,15 @@ E2E remains intentionally small. Keep deterministic local invariants in unit/int
 For every critical journey declare:
 
 - the user/system outcome being claimed;
+- whether it traverses a UI through `ui_surface`;
+- `required_media_artifacts`, which must be `[]` for non-UI journeys and contain `screenshots` plus `video` for UI journeys;
 - the target environment(s) relevant to that claim;
 - the automated environment(s) used before final target validation;
 - the minimum automated fidelity expected for normal release confidence;
 - known fidelity gaps that automation does not cover;
 - whether real-environment confirmation is `required`, `conditional` or `not_required`.
 
-When the journey traverses a material UI, the E2E implementation must also define stable screenshot checkpoints and record the complete journey video. Keep screenshot checkpoints outcome-oriented rather than mirroring every implementation step. At minimum, retain enough screenshots to inspect the materially important UI states and the final user-visible outcome, while the video must cover the journey continuously from its meaningful start through success or the terminal failure state.
+When `ui_surface` is `true`, the E2E implementation must define stable screenshot checkpoints and record the complete journey video. Keep screenshot checkpoints outcome-oriented rather than mirroring every implementation step. At minimum, retain enough screenshots to inspect the materially important UI states and the final user-visible outcome, while the video must cover the journey continuously from its meaningful start through success or the terminal failure state.
 
 When no automated environment can truthfully exercise a required journey, record the automation-capability gap explicitly. Do not silently convert the entire workflow into an informal human test.
 
@@ -149,7 +151,7 @@ E2E evidence should identify enough context to understand what was actually prov
 - known gaps or residual real-environment requirement;
 - relevant privacy-safe logs/traces/screenshots/videos.
 
-For every critical journey that traverses a UI, **screenshots and video are both required evidence artifacts**, not optional decoration:
+For every critical journey whose `.engineering/e2e.json` entry sets `ui_surface: true`, **screenshots and video are both required evidence artifacts**, not optional decoration:
 
 - capture stable, materially important screenshot checkpoints and always include the final reachable user-visible outcome for a successful run;
 - record one continuous video covering the meaningful journey from start through the final success state or terminal failure state, so navigation, transitions, loading/progress behavior and interaction sequencing remain inspectable;
