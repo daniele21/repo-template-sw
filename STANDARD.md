@@ -523,3 +523,11 @@ Projects should define a canonical integration/stable path appropriate to their 
 Before automated readiness, verify the feature head against the current intended target base. If the target base moved after evidence was collected, refresh/reconcile the branch as appropriate to the repository's branching model and rerun invalidated gates. Stacked branches are conditional evidence until dependencies land and the stack is replayed or otherwise proven against the canonical base.
 
 Release workflows should promote already-identified/validated artifacts rather than silently rebuilding or mutating an existing build identity unless the release process explicitly treats the rebuild as a new build.
+
+## Adoption philosophy
+
+For a new project, copy the smallest applicable core and selected profiles, then specialize all project-specific placeholders including `.engineering/commands.json` and `.engineering/e2e.json`. UI products should add `product-ui` only when a material user-facing interface exists and then specialize the design contracts rather than leaving generic placeholders.
+
+For an existing project, audit before copying. Preserve good existing practices, native build/test tooling, design systems and stronger local mechanisms; identify conflicts and gaps and migrate incrementally. Never overwrite project-specific architecture, CI, command tooling, E2E framework/environment strategy, brand/design source or documentation blindly.
+
+A project is self-contained after adoption. Template updates are explicit migrations, not runtime dependencies.
