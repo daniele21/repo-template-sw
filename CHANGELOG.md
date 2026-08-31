@@ -51,7 +51,7 @@ Makes preflight execution-capability and blast-radius aware so strong validation
 - introduces `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` validation execution classes through `EXECUTION-CAPABILITY-CONTRACT.md`;
 - establishes the **no-human-runner principle**: an automatable deterministic gate must not be delegated to the user solely because the current coding agent cannot execute it locally;
 - keeps **CI should confirm, not discover** when the agent has an equivalent local environment, while explicitly allowing CI/repository automation to become the execution backend when it does not;
-- introduces blast-radius validation profiles `LEAN`, `SCOPED`, `STRONG`, `FULL`, with deterministic `auto` selection as the normal path;
+- introduces blast-radius validation profiles `LEAN`, `SCOPED`, `STRONG` and `FULL`, with deterministic `auto` selection as the normal path;
 - defines `LEAN` for docs/governance/cheap universal guards, `SCOPED` for contained owner/module changes, `STRONG` for cross-boundary/release-sensitive changes, and `FULL` for promotion/release or changes where narrowing cannot safely be trusted;
 - requires selectors to fail safe stronger for unknown executable paths and to force `FULL` when CI-scope/global-build/dependency-inventory/toolchain machinery that controls skipping is itself modified;
 - allows automatic escalation and explicit stronger overrides, while forbidding silent downgrade below the `auto` profile;
@@ -70,7 +70,7 @@ The delivery model is now: **reason -> determine blast radius -> select the narr
 Moves coding-agent quality assurance decisively before remote CI and makes delivery readiness a first-class engineering contract:
 
 - introduces the rule **CI should confirm, not discover** for deterministic repository failures that can be reproduced locally;
-- introduces a machine-readable `publication_gate` to `.engineering/commands.json` without forcing a universal wrapper command or replacing stack-native tooling;
+- adds a machine-readable `publication_gate` to `.engineering/commands.json` without forcing a universal wrapper command or replacing stack-native tooling;
 - adds the core `preflight-change` Skill, which establishes `READY_FOR_CI` only after material ambiguity is resolved, the intended target base is fresh, the complete diff is reviewed, and every required locally reproducible deterministic gate passes on the exact head;
 - distinguishes iteration validation (`validate-change`) from final publication readiness (`preflight-change`);
 - adds an explicit material-ambiguity protocol: inspect canonical repository evidence first, then ask the user when unresolved alternatives would materially change behavior, contracts, persistence, security, lifecycle, compatibility, acceptance criteria or UX;
@@ -168,5 +168,5 @@ Initial agent-native reference engineering baseline:
 - core reusable coding-agent skills;
 - token and documentation budgets;
 - zero-dependency repository health checks;
-- adoption/update workflows;
+- adoption and update workflows;
 - optional stack/domain profile model.
