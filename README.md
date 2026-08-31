@@ -22,6 +22,7 @@ Agent-native reference engineering baseline for software repositories maintained
 - agent-triggerable remote preflight when supported coding agents lack the required shell/SDK/toolchain;
 - layered unit/integration/E2E/smoke evidence matched to the strength of the claim;
 - E2E environments deliberately matched to target devices/platforms/runtimes so final target testing confirms residual fidelity gaps instead of discovering ordinary whole-system failures;
+- inspectable UI E2E evidence: screenshot checkpoints plus a complete journey video are required artifacts for UI-bearing critical journeys;
 - consistent project operations without forcing identical tooling;
 - uniquely identifiable builds and traceable immutable artifacts;
 - bounded artifact/cache/log/test-evidence retention and zero-residue runtime/build/E2E lifecycles;
@@ -119,11 +120,12 @@ Use proportional depth: structural UX changes use the full sequence; interaction
 7. Decide which required gates can run agent-local, which need remote automation, and which genuinely require a real environment.
 8. If supported coding agents may lack required local tooling, provide the declared agent-triggerable remote-preflight mechanism before relying on them for autonomous delivery.
 9. Decide E2E applicability. If applicable, specialize `.engineering/e2e.json` with critical journeys, target environments/material dimensions, automated execution environments/fidelity and residual real-environment gaps.
-10. Implement applicable build identity, artifact lifecycle/build-delta and local-runtime/cleanup semantics.
-11. For UI products, identify primary users/jobs/surfaces, define information architecture/journeys, progressive disclosure, critical states, accessibility target, responsive/adaptive scope, design-system ownership, motion/graphics semantics and key reference views; route meaningful UX/UI work through `design-product-experience`.
-12. Record adopted standard version and profiles in `.engineering/baseline.json`.
-13. Run repository/operations/E2E-fidelity/product-experience/documentation/agent-context checks.
-14. Add stack-specific automated/test/E2E/build/smoke and UI evidence gates before claiming the relevant maturity level.
+10. For every UI-bearing E2E journey, configure screenshot checkpoints and complete journey video capture/upload as bounded, identity-bearing artifacts.
+11. Implement applicable build identity, artifact lifecycle/build-delta and local-runtime/cleanup semantics.
+12. For UI products, identify primary users/jobs/surfaces, define information architecture/journeys, progressive disclosure, critical states, accessibility target, responsive/adaptive scope, design-system ownership, motion/graphics semantics and key reference views; route meaningful UX/UI work through `design-product-experience`.
+13. Record adopted standard version and profiles in `.engineering/baseline.json`.
+14. Run repository/operations/E2E-fidelity/product-experience/documentation/agent-context checks.
+15. Add stack-specific automated/test/E2E/build/smoke and UI evidence gates before claiming the relevant maturity level.
 
 The `adopt-engineering-standard` Skill describes the complete workflow.
 
@@ -159,4 +161,4 @@ Git already preserves implementation history. Keep completed plans only when the
 
 The baseline version is stored in [`VERSION`](VERSION). Changes that alter required invariants, copied Skills or machine-readable baseline semantics must be recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
-Current baseline: **0.8.0**.
+Current baseline: **0.8.1**.
