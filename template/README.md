@@ -10,15 +10,29 @@
 
 See [`docs/architecture.md`](docs/architecture.md) for current boundaries and ownership. Keep this README focused on purpose, setup and public usage rather than implementation history.
 
-Documentation ownership and change-impact rules live in [`docs/README.md`](docs/README.md). In particular, title/summary/`Why this exists` are README **identity** and should change only when the project's core purpose, primary audience or primary outcome changes. Setup/run/use/configuration/examples are README **usage** and must stay current whenever those interfaces change.
+Documentation ownership and change-impact rules live in [`docs/README.md`](docs/README.md). Title/summary/`Why this exists` are README **identity** and should change only when the project's core purpose, primary audience or primary outcome changes. Setup/run/use/configuration/examples are README **usage** and must stay current whenever those interfaces change.
 
-## Project commands
+## Project commands and delivery stages
 
 The canonical setup/dev/validation/build/package/cleanup mapping lives in [`.engineering/commands.json`](.engineering/commands.json). It exposes `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean` while keeping this project's native tooling underneath.
 
-E2E applicability, target environments, execution environments, fidelity gaps and critical-journey mappings live in [`.engineering/e2e.json`](.engineering/e2e.json). Execution capability and environment fidelity are separate: an automated emulator/simulator run does not become physical/target-environment evidence merely because CI executed it.
+The same file declares delivery stages separately from validation depth:
 
-For every UI-bearing critical E2E journey, complete run evidence requires both stable screenshot checkpoints and a complete journey video as identity-bearing, privacy-safe bounded artifacts. Assertions passing while either artifact class is missing means incomplete E2E evidence.
+- `ITERATION` — fast owner-focused feedback while implementation changes;
+- `INTEGRATION` — exact-head vertical-slice readiness with complete diff, affected durable docs and required risk gates;
+- `RELEASE` — full release/reference-grade validation.
+
+`LEAN`, `SCOPED`, `STRONG` and `FULL` summarize validation depth; they are not delivery stages.
+
+E2E applicability, target environments, execution environments, fidelity gaps and critical journeys live in [`.engineering/e2e.json`](.engineering/e2e.json).
+
+For UI-bearing journeys, evidence is risk-based:
+
+- `ASSERTIONS` when UI is incidental to a non-visual system claim;
+- `SCREENSHOTS` when stable visible states/layout/hierarchy/copy/recovery/adaptive semantics changed;
+- `FULL_MEDIA` when motion, timing/progression, navigation/transition sequencing, lifecycle visibility, gesture continuity or release acceptance requires observing the journey over time.
+
+UI presence alone does not force video. Missing evidence required by the selected mode means incomplete E2E evidence.
 
 Do not add a second undocumented command or E2E-environment truth for the same intent.
 
@@ -46,7 +60,7 @@ Use the declared `dev` command when applicable. Local servers/processes must fol
 
 <REPLACE_WITH_THE_SHORTEST_SUCCESSFUL_PUBLIC_USAGE_PATH: CLI/API/UI FLOW OR COPY-PASTE EXAMPLE>
 
-Document the normal user/developer path, required inputs and the smallest useful example here. Link to deeper feature/API documentation rather than duplicating large contracts. If a feature change makes this path incomplete, wrong or misleading, update this section in the same change.
+Document the normal user/developer path, required inputs and the smallest useful example here. Link to deeper feature/API documentation rather than duplicating large contracts. If a feature change makes this path incomplete, wrong or misleading, update this section when the coherent slice moves to integration.
 
 ## Configuration
 
@@ -60,7 +74,7 @@ Use the declared `build`/`package` commands. Material builds use unique build id
 
 ## Validate
 
-Start with repository health checks:
+Start with repository health checks when engineering-governance files change:
 
 ```bash
 python3 scripts/verify_repository.py
@@ -71,13 +85,17 @@ python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-`verify_e2e.py` validates the declared E2E target/execution environment and critical-journey contract, including the principle that UI journeys require screenshot + video artifacts. `verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
+`verify_e2e.py` validates E2E target/execution environments, critical journeys and risk-based UI evidence policy. `verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
 
-Then use `check`/`test` while iterating. Use `e2e` when a critical complete workflow must be proven across assembled system boundaries, selecting the cheapest sufficient automated environment declared in `.engineering/e2e.json` and escalating fidelity only when the claim depends on a missing target dimension. For UI-bearing E2E, verify both screenshot checkpoints and complete-video artifacts before calling the journey evidence complete. Use `build` when runnable output is affected, and `smoke` when minimum viability of the built/running artifact must be proven.
+During `ITERATION`, use the cheapest `check`/focused test/compile gates that can falsify the current edit. Do not run full repository/release validation mechanically.
 
-Final device/manual/target-environment validation should primarily confirm the residual fidelity gaps that could not be reproduced earlier. Do not promote emulator/simulator evidence into a stronger physical/target claim.
+At `INTEGRATION`, select concrete risk gates, make affected durable docs current, reuse equivalent successful validation evidence where valid, and run the smallest necessary E2E journey/environment/evidence mode.
 
-For UI changes, also validate applicable states, accessibility, layout contexts, critical journeys and design-system consistency. Screenshot/video run artifacts make the executed flow inspectable but do not replace broader experience evidence when those claims are applicable.
+At `RELEASE`, run full release-critical validation and artifact/E2E evidence.
+
+Final device/manual/target-environment validation should primarily confirm residual fidelity gaps that could not be reproduced earlier. Do not promote emulator/simulator evidence into a stronger physical/target claim.
+
+For UI changes, validate applicable states, accessibility, layout contexts, critical journeys and design-system consistency. Media evidence makes the executed flow inspectable but does not replace broader experience evidence when those claims apply.
 
 ## Security and data
 
@@ -85,4 +103,4 @@ See [`SECURITY.md`](SECURITY.md) and architecture/data-lifecycle documentation f
 
 ## Development state
 
-See [`docs/current-state.md`](docs/current-state.md). Active implementation coordination lives only in [`docs/workstreams/`](docs/workstreams/); completed implementation plans are deleted by default after durable knowledge transfer.
+See [`docs/current-state.md`](docs/current-state.md) for integrated/blocked/next repository truth. Active implementation coordination lives only in [`docs/workstreams/`](docs/workstreams/); completed implementation plans are deleted by default after durable knowledge transfer.
