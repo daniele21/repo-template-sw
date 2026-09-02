@@ -20,7 +20,15 @@ FIDELITY_RANK = {name: index for index, name in enumerate(FIDELITY_ORDER)}
 APPLICABILITY = {"required", "recommended", "n/a"}
 AUTOMATION = {"automated", "real_environment"}
 REAL_CONFIRMATION = {"required", "conditional", "not_required"}
-REQUIRED_UI_MEDIA = {"screenshots", "video"}
+UI_EVIDENCE_MODES = ["assertions", "screenshots", "full_media"]
+UI_EVIDENCE_MODE_SET = set(UI_EVIDENCE_MODES)
+REQUIRED_FULL_MEDIA_TRIGGERS = {
+    "motion_or_animation",
+    "timing_or_progression",
+    "navigation_or_transition_sequence",
+    "lifecycle_visibility",
+    "release_acceptance",
+}
 PLACEHOLDER_MARKERS = ("<REPLACE_WITH_", "<PROJECT_")
 REQUIRED_PRINCIPLES = (
     "final_environment_should_confirm_not_discover",
@@ -29,7 +37,7 @@ REQUIRED_PRINCIPLES = (
     "critical_journeys_only",
     "built_artifact_when_material",
     "residual_fidelity_gaps_explicit",
-    "ui_journey_screenshot_and_video_artifacts_required",
+    "ui_evidence_risk_based",
 )
 
 
@@ -135,8 +143,8 @@ def main() -> int:
 
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
-    if data.get("contract_version") != "0.1.1":
-        errors.append("contract_version must be 0.1.1")
+    if data.get("contract_version") != "0.2.0":
+        errors.append("contract_version must be 0.2.0")
 
     applicability = data.get("applicability")
     if not isinstance(applicability, dict):
@@ -173,6 +181,21 @@ def main() -> int:
     for key in REQUIRED_PRINCIPLES:
         if principles.get(key) is not True:
             errors.append(f"principles.{key} must be true")
+
+    ui_evidence = data.get("ui_evidence")
+    if not isinstance(ui_evidence, dict):
+        errors.append("ui_evidence must be an object")
+        ui_evidence = {}
+    if ui_evidence.get("modes") != UI_EVIDENCE_MODES:
+        errors.append("ui_evidence.modes must be assertions, screenshots, full_media in that order")
+    if ui_evidence.get("default_mode") not in UI_EVIDENCE_MODE_SET:
+        errors.append("ui_evidence.default_mode must be a declared UI evidence mode")
+    if ui_evidence.get("assertions_allowed_when_ui_incidental") is not True:
+        errors.append("ui_evidence.assertions_allowed_when_ui_incidental must be true")
+    full_media_triggers = set(ui_evidence.get("full_media_triggers") or [])
+    missing_triggers = sorted(REQUIRED_FULL_MEDIA_TRIGGERS - full_media_triggers)
+    if missing_triggers:
+        errors.append("ui_evidence.full_media_triggers missing: " + ", ".join(missing_triggers))
 
     if data.get("fidelity_order") != FIDELITY_ORDER:
         errors.append("fidelity_order must match the canonical ordered fidelity classes")
@@ -250,18 +273,14 @@ def main() -> int:
         if not isinstance(ui_surface, bool):
             errors.append(f"critical_journeys.{journey_id}.ui_surface must be boolean")
 
-        media = journey.get("required_media_artifacts")
-        if not isinstance(media, list) or not all(non_empty_string(item) for item in media):
+        minimum_ui_evidence = journey.get("minimum_ui_evidence_mode")
+        if ui_surface is True and minimum_ui_evidence not in UI_EVIDENCE_MODE_SET:
             errors.append(
-                f"critical_journeys.{journey_id}.required_media_artifacts must be a string list"
+                f"critical_journeys.{journey_id}.minimum_ui_evidence_mode must be one of {UI_EVIDENCE_MODES} for UI journeys"
             )
-        elif ui_surface is True and set(media) != REQUIRED_UI_MEDIA:
+        elif ui_surface is False and minimum_ui_evidence not in {None, "assertions"}:
             errors.append(
-                f"critical_journeys.{journey_id}.required_media_artifacts must contain screenshots and video for UI journeys"
-            )
-        elif ui_surface is False and media:
-            errors.append(
-                f"critical_journeys.{journey_id}.required_media_artifacts must be empty when ui_surface is false"
+                f"critical_journeys.{journey_id}.minimum_ui_evidence_mode must be absent or assertions when ui_surface is false"
             )
 
         validate_refs(

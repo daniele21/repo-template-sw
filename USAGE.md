@@ -1,503 +1,293 @@
 # Using `repo-template-sw`
 
-This guide explains how to use `repo-template-sw` with a new repository, an existing repository, and an already-adopted repository that needs a baseline migration.
+This guide explains how to bootstrap, operate and migrate repositories with `repo-template-sw` 0.9.0.
 
-`repo-template-sw` is a **bootstrap, audit and migration source**. After adoption, ordinary work should be driven by the target repository itself.
+`repo-template-sw` is a **bootstrap, audit and migration source**. After adoption, ordinary work is driven by the target repository itself.
 
-The governing model is **same semantics, native implementation**: repositories converge on engineering, E2E-evidence and product-experience invariants without being forced onto the same build system, E2E framework/device provider, design tool or visual style.
+The governing model is **same semantics, native implementation**: preserve Gradle/Xcode/Python/Node/native E2E/design tooling and map it to common engineering behavior rather than replacing it for uniformity.
 
 ## Mental model
 
 ```text
 repo-template-sw
-      |
-      +--> STANDARD.md                    engineering maturity/invariants
-      +--> OPERATING-CONTRACT.md          commands/E2E/build/artifact/runtime
-      +--> E2E-ENVIRONMENT-CONTRACT.md    target environments + E2E fidelity
-      +--> EXECUTION-CAPABILITY-CONTRACT  who/where executes validation
-      +--> PRODUCT-EXPERIENCE-CONTRACT.md UX/UI quality + decision order when applicable
-      +--> template/                      adoptable baseline
-      +--> profiles/                      stack/product mapping
-      |
-      +--> new repository      -> bootstrap + specialize
-      +--> existing repository -> audit + preserve + align
-      +--> adopted repository  -> explicit semantic migration
+  -> STANDARD.md                      core invariants/maturity
+  -> OPERATING-CONTRACT.md            commands/build/artifact/runtime
+  -> EXECUTION-CAPABILITY-CONTRACT.md stages + risk gates + executor + evidence reuse
+  -> E2E-ENVIRONMENT-CONTRACT.md      environment fidelity + UI evidence modes
+  -> PRODUCT-EXPERIENCE-CONTRACT.md   optional UX/UI semantics
+  -> template/                        adoptable project baseline
+  -> profiles/                        stack/domain/product specialization
+```
 
 After adoption:
 
+```text
 project repository
-      |
-      +--> AGENTS.md                    agent routing/invariants
-      +--> .engineering/commands.json  canonical operations/executor routing
-      +--> .engineering/e2e.json       target/execution environments + fidelity gaps + journeys
-      +--> design/*                    UX/brand contract if product-ui
-      +--> local Skills                recurring workflows
-      +--> active workstream           current coordinated work only
-      +--> durable docs                current behavior/decisions
-      +--> scripts / CI                deterministic enforcement
+  -> AGENTS.md                    routing/invariants
+  -> .engineering/commands.json  commands + development velocity + validation/preflight
+  -> .engineering/e2e.json       E2E environments/journeys/evidence policy
+  -> local Skills                recurring workflows
+  -> durable docs                current integrated truth
+  -> scripts / CI                deterministic enforcement/execution
 ```
 
----
+## 1. Ordinary development in 0.9.0
 
-# 1. Common operating and E2E model
+Do not treat every change as a release candidate.
 
-Every adopted application/runtime repository declares applicable intents in `.engineering/commands.json`:
+### ITERATION
+
+Default while implementation changes.
+
+Use the cheapest gate that can falsify the current hypothesis:
 
 ```text
-setup -> doctor -> dev -> check -> test -> e2e -> build -> smoke -> package -> stop -> clean
+edit
+-> touched format/static check
+-> affected compile/typecheck
+-> focused unit/component test
+-> direct contract/consumer test only when needed
+-> repeat
 ```
 
-Do not add wrappers solely for naming consistency. Keep the repository's native Gradle/Xcode/Python/Node/etc. tooling underneath.
+Exact-head publication evidence, complete-diff review, durable-doc freshness, remote preflight, broad E2E and release packaging are **not** default requirements here.
 
-Keep validation layers distinct:
+A temporary branch or draft PR may exist for collaboration without being integration-ready.
+
+### INTEGRATION
+
+Move here when the work forms a coherent **observable vertical outcome**.
+
+Now:
+
+1. refresh exact source head and intended target/base;
+2. inspect the complete diff;
+3. make affected durable docs current;
+4. resolve risk dimensions and concrete required gates;
+5. classify each gate as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT`;
+6. reuse equivalent successful evidence;
+7. execute only missing/stale/insufficient deterministic gates;
+8. add the smallest required critical E2E journey.
+
+### RELEASE
+
+For stable promotion/release/reference checkpoints:
+
+- use `FULL` validation;
+- run release-critical build/package/artifact gates;
+- run release-critical E2E at sufficient environment fidelity;
+- close residual real-environment evidence required by the release claim.
+
+## 2. Validation depth
+
+Delivery stage and validation depth are separate.
+
+- `LEAN` — docs/governance/metadata or cheap universal guards;
+- `SCOPED` — contained owner/module plus direct consumers/tests/lint/compile;
+- `STRONG` — cross-boundary/shared contract/persistence/security/lifecycle/native/package/R8/dependency/variant risk;
+- `FULL` — release/promotion or unsafe-to-narrow selector/global build/toolchain/dependency-inventory changes.
+
+Prefer a selector that emits:
 
 ```text
-unit/component
-   ↓
-integration/contract
-   ↓
-end-to-end critical journey
-   ↓
-smoke of built/running artifact
+RISKS: ui_behavior, direct_consumer
+REQUIRED_GATES: app compile, focused tests, app lint, consumer contract
+PROFILE: SCOPED
 ```
 
-Use E2E only when the complete outcome cannot be proven adequately below that level. Browser/web may prefer Playwright when introducing a new E2E framework; native/mobile/server/CLI projects should use the strongest appropriate native/protocol-level tool.
+rather than using file paths to select a giant suite mechanically.
 
-Material builds use unique identity, immutable successful artifacts, manifests/checksums, generated build delta, bounded local retention and durable release storage. Runtime/test/E2E/build operations own and clean all processes, listeners, temp state and evidence they create.
+## 3. Remote validation without duplicate CI
 
-## Execution capability vs environment fidelity
+When the current agent lacks an SDK/toolchain, deterministic gates are `REMOTE_AUTOMATED`, not user tasks.
 
-These are separate axes.
+Before dispatching remote preflight, search existing successful evidence.
 
-Execution capability answers **who/where can execute the gate now**:
+Reuse it when it still matches:
+
+- exact source head;
+- material target/base relationship;
+- required gates;
+- selected profile or stronger equivalent;
+- E2E environment/fidelity/evidence mode when applicable.
+
+This means a recreated PR, draft -> ready transition or metadata-only collaboration change should not rerun unchanged validation solely because PR identity changed.
+
+Normal flow:
 
 ```text
-AGENT_LOCAL
-REMOTE_AUTOMATED
-REAL_ENVIRONMENT
+required gates
+-> reuse valid existing evidence
+-> find remaining gaps
+-> run only remaining remote gates
+-> combine readiness evidence
 ```
 
-Environment fidelity answers **how closely the gate's environment represents the target relevant to the claim**:
+## 4. E2E environment fidelity
+
+Do not confuse who runs a test with what environment the test represents.
+
+Typical fidelity ladder:
 
 ```text
 host_or_fake
-simulated_or_emulated
-representative_virtual
-representative_physical
-target_environment
+-> simulated_or_emulated
+-> representative_virtual
+-> representative_physical
+-> target_environment
 ```
 
-Examples:
+Use the cheapest declared environment sufficient for the claim. Escalate only when the changed invariant depends on a missing material dimension.
+
+Final physical/manual/target testing should primarily close residual fidelity gaps rather than discover ordinary navigation, persistence, IPC or packaging failures that practical automation could catch earlier.
+
+## 5. UI E2E evidence
+
+0.9.0 replaces the 0.8.1 unconditional “screenshots + video for every UI-bearing journey” rule with risk-based evidence modes.
+
+### ASSERTIONS
+
+Use when UI is incidental to a deterministic system claim, such as persistence, Binder/protocol recovery or process lifecycle.
+
+### SCREENSHOTS
+
+Use when stable visual/product states changed: hierarchy, layout, copy, recovery state, progressive disclosure or adaptive presentation.
+
+### FULL_MEDIA
+
+Use when sequence over time matters: motion/animation, timing/progression, navigation/transition sequencing, lifecycle visibility, gesture continuity or release/product acceptance.
+
+`FULL_MEDIA` includes required screenshots plus continuous journey video.
+
+Do not downgrade the selected evidence mode after execution to hide missing artifacts. Missing required evidence is `E2E_EVIDENCE_INCOMPLETE`.
+
+## 6. Parallel work and workstreams
+
+Use `plan-workstream` only when persistent dependency/parallel coordination adds value.
+
+Prefer:
 
 ```text
-Android emulator in GitHub Actions
--> REMOTE_AUTOMATED + simulated_or_emulated
-
-Automated physical device farm
--> REMOTE_AUTOMATED + representative_physical
-
-Final run on the actual supported/OEM device
--> usually REAL_ENVIRONMENT + target_environment
+vertical outcome
+  ├─ subtask A -> temporary branch/worktree
+  ├─ subtask B -> temporary branch/worktree
+  └─ subtask C -> temporary branch/worktree
+          ↓
+      early convergence
+          ↓
+feature/integration branch
+          ↓
+coherent integration PR
 ```
 
-A green remote job does not automatically strengthen environment fidelity. Emulator/simulator evidence is never physical-device evidence.
+A small technical layer is not automatically a vertical slice. Ask what observable behavior becomes true when the slice lands.
 
-## `.engineering/e2e.json`
+Stacked PRs are useful only when each level is independently mergeable/reviewable/value-bearing or separate ownership genuinely requires it. Sync-only PRs indicate avoidable coordination tax.
 
-When E2E is applicable, specialize the machine-readable contract with:
+## 7. Documentation timing
 
-- E2E applicability and reason;
-- material target environments;
-- platform/device/browser/runtime/hardware dimensions that matter to the product claim;
-- automated execution environments and their fidelity class;
-- whether the real built/package artifact is exercised;
-- known environment gaps;
-- a bounded set of critical journeys;
-- the minimum automated fidelity expected for each journey;
-- residual real-environment confirmation (`required`, `conditional`, `not_required`);
-- an explicit automation-gap reason if a required journey genuinely cannot run automatically.
+During `ITERATION`, durable docs may remain pending while behavior is unsettled.
 
-The desired progression is:
+At `INTEGRATION`, every affected canonical owner must be current with the exact candidate behavior.
 
-```text
-prove invariants cheaply
--> prove the complete critical workflow automatically
--> use the built/package artifact when material
--> increase automated environment fidelity only where required
--> confirm residual target-environment gaps
-```
+`docs/current-state.md` should describe **integrated / blocked / next** repository truth. Do not update it for every agent commit, branch replay or stack sync.
 
-Do **not** execute every rung on every change. Blast radius chooses the validation depth; the claim chooses the required environment fidelity.
+Completed implementation plans are deleted by default after durable truth is transferred; Git keeps history.
 
-For every critical journey that traverses a UI, complete E2E evidence additionally requires **both** screenshot checkpoints and one complete journey video. Screenshots should cover materially important states and the final reachable outcome; the video should continuously cover the meaningful journey start through success or terminal failure. Both are bounded, identity-bearing, privacy-safe run artifacts. If either class is missing, the journey is `E2E_EVIDENCE_INCOMPLETE` even when assertions passed.
+## 8. New repository adoption
 
-The final device/manual/production-like test should mainly find defects caused by the remaining reality delta: physical hardware, OEM behavior, thermals, accelerators, protected external environments or genuinely manual judgement. Broken navigation, persistence, IPC/protocol wiring, install/launch, request/response integration and ordinary restart/recovery should be moved into earlier automated E2E whenever practical.
+1. Read `STANDARD.md` plus only applicable focused contracts/profiles.
+2. Copy/specialize `template/`.
+3. Replace project placeholders from actual repository evidence.
+4. Map canonical command intents to native tooling in `.engineering/commands.json`.
+5. Specialize `development_velocity`, risk/gate selector, execution classes and remote-preflight trigger/reuse semantics.
+6. Decide E2E applicability and specialize `.engineering/e2e.json` with target environments, execution environments, critical journeys, residual gaps and minimum UI evidence mode.
+7. If the product has material UI, adopt `product-ui` and point to the real design-system/brand owner.
+8. Preserve stronger existing tooling rather than introducing parallel frameworks.
+9. Run repository/operations/E2E/product-experience/docs/context verifiers.
+10. Record the adopted baseline version only when behavior really matches it.
 
----
-
-# 2. Product experience model
-
-Use the optional `product-ui` profile when the repository has a material user-facing interface. Do not add it to headless libraries/APIs merely because every project uses the same baseline.
-
-A `product-ui` project specializes:
+Useful prompt:
 
 ```text
-design/
-├── ux-contract.json
-├── brand-kit.json
-└── README.md
-```
-
-and uses `skills/design-product-experience/SKILL.md` for meaningful UX/UI work.
-
-The product-experience decision order is:
-
-```text
-USER OUTCOME
--> TASK MODEL
--> INFORMATION ARCHITECTURE / CRITICAL JOURNEY
--> INFORMATION + ACTION HIERARCHY
--> PROGRESSIVE DISCLOSURE / DEFAULTS
--> INTERACTIONS + STATES + FEEDBACK + RECOVERY
--> ADAPTIVE / PLATFORM BEHAVIOR
--> ACCESSIBILITY
--> DESIGN SYSTEM / COMPONENTS
--> MOTION
--> VISUAL POLISH / GRAPHICS
--> VALIDATION
-```
-
-Use proportional depth:
-
-- **structural UX** — new screen/navigation/workflow/onboarding/major redesign: use the full sequence;
-- **interaction** — start from the owning task/journey and cover affected interaction/state/accessibility/adaptive/component/motion layers;
-- **visual-only** — preserve settled semantics and start from the canonical design-system/brand owner.
-
-The contract covers primary users/jobs/surfaces, information architecture, progressive disclosure, action hierarchy, complete states, feedback/recovery, accessibility, adaptive behavior, semantic design tokens, component ownership, purposeful motion, functional graphics, bounded key reference views and appropriate UX regression evidence.
-
-`design/ux-contract.json` owns why/when motion or graphics are appropriate. `design/brand-kit.json` owns product-specific visual/motion language or points to the stronger existing Figma/code/design-system truth.
-
-Web products should target WCAG 2.2 AA or stronger; native products should use equivalent platform accessibility APIs/guidelines. Automated accessibility tests do not replace manual keyboard/screen-reader/device validation where important.
-
----
-
-# 3. Starting a repository from zero
-
-Recommended request to a coding agent:
-
-```text
-Bootstrap <TARGET_REPOSITORY> using the current stable baseline of daniele21/repo-template-sw.
+Adopt repo-template-sw 0.9.0 in <REPOSITORY>.
 Use adopt-engineering-standard.
-
-Before implementing product features:
-1. identify product/runtime, languages, platforms, persistence, network/security, build/distribution, target environments and UI boundaries;
-2. select only applicable profiles;
-3. adopt and specialize the universal baseline;
-4. if there is a material UI, add product-ui and specialize design/ux-contract.json and design/brand-kit.json;
-5. create a project-specific AGENTS.md with real ownership/routing;
-6. map .engineering/commands.json to native tooling;
-7. decide E2E applicability; if applicable, specialize .engineering/e2e.json with critical journeys, target environments, automated environments/fidelity and residual gaps;
-8. for every UI-bearing E2E journey, configure screenshot checkpoints and complete journey video capture/upload as bounded artifacts;
-9. implement build identity, artifact lifecycle/build delta and zero-residue runtime behavior where applicable;
-10. for product-ui, define users/jobs, IA/journeys, hierarchy/disclosure/defaults, critical states, accessibility, adaptive/platform behavior, design-system ownership, motion/graphics semantics and key reference views;
-11. configure stack-specific format/lint/test/E2E/build/smoke/UI evidence gates;
-12. record baseline version/profiles and Skill metadata;
-13. run repository, operating, E2E-fidelity, product-experience, documentation and agent-context health checks;
-14. report maturity truthfully.
-
-Do not leave placeholders. Do not add profiles, wrappers, E2E/design frameworks or device providers without a real need.
+Preserve stronger existing engineering/build/E2E/design mechanisms and specialize the template from repository evidence rather than copying placeholders blindly.
 ```
 
-Typical profile combinations:
+## 9. Existing repository adoption
+
+Treat adoption as a gap analysis, not wholesale template replacement.
+
+Classify current mechanisms as:
+
+- `KEEP` — already satisfies or exceeds the invariant;
+- `ADAPT` — keep mechanism, add missing semantics/routing;
+- `ADD` — missing capability genuinely needed;
+- `N/A` — concern does not apply.
+
+Preserve project-native commands, CI, test framework, device/provider infrastructure, build/release mechanisms and design sources of truth when they are stronger than the baseline.
+
+## 10. Baseline migration
+
+Use `skills/update-engineering-standard/SKILL.md`.
+
+For each semantic delta classify:
+
+- `APPLY`;
+- `MERGE`;
+- `N/A`;
+- `DEFER`;
+- `CONFLICT`.
+
+A version bump without applying or explicitly classifying the semantic delta is not a valid migration.
+
+### Migrating 0.8.1 -> 0.9.0
+
+Key migration work:
+
+1. `.engineering/commands.json` -> operating contract `0.6.0`;
+2. add `ITERATION / INTEGRATION / RELEASE` development-velocity routing;
+3. update selector output toward risk dimensions + concrete required gates;
+4. enable reuse of equivalent successful remote evidence;
+5. `.engineering/e2e.json` -> E2E contract `0.2.0` with risk-based UI evidence modes;
+6. update validation/preflight/remote-preflight/workstream Skills;
+7. move exact-head/full-diff/durable-doc readiness to integration/release rather than every edit/draft update;
+8. prefer early convergence of related parallel work over stacked publication;
+9. simplify ordinary vertical-slice PR evidence and keep a separate release checklist;
+10. specialize stack profiles, especially Android, so expensive gates run where their signal justifies their latency.
+
+Existing screenshot/video capture infrastructure should normally be **kept**. 0.9.0 changes when it is required: use it for `SCREENSHOTS`/`FULL_MEDIA` claims instead of forcing video on every UI-bearing E2E run.
+
+Useful prompt:
 
 ```text
-Python local inference service -> python + local-ai
-Android app                  -> android + product-ui
-Android local-AI app         -> android + local-ai + product-ui
-macOS desktop app            -> macos + product-ui
-macOS Python local-AI app    -> python + macos + local-ai + product-ui
-TypeScript web app           -> typescript + product-ui
-Headless Python API          -> python
-```
-
-Bootstrap creates structure and contracts; it does not itself prove L1/L2.
-
----
-
-# 4. Aligning an existing repository
-
-**Audit first. Do not copy `template/` blindly.**
-
-Recommended audit request:
-
-```text
-Audit <TARGET_REPOSITORY> against the current stable baseline of daniele21/repo-template-sw.
-Do not modify the repository yet.
-
-Classify every relevant concern as KEEP / ADAPT / ADD / N/A / CONFLICT.
-
-Inspect:
-- architecture/ownership and AGENTS/Skills/docs;
-- setup/dev/check/test/E2E/build/package/clean commands;
-- build identity, artifacts, retention, releases and BUILD_CHANGELOG;
-- localhost/process/port/temp cleanup;
-- resource/concurrency/failure/security/data lifecycle;
-- critical user/system journeys and E2E evidence;
-- current E2E execution environments/device farms/browser grids/emulators;
-- screenshot and complete-video artifact coverage for every UI-bearing E2E journey;
-- final manual/device/production-like validation and what defects are first discovered there;
-- if UI exists: users/jobs, IA/journeys, progressive disclosure/defaults/action hierarchy, critical states, accessibility, adaptive behavior, design/brand truth, tokens/components, motion/imagery and UX evidence.
-
-Return:
-- current L0/L1/L2 estimate;
-- KEEP / ADAPT / ADD / N/A / CONFLICT matrix;
-- what should explicitly NOT change;
-- highest-value gaps;
-- a small dependency-aware adoption DAG;
-- safe parallel lanes.
-```
-
-Then implement incrementally. Preserve native tooling, strong E2E frameworks/device providers and design systems.
-
-For E2E, map each critical journey as:
-
-```text
-claim
--> target environment/material dimensions
--> existing/new automated environment + fidelity
--> built/package artifact requirement
--> UI media evidence requirement (screenshots + video when UI-bearing)
--> known gaps
--> residual target-environment confirmation
-```
-
-Review failures historically found during final target/manual testing:
-
-- reproducible in an existing automated environment -> move the regression earlier;
-- reproducible with a practical stronger automated environment -> add/strengthen it when value justifies cost;
-- genuinely hardware/OEM/thermal/protected/manual -> keep as explicit real-environment evidence.
-
-Examples:
-
-```text
-Strong Playwright/XCUITest/Espresso suite
--> KEEP; map environments/journeys into e2e.json and ensure UI journeys publish screenshots + complete video
-
-Android emulator E2E
--> KEEP; classify simulated_or_emulated, not physical
-
-Existing physical device farm
--> KEEP; classify representative_physical for the claims it represents
-
-Server leaves port open after tests
--> CONFLICT with zero-residue invariant
-
-Strong existing design system/Figma source
--> KEEP; point ux-contract/brand-kit to it
-
-No meaningful UI
--> product-ui N/A
-```
-
----
-
-# 5. Normal development after adoption
-
-Ordinary work should use only the target repository:
-
-```text
-user request
-    ↓
-AGENTS.md
-    ↓
-closest scoped guide when needed
-    ↓
-commands.json for operations/executor routing
-    ↓
-e2e.json when complete workflow/environment fidelity matters
-    ↓
-ux-contract/brand-kit when UI behavior changes
-    ↓
-local Skill + owning code/tests
-```
-
-`validate-change` chooses the narrowest sufficient iteration evidence. If E2E is relevant it chooses the affected critical journey and cheapest sufficient declared automated environment. `preflight-change` then combines blast-radius selection, E2E fidelity selection and executor classification on the exact head/base.
-
-A normal request can stay small:
-
-```text
-Implement memory-aware eviction.
-```
-
-or:
-
-```text
-Redesign model settings so advanced parameters are progressively disclosed.
-```
-
-The repository should already encode how to reason about and validate the work.
-
-For UI-bearing E2E, do not stop at assertion output or a single ad-hoc screenshot: the run must publish the required screenshot checkpoints **and** complete journey video. Separately validate applicable behavior/states, accessibility, layout contexts, motion/performance/reduced-motion semantics, critical journeys and design-system consistency according to the claim.
-
-Use `plan-workstream` only when coordination/dependencies make it useful. Completed plans are deleted after durable knowledge transfer by default.
-
----
-
-# 6. Updating an adopted repository
-
-Baseline upgrades are explicit semantic migrations, not automatic file synchronization.
-
-Recommended request:
-
-```text
-Migrate <TARGET_REPOSITORY> from its recorded repo-template-sw baseline to <TARGET_VERSION>.
+Migrate <REPOSITORY> from its recorded repo-template-sw baseline to 0.9.0.
 Use update-engineering-standard.
-
-Read baseline.json, commands.json, e2e.json when present, local Skills and design contracts when product-ui is adopted.
-Compare VERSION/CHANGELOG and changed focused contracts.
-Classify each delta APPLY / MERGE / N/A / DEFER / CONFLICT.
-Preserve stronger local mechanisms and customizations.
-Implement semantic changes, validate them, then update metadata.
+Preserve local customizations and existing strong test/E2E/build mechanisms; apply the new staged delivery, risk-to-gate, evidence-reuse and risk-based UI evidence semantics.
 ```
 
-## 0.8.0 -> 0.8.1
+## 11. Validation economics
 
-The 0.8.1 migration strengthens **UI E2E evidence completeness** without replacing the existing E2E framework or environment strategy.
+Where practical, periodically review expensive gates for:
 
-For repositories with UI-bearing critical journeys:
+- duration;
+- flake rate;
+- unique regressions caught;
+- overlap with other gates.
 
-```text
-- update the E2E contract/principle to require screenshot + video artifacts;
-- define stable screenshot checkpoints for materially important states and final reachable outcome;
-- record one complete journey video from meaningful start through success or terminal failure;
-- use existing platform-native/framework-native capture mechanisms when possible;
-- tie media filenames/metadata to journey, run/build and execution environment;
-- upload media through the normal CI artifact path with bounded retention and privacy-safe content;
-- update validate-change/preflight-change so missing either artifact class yields E2E_EVIDENCE_INCOMPLETE;
-- update PR/evidence reporting to expose artifact references.
-```
+Move cheap high-signal evidence earlier and expensive low-frequency evidence toward integration/release. Do not delete tests that protect real invariants merely to make CI faster.
 
-For headless/non-UI journeys, the media requirement is `N/A`; do not manufacture screenshots/video merely to satisfy the baseline. A metadata-only `0.8.1` bump without implementing media evidence for applicable UI journeys is not a valid migration.
+The objective is **sufficient confidence per feedback time**.
 
-## 0.7.x -> 0.8.x
+## 12. Source-of-truth order after adoption
 
-The 0.8 migration is an E2E **environment-fidelity** migration, not an E2E-framework replacement.
+For ordinary development on an adopted repository:
 
-Explicitly evaluate:
+1. target repository `AGENTS.md` and closest scoped guide;
+2. target `.engineering/commands.json` / `.engineering/e2e.json`;
+3. target architecture/feature/ADR/current-state owners;
+4. target implementation/direct consumers/tests;
+5. `repo-template-sw` only for baseline semantics, adoption or migration questions.
 
-```text
-- add/merge E2E-ENVIRONMENT-CONTRACT semantics;
-- specialize .engineering/e2e.json;
-- identify material target environments/dimensions;
-- classify existing E2E execution environments by fidelity;
-- map every critical journey to automated environments and minimum fidelity;
-- identify built/package-artifact E2E requirements;
-- record residual gaps and target-environment confirmation;
-- add verify_e2e.py to repository health;
-- update validate-change/preflight-change routing;
-- review defects currently found only in final manual/device testing and move reproducible ones earlier;
-- preserve stronger existing Espresso/Compose UI Test/UI Automator/XCTest/Playwright/device-farm mechanisms.
-```
-
-Do not confuse `REMOTE_AUTOMATED` with high fidelity. A CI emulator remains `simulated_or_emulated`; an automated physical device farm can be `representative_physical`.
-
-A metadata-only `0.8.0` bump, an unspecialized placeholder `e2e.json`, or a process where final manual/device testing remains the undocumented first whole-system run is not a valid migration.
-
-For **0.6.x -> 0.7.x**, adopt execution-capability classes, no-human-runner remote preflight and blast-radius profiles.
-
-For **0.5.x -> 0.6.x**, adopt exact-head pre-publication readiness, material-ambiguity/base/diff/root-cause gates and local/CI parity.
-
-For **0.4.x -> 0.5.x**, adopt the ordered/proportional product-experience workflow and `design-product-experience` routing.
-
-For **0.3.x -> 0.4.x**, first classify/adopt the original `product-ui` contract where a material UI exists.
-
-A metadata-only version bump is never a valid semantic migration.
-
----
-
-# 7. Using the standard as an audit tool
-
-You can use the baseline without modifying a repository:
-
-```text
-Review <TARGET_REPOSITORY> against daniele21/repo-template-sw.
-Do not change code.
-
-Assess:
-- engineering maturity;
-- validation executor coverage and remote-preflight capability;
-- critical E2E journeys and environment fidelity;
-- screenshot + complete-video artifact coverage for UI-bearing E2E journeys;
-- whether final target/manual tests discover failures that practical automation should catch earlier;
-- build/artifact/runtime cleanup;
-- when UI exists: users/jobs/task model/IA, progressive disclosure, states/recovery, accessibility, adaptive behavior, design-system ownership, purposeful motion/graphics and UX evidence.
-
-Estimate L0/L1/L2 and rank the highest-value evidence-backed gaps.
-```
-
----
-
-# 8. What belongs where
-
-| Concern | Canonical owner |
-| --- | --- |
-| Universal engineering invariant | `STANDARD.md` |
-| Command/E2E/build/artifact/runtime semantics | `OPERATING-CONTRACT.md` |
-| Universal E2E environment/fidelity semantics | `E2E-ENVIRONMENT-CONTRACT.md` |
-| Validation executor semantics | `EXECUTION-CAPABILITY-CONTRACT.md` |
-| Universal UX/UI semantics + decision order | `PRODUCT-EXPERIENCE-CONTRACT.md` |
-| Optional stack/product mapping | `profiles/` |
-| Project operations/executor routing | `.engineering/commands.json` |
-| Project E2E environments/fidelity/journeys | `.engineering/e2e.json` |
-| Project UX contract / users-jobs / motion semantics | `design/ux-contract.json` |
-| Project brand/design/motion tokens | `design/brand-kit.json` |
-| Actual design source | declared Figma/code/in-repo owner |
-| Project routing/invariants | `AGENTS.md` |
-| Recurring project procedure | `skills/` |
-| Current coordinated implementation | active workstream |
-| Current behavior | feature/architecture docs + code/tests |
-| Durable decision | ADR |
-| Implementation history | Git |
-| Per-build exact delta | artifact `BUILD_CHANGELOG.md` |
-| Generated E2E/visual evidence | bounded CI artifact store |
-| Deterministic enforceable rule | scripts / CI |
-
-Machine-checkable rules belong in code/CI when practical. Subjective product quality requires structured human/design/usability evidence rather than pretending a validator can decide whether an interface is beautiful or intuitive.
-
----
-
-# 9. Quick reference
-
-## Android / local-AI example
-
-```text
-unit + contract
- -> emulator E2E + screenshot/video artifacts for UI journeys
- -> built APK E2E on emulator
- -> representative physical device when justified
- -> residual OEM/hardware/memory/thermal target confirmation
-```
-
-The exact ladder is project-specific. Do not run every rung mechanically.
-
-## New UI repository
-
-```text
-select stack + product-ui
- -> specialize baseline + e2e/design contracts
- -> define critical journeys/states/accessibility
- -> map commands/environments + screenshot/video evidence
- -> implement product
- -> validate engineering + experience
-```
-
-## Headless repository
-
-```text
-select applicable stack profiles
- -> product-ui N/A
- -> decide E2E applicability honestly
- -> specialize e2e.json or mark n/a consistently
-```
-
-The intended outcome is simple: use `repo-template-sw` to establish **how the software is engineered, validated in environments that progressively represent reality, operated and—when a UI exists—understood by the user**, then let each project remain self-contained with native implementation choices.
+An adopted repository remains self-contained; ordinary development must not depend on reading this source repository at runtime.

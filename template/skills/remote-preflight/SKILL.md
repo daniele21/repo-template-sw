@@ -1,142 +1,157 @@
 ---
 name: remote-preflight
-description: Execute and close the narrowest sufficient deterministic validation through repository-owned remote automation when the current coding agent lacks an equivalent local execution environment, without delegating automatable test work to the user or running full CI by default.
+description: Satisfy integration/release deterministic gates through repository-owned remote automation when local execution is unavailable, reusing equivalent successful evidence first and executing only missing, stale or insufficient gates.
 ---
 
 # Remote Preflight
 
-Use this Skill when `preflight-change` classifies one or more required deterministic gates as `REMOTE_AUTOMATED`.
+Use this Skill when `preflight-change` reaches `INTEGRATION` or `RELEASE` and one or more required deterministic gates are `REMOTE_AUTOMATED`.
 
 The governing rules are:
 
-> Do not turn the user into a CI runner because the current agent lacks a shell, checkout, SDK or platform toolchain.
+> Do not turn the user into a CI runner because the current agent lacks tooling.
 
-> Do not turn every small PR into a full repository/release build. Select validation from the actual blast radius.
+> Do not turn every integration slice into a full repository/release build.
 
-## 1. Confirm remote execution ownership
+> Before triggering a new expensive run, reuse successful equivalent evidence when it still proves the required claim.
 
-Read `.engineering/commands.json` and identify:
+## 1. Confirm required gates
 
-- remote-preflight trigger mechanism and exact command/event;
-- validation profile selector;
-- intended target PR/head;
-- canonical commands/jobs each profile can execute;
-- how results/logs and selected scope are surfaced;
-- timeout/retention behavior;
-- trust/security restrictions.
+Read `.engineering/commands.json` and record:
 
-If the repository has no usable remote path for a required automatable gate, report `AUTOMATION_CAPABILITY_GAP`. If it has no trustworthy way to narrow blast radius, report `VALIDATION_SCOPE_GAP` and fail safe to a stronger profile while fixing the selector.
+- stage: `INTEGRATION` or `RELEASE`;
+- exact head and intended target/base;
+- resolved risks, required gates and validation profile;
+- selected E2E journey/environment/fidelity/evidence mode when applicable;
+- remote trigger mechanism and security constraints.
 
-## 2. Resolve profile
+If required deterministic work has no usable automation path, report `AUTOMATION_CAPABILITY_GAP`.
 
-Default to the repository's `auto` selector.
+If the repository cannot safely narrow risk/gates, report `VALIDATION_SCOPE_GAP` and fail safe stronger while repairing the selector.
 
-Expected resolution:
+## 2. Search for reusable evidence
 
-- `LEAN` — docs/governance/metadata-only or cheap universal guards;
-- `SCOPED` — contained implementation owner/module plus direct consumers;
-- `STRONG` — cross-boundary/shared-contract/native/JNI/persistence/security/packaging/R8/dependency/variant or other release-sensitive changes;
-- `FULL` — promotion/release, selector/global-build/dependency-inventory/toolchain changes, unknown executable paths, or explicit full validation.
+Before dispatching anything, inspect successful validation already associated with the candidate.
 
-The run must report the selected profile and reason. Do not silently request `full` merely because it is simpler to implement.
+Evidence is reusable when it remains sufficient for:
 
-A stronger explicit request is allowed, such as `/preflight strong` or `/preflight full`. A weaker-than-auto request is exceptional and requires explicit justification; do not use it as a normal optimization.
+- exact source head;
+- material target/base relationship;
+- required gate identity;
+- selected profile or stronger equivalent profile;
+- selected E2E environment/fidelity/evidence mode where applicable.
 
-## 3. Trigger exact-head validation
+PR identity is not part of the proof by itself. A replacement PR using the same head/base/gates does not require an expensive rerun solely because its number changed.
 
-Trigger the declared remote preflight against the exact current PR/head revision using `auto` unless a stronger profile is justified.
+Draft/ready transitions, labels, comments and other collaboration metadata do not invalidate source evidence.
 
-For a PR-comment trigger:
+Do not reuse evidence after a material head/base/dependency change or when the previous run did not include the currently required gates.
 
-- verify the PR still targets the intended base;
-- record the current head SHA before triggering;
-- issue the exact declared command once;
-- correlate the resulting run/report with that head SHA;
-- verify the run reports the expected profile/scope reason.
+Record every reused run/gate explicitly.
 
-Do not reuse a remote result from an older head after any material edit, rebase, replay or base change.
+## 3. Resolve only missing work
 
-## 4. Inspect result and logs
+After evidence reuse, determine the remaining unsatisfied remote gates.
 
-Record:
+If none remain, return `AUTOMATED_PREFLIGHT_CONFIRMED` without starting another execution workflow.
 
-- selected profile;
-- profile reason;
-- affected modules/components/jobs;
-- each required remote gate as `PASS`, `FAIL`, `PENDING` or `N/A`.
+Otherwise trigger the narrowest repository-owned automation capable of satisfying the missing gates. Default to the project `auto` selector unless a stronger profile is required.
+
+Do not request `full` merely because it is operationally simpler.
+
+## 4. Trigger exact-head automation
+
+For every new run:
+
+- pin the exact current head;
+- preserve intended base identity;
+- request only the necessary profile/gates;
+- correlate result identity with the candidate;
+- verify the reported selected risks/profile/gates match expectation.
+
+A remote execution backend may orchestrate environment setup and caching, but deterministic semantics must remain project-owned rather than duplicated in workflow YAML.
+
+## 5. Inspect results and evidence
+
+For each required gate record `PASS`, `FAIL`, `PENDING` or `N/A`.
+
+For E2E also record:
+
+- journey;
+- execution environment;
+- fidelity class;
+- selected UI evidence mode;
+- required evidence artifacts for that mode.
+
+`ASSERTIONS` does not require media merely because a UI process existed. `SCREENSHOTS` requires the selected checkpoints. `FULL_MEDIA` requires screenshots plus continuous journey video.
+
+Missing evidence required by the selected mode is `E2E_EVIDENCE_INCOMPLETE`.
+
+## 6. Repair autonomously
 
 On failure:
 
-1. inspect the failing job/step/log rather than guessing from the headline;
-2. classify the failure as `CHANGE_REGRESSION`, `BASELINE_FAILURE`, `ENVIRONMENT`, `FLAKY`, `BASE_DRIFT` or `ASSUMPTION`;
-3. identify the violated invariant and owning source/configuration;
-4. determine whether the remote runner exposed a local/remote parity or scope-selection gap;
-5. form a falsifiable repair hypothesis before editing.
-
-A remote failure is not permission to suppress R8/lint/tests, add broad keep rules blindly, weaken another legitimate gate, or downgrade the profile to escape the failure.
-
-## 5. Repair and retrigger autonomously
-
-When the failure is actionable and unambiguous:
-
-- patch the owning cause;
-- run any available cheap `AGENT_LOCAL` checks/static review;
-- refresh head/base identity and complete-diff review as needed;
-- re-run blast-radius/profile selection because the fix itself can alter scope;
-- retrigger remote preflight;
-- inspect the new exact-head result.
+1. inspect the failing job/step/log;
+2. classify `CHANGE_REGRESSION`, `BASELINE_FAILURE`, `ENVIRONMENT`, `FLAKY`, `BASE_DRIFT` or `ASSUMPTION`;
+3. identify the violated invariant and owner;
+4. patch the owning cause when unambiguous;
+5. re-evaluate risks/gates/profile because the repair may change scope;
+6. invalidate only affected evidence;
+7. reuse still-valid evidence and rerun only what remains necessary.
 
 Do not ask the user to execute the same automatable test between repair attempts.
 
-If the same gate fails after a repair, stop symptom patching and form a new root-cause hypothesis before the next edit. Escalate to the user only if a material product/contract decision becomes genuinely ambiguous or `REAL_ENVIRONMENT` evidence is required.
+If the same gate fails after a repair, form a new falsifiable hypothesis before another patch.
 
-## 6. Profile quality feedback
+## 7. Validation economics feedback
 
-Treat CI cost/latency as an engineering signal without trading away evidence.
+Remote latency is an engineering signal.
 
-If `FULL` runs frequently for contained changes, inspect why:
+When an expensive gate runs frequently, ask whether it:
 
-- unknown paths not mapped to owners;
-- missing dependency graph;
-- overly broad global-path rules;
-- selector unable to distinguish package/native/runtime risk;
-- validation infrastructure accidentally acting as the second source of truth.
+- catches unique regressions at that stage;
+- belongs earlier as a cheaper focused test;
+- belongs later at integration/release rather than iteration;
+- overlaps substantially with another gate;
+- is being triggered because the selector maps risk too broadly.
 
-Prefer improving deterministic scope selection over adding manual labels to every PR.
+Do not delete a real safety invariant for speed. Improve placement and scope.
 
-Conversely, if a narrower profile misses a deterministic failure in a materially affected component, strengthen the dependency/scope mapping so the same class escalates automatically next time.
+## 8. Security requirements
 
-## 7. Security requirements
+Remote execution of change-branch code should use:
 
-For repository automation that executes PR/change-branch code, verify that the implementation follows the local security contract. Prefer:
-
-- trusted requesters only;
+- trusted requesters;
 - exact-head pinning;
-- same-repository PRs by default;
-- no production/deployment/signing secrets in the execution job;
-- read-only/no write credentials while change-branch code executes;
-- a separate reporting job if PR write permission is needed;
-- bounded timeout and failure-artifact retention.
+- same-repository heads by default;
+- no production/deployment/signing secrets in execution jobs;
+- read-only/no write credentials while change code executes;
+- separate reporting permission when needed;
+- bounded timeout and artifact retention.
 
-Do not solve an execution-capability problem by weakening the repository trust boundary.
+Evidence reuse must not weaken these trust boundaries.
 
-## 8. Output
+## 9. Output
 
 Report:
 
 ```text
+STAGE: INTEGRATION|RELEASE
 HEAD: <revision>
 TARGET: <branch>@<revision>
-REMOTE_TRIGGER: <mechanism>
+RISKS: <dimensions>
 VALIDATION_PROFILE: LEAN|SCOPED|STRONG|FULL
-PROFILE_REASON: <reason>
-AFFECTED_SCOPE: <modules/components/jobs>
-REMOTE_GATES:
+REQUIRED_GATES: <list>
+REUSED_EVIDENCE:
+  <gate>: <run/ref>|N/A
+NEW_REMOTE_GATES:
   <gate>: PASS|FAIL|PENDING|N/A
+E2E:
+  <journey>: <environment>/<fidelity>/<ASSERTIONS|SCREENSHOTS|FULL_MEDIA> / PASS|FAIL|PENDING|N/A
 FAILURE_CLASS: <class|N/A>
 REAL_ENVIRONMENT:
   <gate>: PENDING|PASS|N/A
 READINESS: AUTOMATED_PREFLIGHT_CONFIRMED|NOT_READY_FOR_AUTOMATED_PREFLIGHT
 ```
 
-`AUTOMATED_PREFLIGHT_CONFIRMED` requires every deterministic automatable gate selected by the blast-radius profile to pass on the exact current head/base. It does not imply physical-device, hardware, representative-user, signing or release evidence unless those gates also ran.
+`AUTOMATED_PREFLIGHT_CONFIRMED` requires every required deterministic automated gate to be satisfied by valid current evidence; it does not require rerunning evidence that is already equivalent and sufficient.
