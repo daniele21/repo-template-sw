@@ -1,8 +1,8 @@
 # Project Operating Contract
 
-Version: 0.5.0
+Version: 0.6.0
 
-This document defines the common operational semantics that adopted repositories expose to humans and coding agents. It standardizes **intent and lifecycle**, not implementation tools. Android may use Gradle, macOS may use Xcode or Python tooling, browser applications may use Playwright or an established equivalent, and servers may use `uv`, `python`, `pnpm` or another native mechanism, while still exposing the same operational concepts.
+This contract defines common operational semantics for adopted repositories. It standardizes **intent and lifecycle**, not implementation tools.
 
 The governing rule is:
 
@@ -10,470 +10,246 @@ The governing rule is:
 
 The delivery rule is:
 
-> Deterministic automatable validation is executed by the earliest capable automated environment. A human is not the fallback runner when the current coding agent lacks local execution capability.
+> Iterate with the cheapest useful feedback, establish exact-head readiness when a coherent slice integrates, and use full release-grade evidence at release checkpoints.
 
-Execution ownership is further defined in [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md).
+Execution and validation-stage semantics are further defined in [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md). E2E fidelity/evidence semantics live in [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md).
 
 ## 1. Command contract
 
-Each adopted repository declares the applicable command intents in `.engineering/commands.json`.
+Each adopted repository maps these intents in `.engineering/commands.json` to its native tooling:
 
-Canonical intents:
-
-- `setup` — prepare the supported local development environment;
-- `doctor` — verify required toolchains, SDKs, devices and local prerequisites without mutating more than necessary;
-- `dev` — start the canonical local development runtime;
-- `check` — run the cheapest broad static/structural validation suitable for iteration;
-- `test` — run behavioral tests, normally unit/integration scoped according to the project;
-- `e2e` — exercise a complete critical user/system workflow across its real application boundaries when lower-level tests cannot establish the full outcome;
-- `build` — create a runnable/build artifact with a unique build identity;
-- `smoke` — exercise the built or running artifact through a minimal real path;
+- `setup` — prepare the supported development environment;
+- `doctor` — verify prerequisites/capabilities;
+- `dev` — start/install/launch the canonical development runtime when applicable;
+- `check` — cheap broad structural/static validation;
+- `test` — unit/integration/contract behavior;
+- `e2e` — complete critical user/system workflow when lower-level tests cannot prove the outcome;
+- `build` — create runnable output with unique build identity;
+- `smoke` — prove minimum viability of the built/running artifact;
 - `package` — create a distributable artifact when applicable;
 - `stop` — stop project-owned local runtimes when applicable;
-- `clean` — remove project-owned generated state without deleting unrelated/shared resources.
+- `clean` — remove only project-owned generated state.
 
-Repositories may mark an intent `n/a` when it is genuinely not applicable. The command vocabulary is common; the actual command remains stack-native.
+Genuinely irrelevant intents may be `n/a`. Do not introduce a universal wrapper merely to make command syntax identical.
 
-`check`, `test`, `build` and `clean` should be available for normal application repositories. `e2e` is recommended when the product has a meaningful whole-system/user journey that is not adequately proven by lower-level tests. `dev`, `smoke`, `package` and `stop` are required only when the project has the corresponding runtime/distribution behavior.
+The same machine-readable contract owns development stages, publication gates, validation profiles/risk routing, execution classes, remote preflight/evidence reuse and validation-economics policy.
 
-The repository also declares machine-readable `publication_gate`, `validation_execution` and `remote_preflight` sections in `.engineering/commands.json`. These do not introduce a universal wrapper command: the coding agent selects the existing canonical intents required by the change's blast radius and executes them through the appropriate automated environment.
+## 2. Delivery stage contract
 
-## 2. Validation execution model
+### `ITERATION`
 
-For the current coding agent/session, every required validation gate belongs to one execution class:
+Default while implementation is changing.
 
-- `AGENT_LOCAL` — the agent can run it directly against the exact head;
-- `REMOTE_AUTOMATED` — deterministic and automatable, but unavailable in the agent's current shell/checkout/SDK/toolchain environment;
-- `REAL_ENVIRONMENT` — genuinely depends on representative hardware, protected authority, an external environment or manual evidence.
+Use focused evidence that can falsify the current edit quickly. Exact-head readiness, complete-diff review, durable-documentation freshness and remote preflight are not automatically required for every edit, branch push or draft/collaboration update.
 
-The class is contextual. The same Gradle/R8 task may be `AGENT_LOCAL` for an agent with an Android checkout and `REMOTE_AUTOMATED` for a ChatGPT Project operating only through a GitHub connector.
+### `INTEGRATION`
 
-An automatable deterministic gate MUST NOT be delegated to the user solely because the current agent cannot run it locally.
+Begins when a coherent vertical slice delivers an observable outcome and is ready to converge into the shared integration branch or be marked ready for merge/review.
 
-When equivalent local execution exists, run it before remote confirmation. When equivalent local execution does not exist, use the repository-owned remote-preflight mechanism. If required deterministic work is unavailable both locally and remotely, record an automation-capability gap and fix the automation path rather than permanently assigning the work to a human.
+At this point:
 
-## 3. Pre-publication readiness contract
+- record exact head and intended target/base;
+- review the complete diff;
+- make affected durable documentation current;
+- select concrete risk dimensions and required gates;
+- execute/rout deterministic evidence;
+- run the smallest affected E2E journey when lower-level evidence is insufficient.
 
-Before pushing a change, opening/updating a pull request, or publishing it for automated validation, the exact current head must pass the strongest validation available to the current agent and route all remaining deterministic automatable gates to remote automation.
+### `RELEASE`
 
-The governing flow is:
+Stable/promotion/release-candidate checkpoints use full release-grade validation, artifact/package checks and release-critical E2E/residual environment evidence.
+
+## 3. Validation execution model
+
+Required gates are classified for the current session as:
+
+- `AGENT_LOCAL` — current agent can execute directly;
+- `REMOTE_AUTOMATED` — deterministic/automatable but unavailable locally;
+- `REAL_ENVIRONMENT` — genuinely depends on representative hardware, protected authority/external environment or human judgement.
+
+An automatable deterministic gate MUST NOT be delegated to the user solely because the agent lacks tooling.
+
+When equivalent local execution exists, use it for rapid feedback. Otherwise repository-owned remote automation is a valid execution backend.
+
+## 4. Integration/release readiness
+
+`preflight-change` owns readiness beginning at `INTEGRATION`.
+
+The flow is:
 
 ```text
-understand
--> resolve ownership/invariants
+observable outcome ready
 -> resolve material ambiguity
--> implement
--> focused validation
--> diagnose root cause of failures
--> verify target-base freshness
--> review complete diff
--> classify required gates by execution capability
--> run AGENT_LOCAL gates
--> READY_FOR_CI or READY_FOR_REMOTE_PREFLIGHT
--> execute remaining REMOTE_AUTOMATED gates
--> AUTOMATED_PREFLIGHT_CONFIRMED
--> REAL_ENVIRONMENT evidence when required
+-> refresh target/base + exact head
+-> inspect complete diff
+-> make affected durable docs current
+-> identify risks + required gates
+-> select E2E journey/environment/evidence mode when needed
+-> classify executors
+-> reuse equivalent successful evidence
+-> execute only missing/stale/insufficient deterministic gates
+-> automated preflight confirmed
+-> residual real-environment evidence when required
 ```
 
-### Material ambiguity gate
+### Material ambiguity
 
-A coding agent must first inspect canonical repository evidence — owner, architecture/feature docs, ADRs, direct consumers, fakes and tests. Ask the user only when a material decision remains unresolved.
+Inspect canonical repository evidence first. Ask the user only when unresolved alternatives materially change behavior, public contracts, persistence/migration, security/trust, lifecycle/resource semantics, compatibility, acceptance criteria or meaningful UX.
 
-An ambiguity is material when two reasonable interpretations would produce meaningfully different:
+### Failure diagnosis
 
-- product behavior or acceptance criteria;
-- public/API/protocol contracts;
-- persisted data, migration or retention semantics;
-- security/trust/privacy boundaries;
-- failure, concurrency, resource or lifecycle semantics;
-- backward compatibility;
-- meaningful user task/UX behavior.
+Before changing production behavior because a gate failed, classify the failure and identify the violated invariant/owner. Do not weaken legitimate gates merely to obtain green status. Repeated failure after a repair requires a new falsifiable hypothesis.
 
-Implementation-local naming, formatting and equivalent choices that preserve observable semantics do not require user clarification.
+### Exact head/base
 
-If the user cannot be reached, unresolved material semantics remain blocked/conditional; they must not be silently guessed merely to continue coding.
+Integration/release evidence is relative to the exact source head and material intended-base relationship. Invalidate only evidence affected by a material source/base/dependency change.
 
-### Failure diagnosis gate
+PR number, draft/ready status, labels/comments or another collaboration-only change do not independently invalidate otherwise equivalent source evidence.
 
-A failing gate is evidence to diagnose, not a request to patch the nearest symptom. Before changing production behavior in response to a failure, classify it as one of:
+### Complete diff
 
-- regression caused by the current change;
-- failure already present on the intended target base;
-- environment/toolchain/dependency mismatch;
-- flaky/non-deterministic test;
-- stale branch/base integration effect;
-- incorrect requirement/design/contract assumption.
+At integration/release, inspect the whole candidate against the intended base for accidental/generated/private/debug residue, unrelated scope, duplicated ownership/policy, weakened tests, stale affected documentation and compatibility/security/resource/UX drift.
 
-Identify the violated invariant and its owner, then fix that owner and add or strengthen regression evidence at the lowest useful test level. Do not delete, suppress, relax or rewrite a legitimate gate merely to obtain green status without explicitly changing the owning contract.
+## 5. Evidence reuse
 
-If the same gate fails again after an attempted fix, re-evaluate the cause/assumption before applying another patch. Repeated symptom patching without a new falsifiable hypothesis is not acceptable engineering progress.
+Before triggering expensive remote validation, reuse successful evidence when it still proves:
 
-### Target-base freshness gate
+- exact source head;
+- material target/base relationship;
+- required gate identity;
+- selected profile or stronger equivalent;
+- E2E environment/fidelity/evidence mode when relevant.
 
-Preflight evidence is relative to both the exact feature head and its intended integration base.
+The normal algorithm is:
 
-Before automated readiness:
+```text
+resolve required gates
+-> reuse equivalent successful evidence
+-> identify unsatisfied evidence
+-> execute only missing/stale/insufficient gates
+-> combine into one readiness result
+```
 
-- refresh knowledge of the intended target branch;
-- verify that the feature work is based on, reconciled with, or otherwise proven merge-compatible with the current target according to the repository's branch model;
-- treat stacked branches as conditional until parent dependencies are integrated and the branch is replayed/revalidated where necessary;
-- rerun gates invalidated by a changed head, dependency or base relationship.
+Never rerun an expensive gate solely because an otherwise identical PR was recreated or moved from draft to ready.
 
-Prior green evidence from an older head/base is historical evidence, not current readiness.
+## 6. Remote preflight
 
-### Complete-diff gate
+Repositories maintained by execution-limited agents should expose a declared remote-preflight trigger.
 
-Review the complete change against the intended base, not only files edited most recently. Check for accidental generated files, debug/logging residue, unrelated edits, duplicated ownership/policy, weakened tests, stale documentation, hidden compatibility changes and unbounded resource/lifecycle consequences.
+Remote execution must:
 
-### Deterministic validation routing
+- pin exact head;
+- preserve intended-base identity;
+- execute project-owned deterministic semantics;
+- report selected risk/profile/gates and diagnosable results;
+- preserve least privilege;
+- avoid production/signing/deployment secrets in change-branch execution;
+- use bounded timeout/artifact retention.
 
-Use `validate-change` to determine the required validation level, then classify and execute every applicable deterministic gate. Typical examples include:
+A separate reporting job may hold PR write permission when necessary.
 
-- formatter/format check;
-- lint/static analysis/typecheck;
-- affected compilation;
-- focused unit/component tests;
-- direct-consumer/contract/integration tests;
-- repository `check`/`test` as required by blast radius;
-- build/package/smoke where the claim depends on them.
+## 7. Test vs E2E vs smoke
 
-Do not run expensive unrelated suites for every edit, but do not publish after only a focused unit test when the change crosses shared/build/runtime boundaries.
-
-Run `AGENT_LOCAL` gates immediately. Route `REMOTE_AUTOMATED` gates through the repository's declared remote-preflight mechanism. Do not ask the user to run them merely because the current agent lacks a supported execution environment.
-
-A project may have evidence that cannot truthfully run through ordinary automation, such as physical-device, specialized hardware, protected external-service or representative-user validation. Such evidence is `REAL_ENVIRONMENT`, must be declared `PENDING/REAL_ENVIRONMENT` rather than treated as passed, and still blocks any stronger claim that requires it.
-
-### Readiness result
-
-Report validation evidence as `PASS`, `FAIL`, `PENDING` or `N/A` and distinguish:
-
-- `READY_FOR_CI` — no unresolved material ambiguity; target/base and full diff reviewed; every required deterministic gate could run agent-local and passed on the exact head; CI can independently confirm;
-- `READY_FOR_REMOTE_PREFLIGHT` — semantic/base/diff checks and all available agent-local gates passed, while one or more required deterministic gates are remote-automated and must be triggered by the agent;
-- `AUTOMATED_PREFLIGHT_CONFIRMED` — every required deterministic automatable gate passed for the exact head/base, regardless of whether execution was local, remote or both;
-- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — a required deterministic gate failed, material ambiguity remains, exact-head/base readiness is unknown, or required remote automation is unavailable;
-- stronger product/release readiness — only after any required real-environment evidence also passes.
-
-Publishing a known-red draft may be done only when explicitly requested for collaboration/investigation, and the known-red state must be stated clearly rather than represented as readiness.
-
-### Agent-local / remote parity
-
-Deterministic automated validation should invoke the same project-owned canonical commands/scripts regardless of execution location where practical. Workflow YAML may own environment setup, caching, artifacts and reporting, but should not maintain a hidden second implementation of formatting/test/build policy.
-
-When remote automation finds a deterministic repository failure that an equivalent agent-local environment should have found, treat it as a parity/process defect. When the current agent had no equivalent local execution capability, the remote result is valid execution and is not evidence that the user should have run the test first.
-
-## 4. Agent-triggerable remote preflight
-
-Repositories expected to be maintained by execution-limited agents should expose a remote-preflight trigger declared in `.engineering/commands.json`.
-
-Examples include a trusted PR comment such as `/preflight`, an API/dispatch command or another repository-owned bot interface.
-
-A remote preflight must:
-
-- resolve and validate the exact PR/head SHA;
-- run the canonical deterministic commands required for the intended preflight scope;
-- surface result/run identity and diagnosable logs to the agent;
-- be safely retriggerable after a fix;
-- keep failure evidence bounded and privacy-safe.
-
-When change-branch code executes, use least privilege. Trusted requesters, exact-head pinning, same-repository PRs by default, no production/signing/deployment secrets, and read-only/no write credentials in the execution job are the baseline. If the workflow writes a report/comment to the PR, prefer a separate reporting job that does not execute change-branch code.
-
-## 5. Validation boundary: test vs E2E vs smoke
-
-These intents are intentionally distinct:
+These are distinct:
 
 ```text
 unit/component
-    ↓
-integration/contract
-    ↓
-end-to-end
-    ↓
-smoke of built/running artifact
+-> integration/contract
+-> end-to-end critical outcome
+-> smoke of built/running artifact
 ```
 
-- `test` remains the primary fast behavioral validation surface and may include unit/integration/contract suites;
-- `e2e` proves a complete user/system outcome that crosses multiple real boundaries;
-- `smoke` proves minimum viability of the built/running artifact or runtime, not complete business behavior.
+Cover invariants as low as practical. E2E is not coverage theater and should stay small/high-value.
 
-Do not move all testing into E2E. E2E suites are slower, more failure-prone and more expensive to diagnose. Cover invariants as low in the test pyramid as practical, and reserve E2E for critical journeys whose correctness depends on the assembled system.
+Use E2E when correctness depends on assembled boundaries, for example first launch/core flow, create/use/save/reopen, persistence/restart, IPC/consumer integration, important import/export or failure/recovery journeys.
 
-Typical critical journeys include, when applicable:
+## 8. E2E implementation and evidence
 
-- first launch/onboarding and core product entry;
-- create/use/save/reopen or equivalent primary workflow;
-- import/export or persistence/restart paths;
-- a critical destructive/recovery flow;
-- one representative failure/retry/recovery path;
-- authentication/payment/submission flows when they are part of the product's trust boundary;
-- complete local-AI/audio/vision workflows when correctness depends on multiple runtime stages.
+Use stack-native established tooling. The universal standard does not mandate one framework.
 
-E2E is evidence, not coverage theater. Prefer a small deterministic set of high-value journeys over hundreds of brittle UI scripts.
+When the claim concerns distributable behavior, run against the built/package artifact when material and practical.
 
-## 6. E2E implementation contract
+For UI-bearing journeys, evidence mode is selected from the claim:
 
-Use the smallest reliable stack-native tool already appropriate to the project. The universal baseline does **not** mandate Playwright.
+- `ASSERTIONS` — UI incidental to deterministic system behavior;
+- `SCREENSHOTS` — stable visible states/layout/hierarchy/copy/recovery/adaptive behavior changed;
+- `FULL_MEDIA` — motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release acceptance requires observation over time.
 
-Examples:
+Missing evidence required by the selected mode is `E2E_EVIDENCE_INCOMPLETE`. Do not silently downgrade the evidence mode after execution.
 
-- browser/web: prefer Playwright unless the project already has an equally strong established E2E solution;
-- Android: Compose UI Test, Espresso, UI Automator or the established native equivalent;
-- macOS/iOS native: XCTest/XCUITest or the established native equivalent;
-- Python/API/local server: start the real process and exercise the public API/protocol with the project's native test client;
-- CLI: launch the real executable/subprocess and verify end-to-end input/output/state;
-- desktop applications with browser-rendered UI: Playwright may be appropriate when it can exercise the real packaged/runtime surface reliably.
+All E2E evidence carries run/source/build/environment identity, remains privacy-safe and has bounded retention.
 
-When the claim is about a distributable artifact, E2E should run against the built/package artifact when technically practical rather than only a source/dev runner.
+## 9. Zero-residue contract
 
-E2E failure evidence should carry enough identity to diagnose the run:
+Every operation cleans project-owned temporary resources on success, failure, timeout, cancellation, interrupt and partial initialization.
 
-- build/source/run identity;
-- environment/platform/device/browser identity when material;
-- logs/error classification;
-- trace, screenshot, video or request/response evidence when useful and privacy-safe.
+This includes as applicable:
 
-Failure evidence is temporary CI/test evidence, not permanent repository content. Store it through the artifact lifecycle with bounded retention.
-
-## 7. E2E zero-residue contract
-
-E2E runs inherit the same cleanup guarantees as every other project operation.
-
-An E2E run may own:
-
-- application/server/browser/device processes;
+- application/server/helper processes;
 - localhost listeners;
-- browser profiles/contexts;
-- emulator/simulator/device state created for the run;
-- test accounts/sessions when locally owned or explicitly disposable;
+- browser/device/emulator sessions;
 - temporary databases/storage/preferences;
-- downloads/uploads/test fixtures;
-- screenshots, traces and videos;
-- temp workspaces, PID/lock files and logs.
+- downloads/uploads/fixtures;
+- screenshots/traces/videos/logs;
+- workspaces/PID/lock files.
 
-The owner must clean or explicitly retain these resources according to policy on success, failure, timeout, cancellation and interrupt. A failed E2E test is not allowed to leave a localhost server, browser worker or helper process alive merely because the assertion failed.
+Cleanup may remove only resources whose ownership is established.
 
-## 8. Build identity contract
+## 10. Build identity
 
-Every material build has a unique identity even when the same source revision is rebuilt.
+Every material build has a unique identity, even when source revision is unchanged.
 
-Build identity should distinguish:
+Build identity normally includes:
 
-- product name;
-- product/release version;
-- unique build ID;
-- source revision;
-- dirty/modified source state when applicable;
+- product/version;
+- build ID;
+- source revision and dirty state;
 - platform/architecture;
-- build channel/variant.
+- channel/variant.
 
-A recommended artifact name is:
+A changed output receives a new build ID rather than overwriting a successful artifact.
 
-```text
-<Product>-<ProductVersion>-<BuildId>-<SourceRevision>[-dirty].<ext>
-```
+## 11. Artifact lifecycle
 
-A new build must not silently overwrite a previous build. Product version and build identity are separate concepts: rebuilding version `1.4.0` creates a new build ID rather than pretending the product version changed.
+Successful artifacts are immutable and promoted only after validation.
 
-The build identity must be discoverable from the artifact itself or its adjacent manifest, and preferably from an application's About/Diagnostics surface when practical.
+Where applicable, each successful artifact includes:
 
-## 9. Artifact lineage
+- build/source identity;
+- machine-readable manifest;
+- SHA-256 checksum for distributable binaries/packages;
+- generated build delta against the previous successful comparable lineage build.
 
-Artifacts are compared and retained within a comparable lineage, normally:
+Use a staging -> validate -> promote flow. Failed/partial artifacts must not be left where they can be mistaken for valid outputs.
 
-```text
-project / platform / architecture / channel / variant
-```
+Local artifact retention is bounded; the reference default is the latest two successful builds per comparable lineage. CI/E2E evidence uses bounded artifact-store retention. Durable releases belong in an appropriate release/package registry.
 
-Examples:
+## 12. Build delta
 
-```text
-closedroom/macos/arm64/dev/default
-android-harness/android/arm64/debug/default
-local-llm-server/macos/arm64/dev/server
-```
+`BUILD_CHANGELOG.md` (or equivalent) describes the exact delta between comparable successful builds and is distinct from the product-level `CHANGELOG.md`.
 
-The "previous build" means the previous **successful comparable build in the same lineage**, not simply the newest file in a directory.
+Include as applicable source, dependency, toolchain, configuration, migration/compatibility, artifact metric and validation differences.
 
-## 10. Artifact lifecycle contract
+## 13. Local runtime
 
-Build artifacts are immutable outputs. Once a build ID is assigned and an artifact is promoted as successful, modifying that artifact in place is forbidden. A changed output receives a new build ID.
+Projects that open local processes/listeners own them explicitly.
 
-Each successful artifact should have:
+Defaults where applicable:
 
-- artifact file(s);
-- `build-manifest.json` or equivalent machine-readable manifest;
-- `BUILD_CHANGELOG.md` or equivalent generated build delta;
-- SHA-256 checksums for distributable binaries/packages;
-- enough source/toolchain/configuration identity to reproduce or diagnose the build.
+- loopback binding unless external exposure is intentional;
+- collision-aware configurable ports;
+- readiness before declaring start success;
+- graceful shutdown;
+- child-process/listener cleanup;
+- stale resource recovery;
+- verification that stop leaves no project-owned listener/process behind.
 
-Builds use a staging/promote flow:
+## 14. Validation economics
 
-```text
-staging -> build -> validate -> promote -> manifest/delta/checksum -> retention -> verify clean
-```
+Where practical, observe expensive gates for duration, flake rate, unique regression signal and overlap.
 
-A failed/partial build must never be left in a location where it can be mistaken for a valid artifact.
+Move cheap high-signal gates earlier and expensive low-frequency gates toward integration/release checkpoints. This changes **placement and scope**, not the final invariant protected.
 
-### Local retention
+The operating objective is:
 
-The default local policy is to keep the latest **two successful builds per artifact lineage**. Projects may retain more only with a concrete workflow need. Retention is bounded and automatic; old local artifacts must not accumulate indefinitely.
-
-### CI and E2E evidence artifacts
-
-PR/test/E2E artifacts are temporary evidence. Use GitHub Actions Artifacts or an equivalent CI artifact store with an explicit bounded retention period. Screenshots, traces, videos, logs and test downloads should not accumulate in Git history or indefinitely on developer machines.
-
-### Releases
-
-Durable distributable releases belong in GitHub Releases or an equivalent durable release/artifact registry. Release artifacts should be immutable after publication. Use a package/container registry when the output is genuinely a package/container consumed through that registry; do not use a package registry merely as generic binary storage.
-
-Local `dist/` directories are convenience caches, not the durable source of released artifacts.
-
-## 11. Build delta contract
-
-Every successful build generates a build delta against the previous successful comparable build in its lineage.
-
-The build delta is distinct from the product-level `CHANGELOG.md`:
-
-- `CHANGELOG.md` describes durable product/release history;
-- `BUILD_CHANGELOG.md` describes the exact delta from build N-1 to build N.
-
-The generated build delta should report, when applicable:
-
-- previous/current build ID and source revision;
-- source commits/PRs or equivalent source changes;
-- dependency/lockfile changes;
-- toolchain/SDK/runtime changes;
-- build/configuration/feature-flag changes;
-- migrations or compatibility implications;
-- artifact size/hash changes;
-- validation actually executed, including relevant E2E evidence, with PASS/FAIL/PENDING/N/A status.
-
-A Git diff alone is insufficient because two builds of the same commit may differ through dependencies, toolchain, configuration or packaging environment.
-
-The build delta travels with the artifact and may also be surfaced in application diagnostics when useful.
-
-## 12. Local runtime contract
-
-Projects that open local servers, sockets, helper processes or listeners must declare and own them explicitly.
-
-Defaults:
-
-- bind to loopback (`127.0.0.1`/`::1`) unless external exposure is intentional;
-- ports are configurable and collision-checked before start;
-- development runtimes run in the foreground by default;
-- readiness/health is explicit when the runtime accepts requests;
-- shutdown is graceful and bounded;
-- child/helper processes are owned by the launching operation;
-- `stop`, timeout, cancellation, failure and interrupt all execute cleanup;
-- after shutdown, verify that no **project-owned listener** remains open.
-
-Normal kernel TCP states such as `TIME_WAIT` are not considered an open application listener. The invariant is that no project-owned process continues listening after the owning operation is complete.
-
-A strong server smoke lifecycle is:
-
-```text
-allocate run id
--> select/check port
--> start
--> wait readiness
--> minimal request
--> shutdown
--> wait process exit
--> verify children gone
--> verify listener gone
--> verify temporary resources clean
-```
-
-A strong server E2E lifecycle extends that minimal request into one complete critical workflow, then performs the same cleanup verification.
-
-## 13. Ephemeral resource / zero-residue contract
-
-Every temporary resource created by `dev`, `test`, `e2e`, `build`, `smoke`, `package`, benchmark or migration tooling has an owner and deterministic cleanup path.
-
-Examples include:
-
-- processes and child processes;
-- sockets/listeners;
-- PID/lock files;
-- temporary directories/files;
-- test databases and local stores;
-- browser/device test state;
-- downloads, screenshots, traces and videos;
-- mounts/device state;
-- generated secrets/certificates;
-- logs;
-- caches;
-- reservations and resource leases.
-
-Cleanup must run on:
-
-- success;
-- failure;
-- timeout;
-- cancellation;
-- user interrupt;
-- partial initialization.
-
-Use `finally`, traps, scoped resource managers or equivalent mechanisms rather than relying on cleanup being the final happy-path command.
-
-A new operation should detect stale resources from an earlier crash and recover them safely using ownership/identity rather than deleting blindly.
-
-`clean` may remove only resources the project can prove it owns.
-
-## 14. Run identity and isolated workspaces
-
-Longer-lived dev/test/e2e/smoke/build runs should have a unique `run_id` when practical. Use it to namespace temporary files, logs, PID files, test databases and diagnostics.
-
-Example:
-
-```text
-.tmp/run-20260816T202700-a81f/
-```
-
-Parallel or repeated runs must not accidentally share mutable temporary state unless that sharing is intentional and synchronized.
-
-## 15. Test-data and environment isolation
-
-Testing/build tooling must not pollute real user state or global development state.
-
-Prefer:
-
-- project-local or isolated virtual environments;
-- test-specific data directories/databases;
-- explicit environment overrides;
-- no permanent edits to shell profiles, PATH, registry or global config unless the project genuinely requires them;
-- no secrets/private data in build output, logs, screenshots, traces or cached artifacts.
-
-E2E accounts/data should be disposable or namespaced when possible. Never run destructive E2E cleanup against production/user data without an explicit protected test boundary.
-
-## 16. Cache and log hygiene
-
-Caches and logs are resources and require bounded lifecycle rules.
-
-Caches define owner, namespace/version, invalidation and maximum size/retention where material. A new incompatible build must not accidentally reuse stale cache state.
-
-Development/build/test/E2E logs must not grow indefinitely. Prefer bounded retention or run-scoped temporary logs.
-
-## 17. Repeatability
-
-A healthy repository should tolerate repeated cycles such as:
-
-```text
-setup -> dev -> stop -> test -> e2e -> build -> smoke -> e2e -> clean
-```
-
-without behavior changing because earlier runs left processes, listeners, locks, temp state, stale artifacts, browser/device state or incompatible caches behind.
-
-For reference-grade projects, add lifecycle cleanliness tests for important dev/test/e2e/build/smoke paths that snapshot relevant project-owned state, run the operation, stop it and assert that no unintended residue remains.
-
-## 18. Stack mapping
-
-Profiles refine the common contract without replacing it.
-
-Examples:
-
-- Android: Gradle/JDK/SDK/ADB plus native UI/device-test tooling implement the common intents;
-- macOS: Xcode/Swift/Python/package tooling plus native UI-test tooling implement the same intents;
-- Python/local servers: native environment/server/client scripts implement them;
-- TypeScript/web: package-manager scripts implement them, with Playwright preferred for browser E2E unless an equally strong established solution already exists.
-
-The standard owns the semantics. The profile gives stack guidance. The project owns the actual commands, execution routing and E2E framework choice.
+> the cheapest feedback loop that preserves sufficient confidence at the current delivery stage.
