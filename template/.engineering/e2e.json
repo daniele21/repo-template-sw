@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.1.1",
+  "contract_version": "0.2.0",
   "applicability": {
     "status": "recommended",
     "reason": "<REPLACE_WITH_WHY_E2E_IS_REQUIRED_RECOMMENDED_OR_NA>"
@@ -12,7 +12,19 @@
     "critical_journeys_only": true,
     "built_artifact_when_material": true,
     "residual_fidelity_gaps_explicit": true,
-    "ui_journey_screenshot_and_video_artifacts_required": true
+    "ui_evidence_risk_based": true
+  },
+  "ui_evidence": {
+    "modes": ["assertions", "screenshots", "full_media"],
+    "default_mode": "screenshots",
+    "assertions_allowed_when_ui_incidental": true,
+    "full_media_triggers": [
+      "motion_or_animation",
+      "timing_or_progression",
+      "navigation_or_transition_sequence",
+      "lifecycle_visibility",
+      "release_acceptance"
+    ]
   },
   "fidelity_order": [
     "host_or_fake",
@@ -51,10 +63,7 @@
       "id": "<REPLACE_WITH_CRITICAL_JOURNEY_ID>",
       "claim": "<REPLACE_WITH_COMPLETE_USER_OR_SYSTEM_OUTCOME>",
       "ui_surface": true,
-      "required_media_artifacts": [
-        "screenshots",
-        "video"
-      ],
+      "minimum_ui_evidence_mode": "assertions",
       "target_environment_refs": [
         "<REPLACE_WITH_TARGET_ENVIRONMENT_ID>"
       ],
