@@ -1,16 +1,16 @@
 # <PROJECT_NAME> — Coding Agent Guide
 
-This is the repository-wide routing layer for coding agents. It owns durable invariants, routing and validation selection, not project status or detailed architecture.
+This is the repository-wide routing layer for coding agents. It owns durable invariants, delivery/validation routing and ownership discovery, not project status or detailed architecture.
 
 ## Read only what the task requires
 
 Always read this guide. Then read only:
 
 1. the closest scoped `AGENTS.md` for the target subtree, if present;
-2. the canonical architecture/feature/workstream source required by the task; use `docs/README.md` when documentation ownership or impact is unclear;
-3. `.engineering/commands.json` for setup/dev/test/E2E/build/runtime/cleanup, execution capability or publication readiness;
-4. `.engineering/e2e.json` for complete-workflow, target device/platform/browser/runtime or E2E-fidelity questions;
-5. `skills/preflight-change/SKILL.md` before publication and `skills/remote-preflight/SKILL.md` when required deterministic gates cannot run locally;
+2. the canonical architecture/feature/workstream source required by the task;
+3. `.engineering/commands.json` for delivery stage, setup/dev/test/build/runtime/cleanup, execution capability and integration/release readiness;
+4. `.engineering/e2e.json` only for complete-workflow, target device/platform/browser/runtime, E2E fidelity or UI-evidence questions;
+5. `skills/validate-change/SKILL.md` while iterating, `skills/preflight-change/SKILL.md` when the slice becomes integration/release-ready, and `skills/remote-preflight/SKILL.md` only when required deterministic gates cannot run locally;
 6. when `product-ui` is adopted and user-facing semantics change, `design/ux-contract.json`, `design/brand-kit.json` and `skills/design-product-experience/SKILL.md`;
 7. the owning implementation, direct consumers and nearby tests.
 
@@ -38,13 +38,35 @@ Keep this list short. Do not copy generic rules already enforced by the standard
 
 Add scoped guides only where a subtree has meaningful local invariants, hazards, ownership or validation commands.
 
+## Delivery stages
+
+`.engineering/commands.json` separates delivery stage from validation depth.
+
+### `ITERATION`
+
+Default while implementation is changing.
+
+Goal: falsify the current edit quickly with the cheapest useful formatter/static/compile/unit/direct-contract gates. Exact-head publication evidence, complete diff review, durable-documentation freshness, remote preflight and release-grade E2E are **not** default iteration requirements.
+
+A draft/collaboration PR may exist without being integration-ready.
+
+### `INTEGRATION`
+
+Use when a coherent vertical slice now provides an observable user/system outcome and is ready to converge into the shared integration branch or be marked ready for merge/review.
+
+Now refresh base/head, inspect the complete diff, make affected durable docs current, select risk gates, execute/rout deterministic evidence and add the smallest necessary critical E2E.
+
+### `RELEASE`
+
+Use for stable-branch promotion/release candidates/reference checkpoints. Expect `FULL` validation plus release-critical artifact/E2E and residual environment evidence.
+
 ## Project operating commands
 
-`.engineering/commands.json` owns command/publication/execution routing. `.engineering/e2e.json` owns target environments, execution environments, fidelity gaps and critical-journey mapping.
+`.engineering/commands.json` owns command/development-velocity/execution routing. `.engineering/e2e.json` owns target environments, execution environments, fidelity gaps and critical journeys.
 
-Use the declared intent rather than inventing another path:
+Use declared intents rather than inventing parallel paths:
 
-- `check` — broad cheap iteration validation;
+- `check` — broad cheap validation;
 - `test` — unit/integration/contract behavior;
 - `e2e` — complete critical workflow when lower-level tests are insufficient;
 - `build` — runnable/build output;
@@ -54,15 +76,45 @@ Use the declared intent rather than inventing another path:
 
 Do not treat `e2e` and `smoke` as synonyms. Keep E2E small and critical.
 
-For E2E, executor and environment fidelity are independent. `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` say who/where executes a gate; `.engineering/e2e.json` says how representative its environment is. A green emulator run is not physical-device evidence.
+## Validation routing
 
-Use the cheapest automated E2E environment that proves the claim and escalate only when a material target dimension requires it. UI-bearing journeys additionally require privacy-safe screenshot checkpoints plus a complete journey video as bounded run artifacts; missing either makes evidence incomplete. Final target testing should primarily confirm residual gaps.
+Validation selection proceeds in this order:
 
-When build/runtime/E2E behavior changes, preserve unique build identity, artifact/build-delta semantics and zero-residue cleanup. Before publishing, `preflight-change` selects required gates, E2E journey/fidelity and executor class. Use `remote-preflight` for deterministic gates unavailable locally; do not turn the user into the test runner because the agent lacks tooling.
+```text
+changed outcome
+-> risk dimensions
+-> required gates
+-> LEAN | SCOPED | STRONG | FULL summary
+-> executor: AGENT_LOCAL | REMOTE_AUTOMATED | REAL_ENVIRONMENT
+```
+
+Do not escalate because a broad feature/domain label sounds risky. Escalate because the changed invariant requires a stronger gate.
+
+`FULL` is expected for release/promotion and exceptional for ordinary feature work.
+
+When a deterministic gate cannot run locally, route it to repository automation. Do not turn the user into the runner.
+
+Before triggering expensive remote validation at integration/release, reuse successful evidence that still matches exact head, material target/base relationship, required gates/profile and E2E environment/evidence mode. A replacement PR or draft/ready metadata change alone does not invalidate equivalent source evidence.
+
+## E2E routing
+
+Executor and environment fidelity are independent. `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` say who/where executes a gate; `.engineering/e2e.json` says how representative the environment is.
+
+Use the cheapest automated E2E environment that proves the claim and escalate only when a material target dimension requires it.
+
+For journeys crossing a UI, choose evidence mode from the actual claim:
+
+- `ASSERTIONS` — UI is incidental; deterministic system behavior is the changed truth;
+- `SCREENSHOTS` — stable visible layout/hierarchy/copy/state/recovery/adaptive semantics changed;
+- `FULL_MEDIA` — motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release/product acceptance requires observing the journey over time.
+
+UI presence alone does not force video. Missing evidence required by the selected mode means `E2E_EVIDENCE_INCOMPLETE`.
+
+Final target testing should primarily confirm residual fidelity gaps.
 
 ## Product experience routing
 
-When `product-ui` is adopted, `design/ux-contract.json` and `design/brand-kit.json` own experience/brand routing. Meaningful UX/UI work follows, at proportional depth:
+When `product-ui` is adopted, meaningful UX/UI work follows at proportional depth:
 
 ```text
 user outcome
@@ -81,28 +133,47 @@ user outcome
 
 - structural UX — use the full sequence;
 - interaction — start from the owning task/journey and affected layers;
-- visual-only — preserve settled flow/semantics and start from the design-system/brand owner.
+- visual-only — preserve settled flow/semantics and start from the canonical design-system/brand owner.
 
-Do not expose implementation complexity, create duplicate semantic components, or use animation/graphics/polish to compensate for unresolved task flow, hierarchy or feedback.
+Do not expose implementation complexity or use polish to compensate for unresolved task flow/hierarchy/feedback.
 
 ## Core change workflow
 
-1. Confirm the owning boundary and smallest coherent scope.
-2. Resolve material ambiguity from canonical repository evidence; ask the user only when meaningful product/contract alternatives remain.
-3. Use `plan-workstream` only when dependency/state coordination is useful.
-4. Use `structured-change` before and after meaningful code changes.
-5. For meaningful `product-ui` changes, use `design-product-experience` at proportional depth.
-6. Inspect owner, direct consumers, fakes and tests before changing shared contracts.
-7. Implement one coherent vertical slice without speculative layers.
-8. Use `validate-change` for the narrowest sufficient iteration loop; diagnose the owning invariant before patching failures.
-9. For affected critical journeys, use `.engineering/e2e.json` to select the cheapest sufficient fidelity and residual gaps; UI journeys also require screenshot + video artifacts.
-10. Assess documentation impact from the resulting behavior. Update every affected canonical owner in the same change and leave unaffected owners untouched.
-11. For README specifically, treat identity and usage separately: update title/summary/`Why this exists` only when core purpose/audience/outcome changed; update setup/run/use/configuration/public examples whenever those instructions changed.
-12. Finalize completed workstreams and delete plans by default after durable knowledge transfer.
-13. Before publication, use `preflight-change`: refresh target base, inspect the full diff, verify documentation freshness, classify required gates and run all `AGENT_LOCAL` work.
-14. Route required `REMOTE_AUTOMATED` gates through `remote-preflight`; inspect, fix and retrigger until complete or genuinely blocked.
+1. Confirm owning boundary and smallest coherent outcome.
+2. Resolve material ambiguity from canonical repository evidence; ask only when meaningful product/contract alternatives remain.
+3. Use `plan-workstream` only when persistent dependency/parallel coordination is useful.
+4. Prefer an observable vertical outcome. Treat technical layers as subtasks unless independently valuable/mergeable/reviewable.
+5. Parallel branches may execute independently but should converge early onto a coherent feature/integration branch; stacked publication is exceptional.
+6. Use `structured-change` before/after meaningful behavior changes.
+7. Use `validate-change` in `ITERATION` and keep feedback narrow.
+8. Diagnose the owning invariant before patching failures.
+9. When the slice has an observable outcome, move to `INTEGRATION`.
+10. At integration, update affected durable docs, refresh base/head, review the complete diff and select required risk gates.
+11. Use E2E only when lower-level evidence cannot prove the complete affected outcome; select environment/fidelity/evidence mode proportionally.
+12. Use `preflight-change` for exact-head integration/release readiness.
+13. Reuse equivalent successful validation evidence, then route only missing `REMOTE_AUTOMATED` gates through `remote-preflight`.
+14. Finalize completed workstreams and delete plans by default after durable truth is transferred.
 
-## Validation routing
+## Documentation lifecycle
+
+`docs/README.md` owns documentation routing.
+
+- README identity — stable mission/audience/outcome;
+- README usage — setup/run/use/configuration/public examples;
+- `docs/architecture.md` — current architecture/ownership;
+- `docs/features/` — durable non-obvious feature behavior;
+- `docs/adr/` — accepted durable decisions;
+- `docs/current-state.md` — short **integrated/blocked/next** repository truth, not minute-by-minute agent activity;
+- `docs/workstreams/` — active bounded plans only;
+- `design/` — UX/brand contracts when `product-ui` is adopted;
+- `.engineering/e2e.json` — E2E environment/evidence routing;
+- Git history — implementation history.
+
+During `ITERATION`, documentation may remain pending while behavior is still changing. At `INTEGRATION`, affected durable documentation must describe the exact candidate behavior. Do not churn `current-state.md` for temporary branch syncs.
+
+Completed plans are deleted after durable truth is transferred unless independent audit/regulatory/release value justifies retention.
+
+## Validation health
 
 Run repository-health checks, including:
 
@@ -112,39 +183,14 @@ python3 scripts/verify_e2e.py
 python3 scripts/verify_product_experience.py
 ```
 
-`verify_e2e.py` verifies static E2E routing/contract semantics; actual screenshot/video completeness is checked from E2E/preflight artifacts. `verify_product_experience.py` is `N/A` unless `product-ui` is adopted. Project commands remain in `.engineering/commands.json`.
+Report evidence separately as `AGENT_LOCAL`, `REMOTE_AUTOMATED`, or `REAL_ENVIRONMENT`, and report E2E environment/fidelity plus selected UI evidence mode.
 
-Report evidence separately:
-
-- `AGENT_LOCAL` — current agent executed it;
-- `REMOTE_AUTOMATED` — repository-owned automation executed it;
-- `REAL_ENVIRONMENT` — physical/device/external/manual evidence automation cannot truthfully replace.
-
-For E2E report environment/fidelity, residual gaps and UI screenshot/video artifact refs. Missing required real-device/hardware/usability evidence stays pending; synthetic/emulator evidence cannot satisfy a stronger claim. Traces/screenshots/videos/logs are bounded evidence artifacts, not durable docs.
-
-## Documentation lifecycle
-
-`docs/README.md` owns documentation routing and the documentation-impact contract.
-
-- README identity — title/summary/`Why this exists`; stable unless core purpose, primary audience or primary outcome changes.
-- README usage — setup/run/use/configuration/public examples; must remain executable and truthful for the current repository.
-- `docs/architecture.md` — current architecture/ownership.
-- `docs/features/` — durable feature behavior when needed; existing feature owners change with the behavior they describe.
-- `docs/adr/` — accepted durable decisions.
-- `docs/current-state.md` — single short repository-level operational ledger.
-- `docs/workstreams/` — active bounded implementation plans only.
-- `design/` — product experience/brand contracts and bounded key references when `product-ui` is adopted.
-- `.engineering/e2e.json` — current E2E environment/fidelity routing.
-- Git history — implementation history.
-
-Code and durable documentation ship together. Do not rewrite stable README identity copy merely because usage changed, and do not leave stale setup/run/use instructions merely because mission copy remains valid.
-
-Completed plans are deleted after durable truth is transferred unless independent audit/regulatory/release/historical value justifies retention. Generated build deltas and E2E/visual evidence are artifacts, not project-status docs.
+Where practical, review gate duration, flake rate, unique regression signal and overlap. Move cheap high-signal gates earlier and expensive low-frequency gates toward integration/release without deleting real safety invariants.
 
 ## Agent context discipline
 
-Prefer scoped search and targeted reads over broad ingestion. Do not read generated outputs, dependencies, vendored code or large artifacts unless required. Keep this guide within `.engineering/documentation-policy.json`; conditional procedures belong in Skills and deterministic rules in scripts/CI.
+Prefer scoped search and targeted reads over broad ingestion. Do not read generated outputs, dependencies, vendored code or large artifacts unless required. Keep this guide within `.engineering/documentation-policy.json`; procedures belong in Skills and deterministic rules in scripts/CI.
 
 ## Stop conditions
 
-Surface the conflict instead of improvising when a request would violate a durable invariant/ADR, leave material product/contract ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required destructive/migration review, bypass canonical command/test/E2E/environment-fidelity/build/artifact/publication rules, delegate automatable deterministic validation to the user because the agent lacks execution capability, bypass an adopted product-experience contract, publish behavior with stale affected canonical documentation, claim a UI E2E PASS without required screenshot/video artifacts, or claim evidence that was not executed.
+Surface conflicts instead of improvising when a request would violate a durable invariant/ADR, leave material ambiguity unresolved, expose secret/private state, create a second source of truth, bypass required migration/security/resource review, delegate automatable validation to the user, publish an integration/release candidate with stale affected docs, claim stronger E2E/environment evidence than executed, or suppress a legitimate gate merely to gain speed.
