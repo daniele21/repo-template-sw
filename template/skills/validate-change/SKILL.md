@@ -1,152 +1,128 @@
 ---
 name: validate-change
-description: Select the narrowest sufficient validation for a change while iterating, diagnose failures at their owning invariant, and identify the correct final gate by blast radius without confusing unavailable agent-local execution with a human testing requirement or confusing emulator evidence with target-environment evidence.
+description: Select the cheapest sufficient validation while iterating, expand evidence only when risk or delivery stage requires it, and diagnose failures at their owning invariant without confusing execution capability with environment fidelity.
 ---
 
 # Validate Change
 
 ## Principle
 
-Do not run the entire repository for every edit, and do not stop at a local unit test when a shared contract, runtime boundary or critical user experience changed. Validation follows blast radius and the strength of the claim.
+Optimize for **sufficient confidence per unit of feedback time**.
 
-Use `.engineering/commands.json` as the canonical repository-level command routing surface. Read `.engineering/e2e.json` when a complete workflow, platform/device/browser/runtime assumption or environment-dependent claim is affected. When `product-ui` is adopted and user-facing behavior changes, also read `design/ux-contract.json` and `design/brand-kit.json`.
+Do not run the entire repository for every edit, and do not stop at a local unit test when a shared contract, runtime boundary or critical user outcome changed.
 
-This Skill owns iterative validation selection. `preflight-change` owns final exact-head execution classification/readiness. `remote-preflight` owns deterministic remote execution when the current agent lacks an equivalent local environment.
+Read `.engineering/commands.json` for delivery stage, validation routing and execution capability. Read `.engineering/e2e.json` only when a complete workflow/environment-dependent claim is affected. When `product-ui` is adopted and user-facing semantics change, also read the product-experience contract.
 
-## Validation ladder
+`validate-change` owns the edit/test loop. `preflight-change` starts when a slice is being declared `INTEGRATION`-ready or `RELEASE`-ready.
 
-### Level A — local iteration
+## 1. Establish delivery stage
 
-Use for private implementation inside one owner:
+### `ITERATION`
 
-- formatter/linter for touched surface;
+Default while implementation is still changing.
+
+Prefer a feedback loop around the affected owner:
+
+- formatter/static checks for touched surface;
 - focused unit/component tests;
-- module/package compile or typecheck.
+- affected module/package compile/typecheck;
+- direct contract/consumer test only when the edit crosses that boundary.
 
-Run these directly when the current agent has the required environment. If not, record the gate as a candidate `REMOTE_AUTOMATED` gate for preflight rather than asking the user to run it by default.
+Do **not** require exact-head publication evidence, complete diff review, durable-documentation freshness, remote preflight, minified/release packaging, broad AndroidTest assembly, emulator E2E or UI media merely because they exist in the repository.
 
-### Level B — direct consumers
+If the current agent cannot run one of these cheap deterministic gates locally, record it for later remote execution unless that gate is necessary to falsify the current hypothesis now.
 
-Add when a contract or behavior affects known callers/adapters:
+### `INTEGRATION`
 
-- direct consumer tests;
-- contract/fake compatibility;
-- persistence/migration tests if applicable;
-- affected UI/transport compilation and component-state tests.
+Use when a coherent vertical slice has an observable outcome and is ready to converge.
 
-### Level C — integration/repository
+Expand to the required risk cone:
 
-Add for public contracts, multiple domains, build/configuration, CI/tooling or broad dependency changes:
+- affected owners/modules and direct consumers;
+- relevant lint/static analysis;
+- integration/contract tests implicated by the change;
+- build/package/minification only when their semantics are affected;
+- the smallest affected critical E2E journey when lower-level evidence cannot prove the slice outcome.
 
-- canonical `check` command;
-- canonical `test` command or relevant scoped subset;
-- integration/contract tests;
-- canonical `build` when build/runtime/package behavior may be affected;
-- repository/operating/E2E-fidelity/product-experience health checks as applicable.
+Hand final exact-head readiness to `preflight-change`.
 
-### Level D — end-to-end/product flow
+### `RELEASE`
 
-Add when the claim crosses a complete user/system workflow boundary and lower-level tests cannot establish the final outcome:
+Use for release/promotion/reference checkpoints. Expect `FULL` plus release-critical artifact/E2E gates and residual environment evidence.
 
-- canonical `e2e` command or smallest relevant critical-journey subset;
-- complete workflow assertion through the real public/UI/protocol boundary;
-- the cheapest declared automated environment in `.engineering/e2e.json` that can truthfully prove the changed claim;
-- fidelity escalation when the claim depends on a device/platform/browser/runtime/artifact dimension missing from the cheaper environment;
-- built/package artifact execution when the claim depends on distributable behavior and this is technically practical;
-- for every UI-bearing journey, screenshot artifacts for materially important UI checkpoints and the final reachable user-visible outcome;
-- for every UI-bearing journey, one complete journey video covering the meaningful start through final success or terminal failure;
-- zero-residue cleanup of app/server/browser/device/test state owned by the run;
-- bounded failure evidence with build/run/environment identity and declared fidelity class.
+## 2. Select risks and gates before profile
 
-Execution capability and environment fidelity are separate. `REMOTE_AUTOMATED` says where/who executed the gate; `simulated_or_emulated`, `representative_virtual`, `representative_physical` and `target_environment` say what environment claim the evidence supports. Never treat a green emulator/simulator run as physical/target-environment evidence.
+Determine the changed risk dimensions, then map them to required gates. Use `LEAN | SCOPED | STRONG | FULL` as a summary.
 
-For UI-bearing journeys, screenshots and video are both mandatory evidence. A test assertion PASS with either artifact class missing is `E2E_EVIDENCE_INCOMPLETE`, not a complete E2E PASS. On failure, preserve the last useful reachable screenshot when technically possible and the video up to the failure; if the failure occurs before UI rendering or recording can begin, report that pre-UI/pre-recording failure explicitly instead of fabricating media evidence.
+Examples:
 
-Do not require E2E for every change. Prefer unit/integration coverage when it can prove the same invariant more deterministically and cheaply.
+- UI copy/layout with unchanged domain semantics -> affected UI compile/tests/lint, maybe screenshots; normally `SCOPED`;
+- Binder/shared protocol -> owner + direct consumer compatibility + relevant integration; normally `STRONG`;
+- persistence migration -> migration/recovery/direct consumers; normally `STRONG`;
+- native/JNI/package/R8/manifest/variant -> affected native/package/release gates; normally `STRONG`;
+- selector/global Gradle/toolchain/dependency-inventory change -> `FULL` because narrowing machinery changed;
+- docs/governance only -> `LEAN`.
 
-### Level E — real environment / representative evidence
+Do not escalate merely because a broad product area such as “Local AI” is mentioned. Escalate because the changed invariant requires stronger evidence.
 
-Required only for claims ordinary deterministic automation cannot truthfully prove or where `.engineering/e2e.json` declares residual confirmation:
+## 3. Validation ladder
 
-- physical device/hardware behavior;
-- memory reclamation/unified/GPU footprint under representative hardware conditions;
-- audio/device routing;
-- performance/thermal characteristics;
-- protected signing/release behavior when credentials must not be available to automation;
-- external-service integration where a real environment is part of the claim;
-- representative-user usability or assistive-technology evidence when the UX claim requires it.
+Use only the rungs needed by the claim.
 
-Do not place ordinary formatter, compile, R8, lint, unit, deterministic integration or unsigned build tasks here merely because the current agent lacks the platform SDK. Those are `REMOTE_AUTOMATED` when they cannot run agent-local.
+### A — owner-local
 
-The target-environment run should primarily confirm residual fidelity gaps that could not be reproduced earlier. If it repeatedly discovers ordinary workflow failures that could have been automated, strengthen the declared automated E2E environment/journey instead of normalizing the human/device test as the first whole-system check.
+Formatter/static analysis, focused unit/component tests, module compile/typecheck.
 
-Synthetic/emulator evidence must be labelled as such and cannot satisfy a stronger claim.
+### B — direct consumers
 
-## E2E environment fidelity
+Contract/fake compatibility, persistence/migration tests, directly affected adapters/consumers and component-state tests.
 
-When Level D or E is relevant, use `.engineering/e2e.json` to answer four questions before selecting the run:
+### C — integration/build
 
-1. Which critical journey owns the changed outcome?
-2. Which target environment dimensions are material to the claim?
-3. Which declared automated environment is the cheapest one that represents those dimensions strongly enough?
-4. Which fidelity gaps remain and therefore still require target/real-environment confirmation?
+Relevant repository check/test subsets, integration tests and build/package/minification gates when the changed risk requires them.
 
-Prefer this progression only as needed by the claim:
+### D — complete journey
 
-```text
-lower-level tests
--> automated E2E
--> built/package artifact E2E when material
--> highest practical automated fidelity
--> residual real/target-environment confirmation
-```
+Use the smallest critical E2E journey when the claim crosses the assembled user/system workflow and lower-level evidence is insufficient.
 
-Do not execute every rung mechanically. Escalate only when the changed invariant depends on a missing dimension or release policy requires stronger evidence.
+### E — residual real environment
 
-If no automated environment can exercise a required critical journey, preserve the explicit `automation_gap_reason` from `.engineering/e2e.json` and report the limitation. Do not silently convert the workflow into an undocumented manual test.
+Use only when the claim genuinely depends on physical hardware, target runtime/OEM behavior, protected authority, representative usability or another dimension automation cannot truthfully reproduce.
 
-## Product experience validation
+Do not execute every rung mechanically.
 
-When `product-ui` is adopted and a change affects user-facing behavior, validate the experience properties actually changed rather than only checking visual appearance.
+## 4. E2E environment and UI evidence
 
-First confirm the change depth was appropriate:
+When E2E is relevant:
 
-- structural UX change — user outcome/task, IA/critical journey and hierarchy/disclosure were explicitly considered before components/motion/polish;
-- interaction change — the owning task/journey plus affected states/feedback/accessibility/adaptive/component/motion layers were considered;
-- visual-only change — settled flow/interaction semantics were preserved and the change stayed with the canonical design-system/brand owner.
+1. identify the affected critical journey;
+2. select the cheapest declared execution environment with sufficient fidelity;
+3. select UI evidence mode from the changed claim;
+4. escalate environment fidelity or evidence mode only when a material dimension requires it.
 
-Depending on blast radius, inspect/prove:
+UI evidence modes:
 
-- user outcome/task model and information architecture;
-- critical journey continuity and context preservation;
-- primary/secondary/destructive action hierarchy;
-- progressive disclosure and whether advanced/debug complexity remains appropriately separated;
-- sensible defaults and reduction of unnecessary configuration burden;
-- critical loading/empty/error/disabled/offline/permission/partial states that are reachable;
-- immediate feedback, truthful progress and actionable recovery;
-- keyboard/focus/assistive semantics/text scaling/contrast/reduced-motion behavior where applicable;
-- responsive/adaptive layout across relevant supported contexts;
-- semantic token/component reuse and absence of accidental design-system duplication;
-- meaningful motion has an explicit purpose, remains restrained for frequent interaction, tracks gestures where applicable and does not degrade performance;
-- functional UI remains understandable without decorative imagery and data graphics support a user question/decision;
-- critical-journey E2E when lower-level tests cannot prove the user outcome;
-- visual regression for stable high-risk surfaces where useful;
-- representative-user usability evidence for important/high-risk workflows when justified.
+- `ASSERTIONS` — UI is incidental; changed truth is deterministic system behavior;
+- `SCREENSHOTS` — visible hierarchy/layout/copy/state/adaptive/recovery semantics changed;
+- `FULL_MEDIA` — motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release/product acceptance depends on observing the journey over time.
 
-Screenshots and video support inspection of the executed UI but do not by themselves prove accessibility, recovery, adaptive behavior or usability. They are nevertheless mandatory artifacts for UI-bearing E2E journeys.
+A UI process existing does not by itself force `FULL_MEDIA`.
 
-## Smoke vs E2E
+Evidence required by the selected mode must be present and identity-bearing. Missing required artifacts means `E2E_EVIDENCE_INCOMPLETE`; never downgrade the mode after execution merely to claim PASS.
 
-A build passing is not equivalent to the built artifact working, and smoke is not equivalent to E2E.
+## 5. Product experience validation
 
-- `smoke` proves minimal viability: start/install/launch -> minimal request/path -> stop;
-- `e2e` proves a complete critical workflow outcome across the assembled system.
+When `product-ui` is adopted, validate only the experience layers materially changed:
 
-Use both when both claims matter.
+- structural UX -> outcome/task/IA/hierarchy/progressive disclosure/states/accessibility/adaptive behavior before polish;
+- interaction -> owning journey, feedback/recovery, accessibility/adaptive behavior and relevant motion;
+- visual-only -> settled semantics preserved, canonical tokens/components reused.
 
-## Failure diagnosis
+Do not force broad E2E or full-media evidence for a token-only change unless the affected visual risk genuinely needs it.
 
-A red gate must be understood before it drives another code edit. Classify it as:
+## 6. Failure diagnosis
+
+Classify every red gate before changing production code:
 
 - current-change regression;
 - baseline/pre-existing failure;
@@ -157,51 +133,45 @@ A red gate must be understood before it drives another code edit. Classify it as
 
 Identify the violated invariant and owner. Fix the owner and add regression evidence at the lowest useful level.
 
-Never weaken/delete/suppress a legitimate failing test or requirement merely to make the change green without explicitly changing the owning contract. If the same gate fails after an attempted fix, do not repeat symptom patches: re-evaluate the hypothesis, ownership and assumptions first.
+Never suppress/delete/weaken a legitimate failing test merely to make the branch green. If the same gate fails after a repair, form a new falsifiable hypothesis before another patch.
 
-## Operational validation
+## 7. Operational validation
 
-When the change affects runtime/build/package/E2E/lifecycle behavior, validate applicable operating-contract invariants:
+When relevant, preserve:
 
-- a material build has a unique build identity;
-- artifact name/manifest identify product version, build ID and source revision;
-- successful artifact is promoted only after validation and is not modified in place;
-- `BUILD_CHANGELOG.md` compares against the previous successful comparable build;
-- local artifact retention is applied after successful promotion;
-- `dev`/`e2e`/`smoke`/`stop` leave no project-owned child process or listener behind;
-- browser/device profiles, test data, downloads, temporary workspaces, locks and other owned ephemeral resources are cleaned after success and failure paths;
-- E2E/visual traces/screenshots/videos/logs have bounded retention and do not become permanent repository clutter;
-- UI-bearing E2E runs expose both required screenshot and video artifacts tied to journey/run/build/environment identity;
-- E2E evidence identifies the execution environment/fidelity actually used and does not overclaim stronger target evidence;
-- failed/partial artifacts cannot be mistaken for valid outputs.
+- unique build/source identity;
+- immutable successful artifact promotion;
+- build delta/retention semantics;
+- bounded temporary/test/media artifacts;
+- zero project-owned process/listener/resource residue after success and failure;
+- truthful environment/fidelity reporting.
 
-For localhost services, a strong smoke test is: start -> readiness -> minimal request -> graceful stop -> verify process/children/listener gone -> verify temporary resources clean.
+## 8. Workflow
 
-A strong E2E extends that lifecycle with one complete critical workflow before the same cleanup verification.
-
-## Workflow
-
-1. Identify changed owner, user-visible impact and public blast radius.
-2. Read the nearest agent guide and `.engineering/commands.json`; read `.engineering/e2e.json` when a complete workflow or environment-dependent claim is relevant; read design contracts when `product-ui` and UI behavior are relevant.
-3. For meaningful UX/UI semantics, confirm `design-product-experience` was applied at proportional depth before validating the implementation.
-4. Run the cheapest deterministic gate that can falsify the current edit quickly **when the current agent can execute it**.
-5. On failure, classify cause and owner before editing again.
-6. Expand only when the change crosses a boundary or is ready for final integration.
-7. Use E2E only when the full product/system outcome is part of the claim; when used, select the declared critical journey and cheapest sufficient environment fidelity.
-8. For UI-bearing E2E journeys, verify screenshot and video artifacts exist and are inspectable before recording complete PASS evidence.
-9. Escalate E2E fidelity only when target dimensions materially affect the claim; preserve residual real-environment evidence separately.
-10. Add accessibility/adaptive/motion/visual/usability evidence only when the changed experience claim requires it.
-11. If a deterministic gate cannot run in the current agent environment, record the exact missing capability and mark it for `REMOTE_AUTOMATED` routing; do not silently pass it and do not default to asking the user to execute it.
-12. Report exact validation executed, E2E environment/fidelity used, screenshot/video artifact evidence for UI journeys and evidence still pending.
-13. Before publication, hand the accumulated evidence to `preflight-change`; it will classify executor capability and invoke `remote-preflight` when required.
+1. Identify owner, changed observable behavior and delivery stage.
+2. Identify risk dimensions.
+3. Run the cheapest deterministic gate that can falsify the current edit.
+4. Diagnose failures before editing again.
+5. Add direct-consumer/integration gates only as boundaries are crossed.
+6. During `ITERATION`, keep the loop narrow and avoid publication ceremony.
+7. When the vertical slice produces an observable outcome, move to `INTEGRATION`.
+8. Select E2E journey/environment/evidence mode only when required by the claim.
+9. Record exact executed evidence and remaining deterministic/real-environment gaps.
+10. Hand integration/release readiness to `preflight-change`.
 
 ## Output
 
-An iteration/final change summary should distinguish:
+Report:
 
-- PASS — executed and passed;
-- FAIL — executed and failed;
-- PENDING — required but not yet executed;
-- N/A — genuinely not applicable.
+```text
+STAGE: ITERATION|INTEGRATION|RELEASE
+RISKS: <dimensions>
+PROFILE: LEAN|SCOPED|STRONG|FULL
+GATES:
+  <gate>: PASS|FAIL|PENDING|N/A / AGENT_LOCAL|REMOTE_AUTOMATED|REAL_ENVIRONMENT
+E2E:
+  <journey>: <environment>/<fidelity>/<ASSERTIONS|SCREENSHOTS|FULL_MEDIA> / PASS|FAIL|PENDING|N/A
+NEXT: <smallest useful next validation/integration action>
+```
 
-Also record whether a pending gate is expected to be `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT`. For E2E evidence, record the `.engineering/e2e.json` environment ID/fidelity class, any residual gaps and, for UI-bearing journeys, where the screenshot and video artifacts can be inspected. Absence of agent-local execution is not evidence that a user must run the gate.
+Absence of agent-local tooling is not evidence that the user must run the gate.
