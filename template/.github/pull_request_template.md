@@ -1,77 +1,32 @@
+## Outcome
+
+<!-- What observable user/system outcome becomes true if this vertical slice is integrated? -->
+
+## Scope / risks
+
+<!-- Changed owners and material risk dimensions only: public contract, persistence, lifecycle, native, packaging, UI semantics, etc. -->
+
 ## What changed
 
-<!-- Small, concrete summary. -->
+<!-- Small concrete summary. Technical subtasks belong here; do not turn each layer into a separate pseudo-outcome. -->
 
-## Why
+## Validation
 
-<!-- Problem/outcome and important tradeoffs. -->
+- Stage: <!-- INTEGRATION -->
+- Profile: <!-- LEAN / SCOPED / STRONG -->
+- Required gates: <!-- concrete gates selected from risk -->
+- Agent-local: <!-- PASS/FAIL/N/A -->
+- Reused remote evidence: <!-- run/ref or N/A -->
+- New remote evidence: <!-- PASS/FAIL/PENDING/N/A -->
 
-## Invariants / risk
+## E2E
 
-<!-- Public contracts, data, resource, failure, security, migration or operating-lifecycle implications. Write N/A when truly not applicable. -->
+<!-- Only when a complete affected outcome needs E2E. Record journey, environment/fidelity and ASSERTIONS / SCREENSHOTS / FULL_MEDIA. N/A otherwise. -->
 
-## Product experience
+## Documentation
 
-<!-- If product-ui/user-facing behavior is affected: task/IA/progressive disclosure, critical states/feedback/recovery, accessibility/adaptive layout, design-system/brand implications and critical journeys. Otherwise N/A. -->
+<!-- Affected durable owners only. At INTEGRATION they must be current; do not list every possible doc category when clearly unrelated. -->
 
-## Build / runtime / artifact lifecycle
+## Remaining gaps
 
-<!-- If applicable: canonical command intents affected; build identity; artifact manifest/checksum/build delta/retention; localhost/process/port/temp cleanup. Otherwise N/A. -->
-
-## Documentation impact
-
-<!-- Assess from resulting behavior, not filenames. Use UPDATED or N/A; give a short reason when impact was plausible. README identity and usage are deliberately separate. -->
-
-- README_IDENTITY: <!-- title/summary/Why this exists; update only if core purpose, audience or primary outcome changed -->
-- README_USAGE: <!-- setup/run/use/configuration/public CLI/API/UI examples; update whenever old instructions became incomplete, wrong or misleading -->
-- FEATURE_DOCS: <!-- durable non-obvious feature behavior -->
-- ARCHITECTURE: <!-- boundaries/ownership -->
-- ADR: <!-- durable decision/rationale -->
-- SECURITY_DATA: <!-- trust/privacy/security/data lifecycle -->
-- OPERATIONS: <!-- canonical command/operational semantics -->
-- PRODUCT_EXPERIENCE: <!-- adopted design/UX/brand contract -->
-- CURRENT_STATE: <!-- integrated/blocked/next truth -->
-
-DOCS_CURRENT_WITH_IMPLEMENTATION: <!-- PASS/FAIL -->
-
-## Pre-publication readiness
-
-<!-- Exact HEAD and intended target/base revision; material ambiguity resolved; full diff reviewed; documentation current; target-base freshness. State READY_FOR_CI, READY_FOR_REMOTE_PREFLIGHT, AUTOMATED_PREFLIGHT_CONFIRMED or blocked reason truthfully. -->
-
-## Validation profile
-
-<!-- AUTO resolution: LEAN / SCOPED / STRONG / FULL, why it was selected, and affected modules/components/jobs. Stronger manual override is fine; weaker-than-auto requires explicit justification. -->
-
-## Agent-local validation
-
-<!-- Required gates in the selected profile that the current coding agent could execute directly. Use PASS/FAIL/N/A. -->
-
-## Remote automated validation
-
-<!-- Deterministic automatable gates in the selected profile that were unavailable to the current agent locally. Record trigger/run identity and PASS/FAIL/PENDING/N/A. Do not delegate these to the user merely because the agent lacks an execution environment. -->
-
-## E2E environment / fidelity evidence
-
-<!-- For each affected critical journey: .engineering/e2e.json journey id, execution-environment id, fidelity class, built/package surface used, PASS/FAIL/PENDING/N/A, and residual target-environment gaps. Do not promote emulator/simulator evidence into physical/target evidence. Otherwise N/A. -->
-
-## E2E UI media artifacts
-
-<!-- For every UI-bearing E2E journey, record BOTH required artifact classes: screenshot checkpoint artifact/ref and complete journey video artifact/ref. Missing either means E2E_EVIDENCE_INCOMPLETE and blocks complete automated preflight. Use N/A only for journeys with no UI. -->
-
-- <journey>: screenshots=<!-- PASS/FAIL/N/A + artifact ref --> video=<!-- PASS/FAIL/N/A + artifact ref -->
-
-## Real-environment evidence
-
-<!-- Physical-device/hardware/protected external/manual/usability evidence that automation cannot truthfully replace. Tie it to residual E2E fidelity gaps when applicable. State PASS/PENDING/N/A and why. -->
-
-## Product-experience evidence
-
-<!-- If a stable high-risk UI surface was affected: accessibility/visual/usability evidence and relevant critical-journey evidence. Otherwise N/A. -->
-
-## Evidence lifecycle
-
-<!-- Cleanup verification plus trace/screenshot/video/log identity, privacy and bounded-retention policy when applicable. -->
-
-## Documentation / design lifecycle
-
-<!-- Completed workstream deleted/finalized when applicable; generated screenshots/videos remain evidence rather than default durable design truth. -->
+<!-- REAL_ENVIRONMENT evidence or other explicitly residual risk. N/A when none. -->
