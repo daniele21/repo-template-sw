@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+## 0.9.0 — 2026-09-02
+
+Introduces a **Development Velocity** model so repositories can deliver coherent value incrementally without turning every edit or small PR into a release-grade validation waterfall:
+
+- separates delivery stage from validation depth: `ITERATION -> INTEGRATION -> RELEASE` is now independent from `LEAN | SCOPED | STRONG | FULL`;
+- makes `ITERATION` the default implementation loop, optimized for fast formatter/static/affected-compile/focused-test feedback without mandatory exact-head, complete-diff, durable-doc, remote-preflight or release-grade E2E ceremony;
+- moves exact-head/base freshness, complete-diff review and affected durable-documentation freshness to the `INTEGRATION` checkpoint, when a coherent observable vertical outcome is actually ready to converge;
+- keeps `RELEASE` explicitly reference-grade, with `FULL` validation plus release-critical build/package/E2E and residual environment evidence;
+- upgrades `.engineering/commands.json` to contract `0.6.0` with machine-readable `development_velocity`, risk-to-gate selector output, evidence-reuse policy and validation-economics semantics;
+- changes validation selection from primarily profile/suite-oriented to **risk dimensions -> concrete required gates -> profile shorthand**, so an important feature-area label does not automatically trigger unrelated broad validation;
+- upgrades `EXECUTION-CAPABILITY-CONTRACT.md` to `0.3.0`, preserving `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` while making delivery stage, required-gate selection and equivalent evidence reuse first-class;
+- updates `preflight-change` and `remote-preflight` to reuse successful equivalent evidence for the same exact source head, material target/base relationship, required gates/profile and E2E environment/evidence mode before starting another expensive remote run;
+- explicitly removes PR number, draft/ready state, labels/comments and other collaboration-only metadata from evidence identity, preventing replacement PRs or ready-state transitions from forcing unchanged validation to rerun;
+- updates `plan-workstream` so a vertical slice means an observable user/system outcome, while technical layers are normally subtasks and parallel branches converge early onto a coherent feature/integration branch;
+- makes stacked publication exception-only: stacked PRs remain valid when levels are independently mergeable/reviewable/value-bearing, while sync-only parent/child PRs are treated as coordination smells;
+- upgrades `E2E-ENVIRONMENT-CONTRACT.md` and `.engineering/e2e.json` to `0.2.0`, replacing the 0.8.1 unconditional screenshot+video rule with risk-based UI evidence modes: `ASSERTIONS`, `SCREENSHOTS`, `FULL_MEDIA`;
+- retains `FULL_MEDIA` for claims that materially depend on motion/animation, timing/progression, navigation/transition sequencing, lifecycle visibility, gesture continuity or release/product acceptance, while allowing assertion-only evidence when UI is incidental to a non-visual system claim;
+- preserves the `E2E_EVIDENCE_INCOMPLETE` invariant: evidence required by the selected mode must be present, identity-bearing, privacy-safe and bounded, and the mode may not be silently downgraded after execution;
+- rewrites the Android profile around staged validation: focused compile/unit/direct-contract gates during iteration; Binder/persistence/lifecycle/native/manifest/R8/package/complete-journey gates only when their concrete integration risk requires them; full breadth at release;
+- simplifies the ordinary PR template around outcome, risks, required gates, reused/new evidence, applicable E2E, affected durable docs and remaining gaps, while adding a separate release-specific checklist;
+- changes documentation timing so unsettled implementation may iterate without repeatedly churning README/current-state/workstream files, while affected canonical docs remain mandatory before integration;
+- introduces validation economics as a recommended feedback loop over gate duration, flake rate, unique regression signal and overlap, with the goal of moving high-signal cheap evidence earlier and expensive low-frequency evidence to the checkpoint where it adds value;
+- compresses and realigns `STANDARD.md`, `OPERATING-CONTRACT.md`, root/adopter guidance and adoption/migration Skills so the standard itself no longer carries contradictory 0.8.1 publication/media semantics;
+- bumps the reference baseline and the affected core Skill source versions to **0.9.0**.
+
+The 0.9.0 delivery model is: **iterate cheaply -> integrate a coherent vertical outcome with exact risk-based evidence -> release with full confidence; reuse evidence instead of rerunning unchanged proof.**
+
+The 0.8.1 screenshot+video requirement remains below as historical release documentation; 0.9.0 supersedes its unconditional applicability with the risk-based evidence modes above rather than removing useful media-capture infrastructure.
+
 ## 0.8.1 — 2026-08-31
 
 Strengthens implementation/documentation completeness and makes inspectable UI E2E media evidence mandatory without replacing project-native E2E tooling:
