@@ -2,163 +2,178 @@
 
 Agent-native reference engineering baseline for software repositories maintained by humans and coding agents.
 
-`repo-template-sw` is not an application framework, universal build system or visual framework. It is the canonical source for a small engineering standard, reusable project bootstrap, common project operating contract, E2E environment-fidelity contract, validation execution-capability contract, optional product-experience contract, coding-agent Skills, documentation/context governance, and deterministic repository health checks.
+`repo-template-sw` is not an application framework or universal build system. It defines a compact engineering standard, reusable adopter template, operating/development-velocity contracts, E2E environment/evidence semantics, optional product-experience semantics, coding-agent Skills and deterministic repository health checks.
 
 ## Start here
 
-- [`USAGE.md`](USAGE.md) — practical guide for using this repository with a brand-new project, an existing repository, ordinary coding-agent development, audits and baseline upgrades.
+- [`USAGE.md`](USAGE.md) — practical adoption, ordinary development and migration guide.
 - [`STANDARD.md`](STANDARD.md) — canonical L0/L1/L2 engineering standard.
-- [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md) — common stack-neutral semantics for setup/dev/test/E2E/build/smoke/package/cleanup, build identity, artifacts and local runtimes.
-- [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md) — stack-neutral E2E target-environment/fidelity semantics; separates who can execute a gate from how representative its environment is.
-- [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md) — determines whether required validation runs agent-local, through remote automation, or in a genuine real environment; explicitly prevents humans from becoming fallback runners for automatable gates.
-- [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) — optional stack-neutral UX/UI contract for products with a material user interface, including ordered product-experience decision semantics.
+- [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md) — command/build/artifact/runtime lifecycle semantics.
+- [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md) — delivery stages, risk-based validation, executor routing and evidence reuse.
+- [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md) — target-environment/fidelity semantics and risk-based UI evidence modes.
+- [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) — optional stack-neutral UX/UI contract.
+
+## 0.9.0: Development Velocity
+
+The delivery model is now explicitly two-dimensional:
+
+```text
+Delivery stage:     ITERATION -> INTEGRATION -> RELEASE
+Validation depth:   LEAN | SCOPED | STRONG | FULL
+```
+
+They answer different questions.
+
+- **Stage** says *when* the change is in its lifecycle.
+- **Depth** says *how much evidence* the actual risk requires.
+
+### ITERATION
+
+Default while implementation is changing. Optimize for a short feedback loop: touched formatter/static checks, affected compile/typecheck, focused tests and direct contract tests when needed.
+
+Do not automatically require exact-head publication evidence, complete-diff review, durable-documentation freshness, remote preflight, release packaging, broad emulator suites or E2E media for every edit.
+
+### INTEGRATION
+
+Begins when a coherent **vertical outcome** is ready to converge. Refresh exact head/base, inspect the complete diff, update affected durable docs, select concrete risk gates and run the smallest required critical E2E.
+
+### RELEASE
+
+Promotion/release/reference checkpoints use `FULL` validation plus release-critical build/package/E2E and residual real-environment evidence.
+
+The objective is:
+
+> **high-confidence incremental delivery without validation waterfall.**
 
 ## What it optimizes for
 
-- software correctness and explicit ownership;
-- bounded memory/resources, concurrency and failure behavior;
-- reproducible builds and validation;
-- strong deterministic validation without requiring the repository owner to manually run commands an agent cannot execute locally;
-- agent-triggerable remote preflight when supported coding agents lack the required shell/SDK/toolchain;
-- layered unit/integration/E2E/smoke evidence matched to the strength of the claim;
-- E2E environments deliberately matched to target devices/platforms/runtimes so final target testing confirms residual fidelity gaps instead of discovering ordinary whole-system failures;
-- inspectable UI E2E evidence: screenshot checkpoints plus a complete journey video are required artifacts for UI-bearing critical journeys;
-- consistent project operations without forcing identical tooling;
-- uniquely identifiable builds and traceable immutable artifacts;
-- bounded artifact/cache/log/test-evidence retention and zero-residue runtime/build/E2E lifecycles;
-- clear, accessible and progressively disclosed product experiences when UI is present;
-- user-outcome-first UX reasoning before layout, motion and visual polish;
-- purposeful motion/graphics without forcing one visual language;
-- stable brand/design-system ownership without forcing one visual style;
-- privacy/security and data lifecycle clarity;
-- low repository/documentation entropy;
-- low coding-agent context and token cost;
-- safe parallel work through dependency-aware workstreams;
-- reusable operating procedures without stuffing `AGENTS.md` with every rule.
+- explicit ownership and simple architecture;
+- bounded resources/concurrency/failure behavior;
+- fast deterministic feedback during implementation;
+- risk-to-gate validation instead of full-suite-by-default;
+- agent-triggerable remote automation when local tooling is unavailable;
+- reuse of equivalent successful CI/preflight evidence instead of duplicate same-head runs;
+- critical E2E matched to both claim strength and environment fidelity;
+- risk-based UI E2E evidence: `ASSERTIONS`, `SCREENSHOTS`, `FULL_MEDIA`;
+- reproducible builds and immutable traceable artifacts;
+- zero-residue runtime/build/E2E lifecycles;
+- low repository/documentation entropy and low agent context cost;
+- observable vertical slices and early convergence of parallel work;
+- clear, accessible and progressively disclosed product experiences where UI exists.
 
-The core principles are:
+Core principles:
 
 > **Make ownership, limits, failures and costs explicit, using the simplest solution that preserves the required invariants.**
 
-> **Every operation must be identifiable, owned, bounded, reversible and leave no unintended residue.**
+> **Optimize for sufficient confidence per unit of feedback time.**
 
-> **Automation executes automatable work; humans make material decisions and provide evidence that genuinely requires a real environment.**
+> **Automation executes automatable work; humans make material decisions and provide genuinely real-environment evidence.**
 
-> **Final target-environment validation should confirm residual environment-specific claims, not become the first time the complete workflow is exercised.**
+> **Final target-environment validation confirms residual fidelity gaps rather than becoming the first complete-system test.**
 
-> **A strong interface makes the user's next decision obvious, reveals complexity progressively, communicates system state clearly, and remains consistent, accessible and recoverable.**
+## Validation model
 
-> **UX before UI. Interaction before motion. Structure before polish. Evidence before completion.**
+The selector should resolve:
+
+```text
+changed outcome
+-> risk dimensions
+-> required gates
+-> LEAN | SCOPED | STRONG | FULL summary
+-> AGENT_LOCAL | REMOTE_AUTOMATED | REAL_ENVIRONMENT executor
+```
+
+Profiles are shorthand, not monolithic suite aliases.
+
+Typical examples:
+
+- contained UI/ViewModel/domain change -> `SCOPED` owner/direct-consumer gates;
+- Binder/shared contract, persistence, lifecycle, native/JNI, packaging/R8/manifest -> relevant `STRONG` risk cone;
+- selector/global build/toolchain/dependency inventory -> `FULL` because narrowing machinery changed;
+- stable/release promotion -> `FULL`.
+
+## Remote preflight evidence reuse
+
+Before starting another expensive remote run, reuse successful evidence when it still matches:
+
+- exact source head;
+- material target/base relationship;
+- required gates;
+- selected profile or stronger equivalent;
+- E2E environment/fidelity/evidence mode where relevant.
+
+PR number, draft/ready state, labels and comments are not source-evidence identity by themselves.
+
+A replacement PR with the same head/base/gates should not rerun minutes of unchanged validation solely because its UI identity changed.
+
+## E2E model
+
+Execution capability and environment fidelity are independent.
+
+```text
+host/fake
+-> simulator/emulator
+-> representative virtual
+-> representative physical
+-> target environment
+```
+
+Use the cheapest automated environment that proves the claim and escalate only for material target dimensions.
+
+For UI-bearing critical journeys, select evidence from the changed claim:
+
+- `ASSERTIONS` — UI is incidental to deterministic system behavior;
+- `SCREENSHOTS` — stable visible layout/hierarchy/copy/state/recovery/adaptive behavior changed;
+- `FULL_MEDIA` — motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release acceptance requires observing sequence over time.
+
+UI presence alone does not force video. Evidence required by the selected mode must be complete and identity-bearing.
+
+## Vertical slices and parallel work
+
+Prefer an observable user/system outcome over a small technical layer.
+
+```text
+agent A subtask ─┐
+agent B subtask ─┼─> feature/integration branch -> coherent vertical-slice PR
+agent C subtask ─┘
+```
+
+Parallel development does not imply stacked publication. Stacked PRs remain useful when levels are independently mergeable/reviewable/value-bearing, but sync-only stack-maintenance PRs are a smell.
 
 ## Repository layout
 
-- [`STANDARD.md`](STANDARD.md) — canonical L0/L1/L2 engineering standard.
-- [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md) — normative project command/test/E2E/build/artifact/runtime lifecycle semantics.
-- [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md) — normative E2E target-environment, fidelity, escalation and residual-evidence semantics.
-- [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md) — normative executor classification and no-human-runner semantics.
-- [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) — normative UX/UI semantics for repositories that adopt `product-ui`.
-- [`USAGE.md`](USAGE.md) — practical adoption and operating guide.
-- [`template/`](template/) — universal files that can be adopted into a project and then specialized locally.
-- [`template/.engineering/commands.json`](template/.engineering/commands.json) — machine-readable project operating, publication and execution-routing contract template.
-- [`template/.engineering/e2e.json`](template/.engineering/e2e.json) — machine-readable E2E applicability, target environments, execution environments, fidelity gaps and critical-journey mapping.
-- [`template/design/`](template/design/) — opt-in UX/brand contract files validated when `product-ui` is adopted.
-- [`template/skills/`](template/skills/) — core project-local coding-agent Skills, including `preflight-change` and `remote-preflight`.
-- [`profiles/`](profiles/) — optional stack/domain/product guidance, including `product-ui` for UI products.
-- [`skills/adopt-engineering-standard/`](skills/adopt-engineering-standard/) — workflow for aligning a new/existing repository.
-- [`skills/update-engineering-standard/`](skills/update-engineering-standard/) — workflow for migrating an adopted repository to a newer baseline.
-
-## Core model
-
-```text
-AGENTS.md          -> how to orient and what is invariant
-commands.json      -> how this project runs/checks/tests/builds and where validation executes
-e2e.json           -> which critical journeys run against which target/automated environments and what fidelity gaps remain
-Skills             -> how to perform recurring change/preflight workflows
-remote preflight   -> agent-triggerable deterministic execution when local capability is missing
-design contracts   -> how a UI product expresses users/jobs, hierarchy, motion semantics and brand/design ownership
-Active workstream  -> what is being implemented now
-Feature/ADR/docs   -> how the system works now and why durable decisions exist
-Git history        -> how the repository got here
-Scripts/CI         -> deterministic enforcement and remote execution
-```
-
-The operating model is **same semantics, native implementation**. Android remains Gradle/native-test-tooling, macOS remains Xcode/Swift/Python-native, browser/web can prefer Playwright for new browser E2E, and local servers use established tooling.
-
-The validation execution model is **same required evidence, earliest capable automated executor**. If the coding agent has the correct local environment, it runs deterministic gates before CI confirmation. If it does not, repository-owned remote automation executes those gates. A human is not the default fallback runner.
-
-The E2E environment model is **same critical claim, explicitly bounded environment fidelity**. Executor classification (`AGENT_LOCAL`, `REMOTE_AUTOMATED`, `REAL_ENVIRONMENT`) is separate from environment fidelity (`host_or_fake`, `simulated_or_emulated`, `representative_virtual`, `representative_physical`, `target_environment`). Use the cheapest automated environment sufficient for the claim, then increase fidelity only where material and leave only irreducible target-environment deltas for final confirmation.
-
-The product-experience model follows the same rule: **same UX quality/decision contract, platform-appropriate implementation**. A web app, Android app and macOS app should converge on user-outcome-first task modeling, clarity, progressive disclosure, complete states, accessibility, purposeful motion/graphics and design-system ownership without being forced into identical visuals or interactions.
-
-For meaningful product-experience work, the default decision order is:
-
-```text
-user outcome
--> task model
--> IA / critical journey
--> information + action hierarchy
--> progressive disclosure / defaults
--> interactions / states / feedback / recovery
--> adaptive / platform
--> accessibility
--> design system / components
--> motion
--> visual polish / graphics
--> validation
-```
-
-Use proportional depth: structural UX changes use the full sequence; interaction changes start from the owning task/journey and affected layers; visual-only edits preserve settled semantics and remain local.
+- `STANDARD.md` — universal engineering standard.
+- `OPERATING-CONTRACT.md` — operations/build/artifact/runtime contract.
+- `EXECUTION-CAPABILITY-CONTRACT.md` — development velocity, validation/executor/evidence-reuse contract.
+- `E2E-ENVIRONMENT-CONTRACT.md` — E2E environment/evidence contract.
+- `PRODUCT-EXPERIENCE-CONTRACT.md` — optional UX/UI contract.
+- `template/` — files adopted and then specialized locally.
+- `template/.engineering/commands.json` — machine-readable commands, stages, validation routing and preflight policy.
+- `template/.engineering/e2e.json` — machine-readable E2E environments, journeys and UI evidence policy.
+- `template/skills/` — recurring project-local agent workflows.
+- `profiles/` — optional stack/domain/product deltas such as Android/local-AI/product-ui.
+- `skills/adopt-engineering-standard/` — first adoption.
+- `skills/update-engineering-standard/` — explicit baseline migration.
 
 ## Use with a new project
 
-1. Read [`USAGE.md`](USAGE.md), `STANDARD.md` and the applicable focused contracts.
-2. Copy the universal `template/` baseline into the repository.
-3. Select only the profiles that apply.
-4. If the product has a material UI, adopt `product-ui` and specialize `design/ux-contract.json` plus `design/brand-kit.json`.
-5. Replace project placeholders and generate project-specific ownership/routing.
-6. Map `.engineering/commands.json` to native setup/dev/check/test/E2E/build/smoke/package/stop/clean commands.
-7. Decide which required gates can run agent-local, which need remote automation, and which genuinely require a real environment.
-8. If supported coding agents may lack required local tooling, provide the declared agent-triggerable remote-preflight mechanism before relying on them for autonomous delivery.
-9. Decide E2E applicability. If applicable, specialize `.engineering/e2e.json` with critical journeys, target environments/material dimensions, automated execution environments/fidelity and residual real-environment gaps.
-10. For every UI-bearing E2E journey, configure screenshot checkpoints and complete journey video capture/upload as bounded, identity-bearing artifacts.
-11. Implement applicable build identity, artifact lifecycle/build-delta and local-runtime/cleanup semantics.
-12. For UI products, identify primary users/jobs/surfaces, define information architecture/journeys, progressive disclosure, critical states, accessibility target, responsive/adaptive scope, design-system ownership, motion/graphics semantics and key reference views; route meaningful UX/UI work through `design-product-experience`.
-13. Record adopted standard version and profiles in `.engineering/baseline.json`.
-14. Run repository/operations/E2E-fidelity/product-experience/documentation/agent-context checks.
-15. Add stack-specific automated/test/E2E/build/smoke and UI evidence gates before claiming the relevant maturity level.
-
-The `adopt-engineering-standard` Skill describes the complete workflow.
+1. Read `USAGE.md`, `STANDARD.md` and only the focused contracts/profiles that apply.
+2. Copy/specialize `template/`.
+3. Select only applicable profiles.
+4. Map `.engineering/commands.json` to the project's native commands and specialize `development_velocity`/risk selector/remote-preflight routing.
+5. Decide E2E applicability and specialize `.engineering/e2e.json` with target/execution environments, critical journeys, residual gaps and minimum UI evidence modes.
+6. If UI is material, adopt `product-ui` and map the real design-system/brand owner.
+7. Preserve stronger existing tooling rather than replacing it for compliance aesthetics.
+8. Record baseline version/profiles and run repository health checks.
 
 ## Use with an existing project
 
-Do not copy blindly. First audit existing architecture, docs, CI, tests, E2E framework/critical journeys/execution environments/final target testing, security, native commands, build/version identity, artifact/release behavior, local runtimes, cleanup and agent guidance.
+Adoption is semantic, not file replacement. Preserve stronger local ownership, CI, E2E, build/release and design mechanisms; merge only missing invariants/routing.
 
-Also audit execution capability: determine whether the coding agents expected to maintain the repository can run required deterministic gates directly. Where they cannot, preserve or add secure agent-triggerable remote automation rather than assigning those commands to the repository owner.
+Later upgrades use `update-engineering-standard`: read the version delta, classify each change as APPLY/MERGE/N/A/DEFER/CONFLICT, preserve intentional customization and bump baseline metadata only after the new behavior is real.
 
-For E2E, identify which failures are currently first discovered in final device/manual/production-like validation. Move failures reproducible in practical automated environments earlier, while leaving genuinely hardware/OEM/thermal/protected-environment/manual-judgement evidence explicit as residual target evidence.
+## Current version
 
-For UI products also audit primary users/jobs, information architecture/journeys, progressive disclosure, design source of truth, brand tokens/components, critical states, accessibility, responsive/adaptive behavior, motion/imagery ownership, key reference views and UX regression evidence. Preserve stronger existing practices, identify gaps/conflicts, build a small adoption DAG, then migrate incrementally.
+Reference baseline: **0.9.0**.
 
-The goal is convergence on engineering and experience invariants, not identical repository layouts, build tools, E2E frameworks/environment providers or visual styles.
-
-## Updating an adopted project
-
-Projects remain self-contained. They do not depend on this repository at runtime or during ordinary coding-agent tasks.
-
-When this baseline changes, compare the project's recorded standard version with the desired version, identify relevant semantic deltas, preserve local customizations/native tooling/E2E environment strategy/design systems, and apply a focused migration. See `skills/update-engineering-standard` and [`USAGE.md`](USAGE.md).
-
-## Documentation lifecycle
-
-Implementation plans are disposable by default:
-
-```text
-plan -> implement -> validate -> transfer durable knowledge -> delete plan
-```
-
-Git already preserves implementation history. Keep completed plans only when they have independent audit, regulatory, release or historical value. Generated per-build deltas and per-run E2E/visual evidence are artifacts, not active planning documents.
-
-## Versioning
-
-The baseline version is stored in [`VERSION`](VERSION). Changes that alter required invariants, copied Skills or machine-readable baseline semantics must be recorded in [`CHANGELOG.md`](CHANGELOG.md).
-
-Current baseline: **0.8.1**.
+See [`CHANGELOG.md`](CHANGELOG.md) for the adopter-facing delta.
