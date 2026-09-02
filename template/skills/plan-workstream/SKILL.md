@@ -1,13 +1,13 @@
 ---
 name: plan-workstream
-description: Create or reshape a compact active implementation workstream when substantial work needs dependency, parallelism, ownership or progress coordination. Do not use for small coherent changes that need no persistent plan.
+description: Create or reshape a compact active implementation workstream when substantial work needs dependency, parallelism, ownership or progress coordination, while preferring observable vertical outcomes and early branch convergence over stacked publication ceremony.
 ---
 
 # Plan Workstream
 
 ## Goal
 
-Turn a substantial engineering goal into a bounded execution DAG that coding agents can continue without rereading a narrative history.
+Turn a substantial engineering goal into a bounded execution DAG that coding agents can continue without rereading narrative history and without turning every technical subtask into its own publication-grade PR.
 
 ## First decide whether a plan is justified
 
@@ -15,40 +15,78 @@ Do not create a workstream when the change can be understood, implemented and va
 
 Create one when at least one is true:
 
-- multiple independently executable slices exist;
+- multiple independently executable subtasks/slices exist;
 - dependencies/blockers must survive across agent sessions;
 - multiple agents may work in parallel;
-- integration/evidence spans several PRs or environments;
-- the work has enough scope that current executable state would otherwise be reconstructed repeatedly.
+- integration/evidence spans several execution environments or checkpoints;
+- scope is large enough that current executable state would otherwise be reconstructed repeatedly.
+
+## Vertical slice rule
+
+Prefer slices that unlock an **observable user/system outcome** end to end.
+
+A technical layer, model, adapter, test harness or ViewModel change is normally a **subtask of the vertical slice** unless it is independently valuable, mergeable and reviewable.
+
+Avoid decomposition that produces many individually complete-looking PRs but no useful product behavior until the final one lands.
+
+Ask for each proposed slice:
+
+- what observable outcome becomes true when this lands?
+- can it integrate safely without waiting for later layers?
+- does separating it reduce risk/coordination, or only create ceremony?
+
+## Parallel development does not imply stacked publication
+
+Use temporary branches/worktrees to parallelize non-conflicting ownership, then converge them early onto a shared feature/integration branch when the pieces belong to one vertical outcome.
+
+Preferred pattern:
+
+```text
+agent A subtask ─┐
+agent B subtask ─┼─> feature/integration branch -> coherent vertical-slice PR
+agent C subtask ─┘
+```
+
+Stacked publication is exceptional. Use stacked PRs only when each level is independently mergeable/reviewable/value-bearing or when separate ownership/review genuinely requires it.
+
+A PR whose only purpose is to sync a parent into a child is a coordination smell. Prefer branch convergence or explicit integration points over repeated stack-maintenance PRs.
 
 ## Workflow
 
-1. Find the owning architecture/feature sources and current state before planning.
+1. Find owning architecture/feature sources and current state.
 2. State one outcome-oriented Goal and explicit Non-goals.
 3. List only invariants that materially constrain implementation.
-4. Decompose into the smallest coherent vertical slices with observable acceptance criteria.
-5. Give every slice a stable ID and explicit `Owns/writes` boundary.
-6. Express dependencies as a DAG. Mark slices parallel only when write ownership is non-conflicting or the integration point is explicit.
-7. Use only `READY`, `ACTIVE`, `BLOCKED`, `DONE` states.
-8. Name the current executable slice(s); do not make an agent infer them from prose.
-9. Put targeted validation beside the slice that needs it and final integration/evidence gates at the appropriate dependency point.
-10. Declare durable documentation destinations so completion can transfer current behavior/decisions and delete the plan.
-11. Link the workstream once from `docs/current-state.md`.
+4. Decompose into the smallest coherent **vertical outcomes**, then list parallel technical subtasks beneath them.
+5. Give every slice/subtask a stable ID and explicit `Owns/writes` boundary.
+6. Express dependencies as a DAG. Mark work parallel only when writes are non-conflicting or the integration point is explicit.
+7. Choose the convergence branch/checkpoint for related parallel work.
+8. Use only `READY`, `ACTIVE`, `BLOCKED`, `DONE` states.
+9. Name the currently executable work; do not make agents infer it from prose.
+10. Put FAST/iteration validation beside each subtask and integration/E2E evidence beside the vertical outcome it proves.
+11. Reserve release-grade validation for the release checkpoint rather than copying it onto every subtask.
+12. Declare durable documentation destinations so completion can transfer current truth and delete the plan.
+13. Link the active workstream once from `docs/current-state.md` only when repository-level coordination needs that pointer.
 
 ## Size discipline
 
-Use `docs/workstreams/_template.md`. Keep the workstream under the configured token/line budget. If it grows, split by independently owned domain/workstream rather than appending history.
+Use `docs/workstreams/_template.md`. Keep the workstream under the configured token/line budget.
 
-Do not maintain separate `plan.md`, `progress.md` and `status.md` for the same work. Update state in the DAG table. Completed slices remain as terse `DONE` rows only while the workstream is active; do not append diaries, commit lists or PR narratives.
+If it grows, split by genuinely independent domain/outcome rather than appending history.
+
+Do not maintain separate `plan.md`, `progress.md` and `status.md` for the same work. Update state in the DAG table. Completed work remains as terse `DONE` rows only while needed for active dependency context.
+
+Do not update `docs/current-state.md` for every agent commit or temporary branch synchronization; it owns integrated/blocked/next repository truth.
 
 ## Completion standard
 
-The plan is useful when a fresh agent can determine in a small read:
+A useful plan lets a fresh agent determine quickly:
 
-- the intended outcome and exclusions;
+- intended observable outcome and exclusions;
 - what can execute now;
 - what blocks what;
-- which paths/contracts each slice owns;
+- which paths/contracts each subtask owns;
 - what may run in parallel;
-- how each slice is accepted/validated;
+- where related work converges;
+- which iteration checks belong to subtasks;
+- which integration/release gates belong to checkpoints;
 - what durable knowledge must remain after the plan is deleted.
