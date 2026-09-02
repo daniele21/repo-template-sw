@@ -1,214 +1,215 @@
 ---
 name: update-engineering-standard
-description: Migrate an already-adopted repository from its recorded repo-template-sw baseline to a newer version through an explicit semantic delta review that preserves local engineering and product-experience customizations and applies only relevant changes.
+description: Migrate an already-adopted repository from its recorded repo-template-sw baseline to a newer version through an explicit semantic delta review that preserves local engineering/product customizations and applies only relevant changes.
 ---
 
 # Update Engineering Standard
 
 ## Principle
 
-An adopted repository is self-contained. Standard updates are explicit migrations, not automatic synchronization.
+An adopted repository is self-contained. Standard updates are explicit semantic migrations, not automatic synchronization or template overwrites.
+
+A version bump without applying or explicitly classifying relevant behavioral deltas is not a valid migration.
 
 ## Workflow
 
-1. Read the project's `.engineering/baseline.json`, `.engineering/commands.json`, `.engineering/e2e.json` when present and current local Skills/guides; read `design/ux-contract.json` and `design/brand-kit.json` when `product-ui` is adopted.
-2. Read `VERSION`, `CHANGELOG.md`, `STANDARD.md` and changed focused contracts in `repo-template-sw` from recorded version to target version.
+1. Read the target repository's `.engineering/baseline.json`, `.engineering/commands.json`, `.engineering/e2e.json`, relevant local Skills/guides and design contracts when `product-ui` applies.
+2. Read `VERSION`, `CHANGELOG.md`, `STANDARD.md` and changed focused contracts in `repo-template-sw` from the recorded version to the requested target.
 3. Classify each delta:
-   - `APPLY` — directly relevant and local copy is unmodified;
-   - `MERGE` — relevant but local file/Skill/operating/E2E/design mechanism is customized;
-   - `N/A` — profile/concern not used by the project;
-   - `DEFER` — valid change intentionally postponed with a named reason/owner;
-   - `CONFLICT` — requires an explicit architecture/product decision.
-4. Inspect local behavior before replacing text. Never overwrite a customized Skill, project-specific `AGENTS.md`, native build tooling, E2E framework/environment provider, design system/source of truth or release flow wholesale.
-5. Map common semantics onto existing native mechanisms before adding wrappers/frameworks. Preserve stronger local build/runtime/artifact/E2E/design mechanisms.
-6. Implement the smallest migration that establishes the new invariant/behavior.
-7. Run baseline health checks plus project-specific validation affected by the migration. Run applicable E2E at the declared environment fidelity for full workflows, product-experience evidence for UI changes, and build/smoke/stop for build/runtime lifecycle changes.
-8. Update `.engineering/baseline.json` source version and per-Skill `source_version`; preserve `customized: true` where local divergence remains intentional.
-9. Update `.engineering/commands.json`, `.engineering/e2e.json` or design contract versions/mappings only after corresponding behavior is real.
-10. Update durable project docs/design contracts only when current behavior/ownership changed.
-11. If a migration workstream was required, finalize and delete it by default.
+   - `APPLY` — relevant and local mechanism is effectively baseline-compatible;
+   - `MERGE` — relevant but local mechanism is customized/stronger;
+   - `N/A` — profile/concern does not apply;
+   - `DEFER` — intentionally postponed with reason/owner;
+   - `CONFLICT` — requires explicit architecture/product decision.
+4. Inspect actual local behavior before replacing text or config.
+5. Preserve stronger project-native commands, CI scope detectors, E2E frameworks/device providers, build/release systems, design systems and security boundaries.
+6. Implement the smallest migration that makes the new semantics real.
+7. Validate the migration itself at the appropriate risk/stage.
+8. Update contract versions/mappings only after behavior matches them.
+9. Update `.engineering/baseline.json` and per-Skill `source_version` last, preserving `customized: true` where intentional local divergence remains.
+10. Update durable project docs only when current behavior/ownership changed.
+11. Delete migration workstreams after durable truth is transferred unless independent archive/audit value exists.
 
-## 0.2 operating-contract migration guidance
+## Historical migration principle
 
-When migrating from 0.1.x to 0.2.x, explicitly classify canonical commands, build identity, artifact lineage/manifest/checksum/retention/release storage, generated build delta, localhost/process/port ownership, ephemeral cleanup and operating-contract CI enforcement.
+Older baseline deltas remain documented in `CHANGELOG.md` and their focused contracts. When migrating across several versions, apply the **semantic end state** in dependency order rather than mechanically replaying every obsolete intermediate implementation.
 
-Do not claim 0.2 adoption by only copying `.engineering/commands.json` or bumping metadata.
+Examples:
 
-## 0.3 E2E migration guidance
+- operating/build/artifact semantics are owned by `OPERATING-CONTRACT.md`;
+- execution/no-human-runner/validation routing by `EXECUTION-CAPABILITY-CONTRACT.md`;
+- E2E fidelity/evidence by `E2E-ENVIRONMENT-CONTRACT.md`;
+- product experience by `PRODUCT-EXPERIENCE-CONTRACT.md`.
 
-When migrating from 0.2.x to 0.3.x, explicitly classify:
+Preserve stronger existing mechanisms and avoid adding parallel wrappers/frameworks solely because an older migration note introduced them as one option.
 
-- whether critical complete workflows need E2E evidence;
-- canonical `e2e` command mapping or truthful `n/a`;
-- existing E2E framework/tooling that should be `KEEP`;
-- a small critical-journey set instead of broad brittle UI automation;
-- built/package artifact execution when the claim depends on it;
-- E2E cleanup and bounded identity-bearing failure evidence;
-- CI cadence appropriate to E2E cost.
+## 0.9.0 Development Velocity migration
 
-For browser/web projects adding a new E2E framework, prefer Playwright unless an equally strong established solution already exists.
+When migrating from 0.8.x to 0.9.0, the goal is to remove **validation waterfall and coordination ceremony** without weakening integration/release confidence.
 
-## 0.4 product-experience migration guidance
+### 1. Upgrade operating/execution contracts
 
-When migrating from 0.3.x to 0.4.x, first decide whether a material user-facing interface exists.
+Merge:
 
-If not, classify `product-ui` as `N/A`; `verify_product_experience.py` should pass as not applicable.
+- `.engineering/commands.json` operating contract `0.6.0`;
+- `EXECUTION-CAPABILITY-CONTRACT.md` `0.3.0` semantics;
+- explicit delivery stages `ITERATION`, `INTEGRATION`, `RELEASE`;
+- publication gate beginning at `INTEGRATION` rather than every implementation edit/draft update.
 
-If yes, explicitly classify:
+`ITERATION` should stay fast and focused. `INTEGRATION` owns exact-head/base, complete-diff review, affected durable-doc freshness and integration evidence. `RELEASE` owns full release-grade confidence.
 
-- whether to adopt `product-ui` in `.engineering/baseline.json`;
-- canonical design source of truth (Figma, code-first, in-repo or other real owner);
-- existing brand kit/tokens/components that should be `KEEP` rather than duplicated;
-- user task model and information architecture;
-- primary action hierarchy, progressive disclosure and sensible defaults;
-- critical loading/empty/error/disabled and other reachable states;
-- feedback/progress/error recovery behavior;
-- accessibility target and real automated/manual evidence;
-- responsive/adaptive contexts;
-- critical user journeys and linkage to existing/new E2E where lower-level tests are insufficient;
-- key reference views without screenshot/mockup sprawl;
-- visual regression for stable high-risk surfaces where useful;
-- usability evidence for high-risk/important flows where justified;
-- bounded/identity-bearing UI test evidence and zero-residue cleanup.
+Do not interpret the migration as permission to skip required integration/release evidence.
 
-Do not create a second design system, copy Figma into static screenshots, or introduce a UI framework merely to satisfy the baseline. `design/ux-contract.json` and `design/brand-kit.json` may route to existing stronger owners.
+### 2. Separate stage from validation depth
 
-A metadata-only 0.4 bump, or selecting `product-ui` while leaving generic placeholders, is not a valid migration.
+Keep `LEAN`, `SCOPED`, `STRONG`, `FULL`, but stop treating them as lifecycle states.
 
-## 0.5 product-experience workflow migration guidance
+Adapt the project selector so it reports:
 
-When migrating from 0.4.x to 0.5.x, the main change is not a new visual style. It is an explicit decision workflow that keeps structural UX ahead of implementation/polish and separates UX motion semantics from project-specific motion language.
+- changed owners;
+- risk dimensions;
+- concrete required gates;
+- profile/reason.
 
-For repositories without `product-ui`, keep the new `design-product-experience` Skill as a dormant core Skill unless local policy intentionally removes non-applicable Skills and records that customization.
+Prefer gate selection over broad suite selection.
 
-For repositories with `product-ui`, explicitly classify and merge:
+Preserve a stronger existing dependency/scope detector rather than adding a second selector.
 
-- `design-product-experience` Skill routing in `AGENTS.md`;
-- primary users/jobs/surfaces in `design/ux-contract.json`;
-- decision-model invariants: user outcome first, task model before layout, hierarchy before polish, states before motion, purposeful motion and evidence before completion;
-- proportional change depth: structural UX vs interaction vs visual-only;
-- motion semantics/purposes in the UX contract;
-- functional-before-decorative graphics/imagery semantics;
-- project-owned motion character/tokens in `design/brand-kit.json` (durations, easing, spring/bounce and reduced-motion strategy) without replacing stronger existing design-system tokens;
-- verifier changes for the new machine-readable fields;
-- `structured-change` and `validate-change` routing so meaningful UX/UI work cannot silently jump straight to components, animation or graphics.
+Unknown executable scope should fail safe stronger. Changes to selector/global build/toolchain/dependency inventory that control narrowing should validate `FULL`.
 
-Preserve stronger existing product/design processes. If an established design system already owns motion tokens, point/map `brand-kit.json` to that truth rather than introducing duplicate values.
+### 3. Reuse equivalent successful evidence
 
-Do not treat migration as permission to redesign the product. The semantic migration is complete when future meaningful UX/UI work is routed through the ordered, proportional process and the machine-readable project contracts reflect real current ownership/semantics.
+Update `preflight-change`/`remote-preflight` and repository automation so existing successful evidence is reused when it remains sufficient for:
 
-A metadata-only 0.5 bump is not a valid migration.
+- exact source head;
+- material target/base relationship;
+- required gates;
+- selected profile or stronger equivalent;
+- E2E environment/fidelity/evidence mode when applicable.
 
-## 0.6 pre-publication readiness migration guidance
+A replacement PR, draft -> ready transition, label/comment or another collaboration-only change must not force an expensive rerun by itself.
 
-When migrating from 0.5.x to 0.6.x, explicitly classify and merge:
+Rerun only missing, stale or insufficient gates.
 
-- `publication_gate` semantics in `.engineering/commands.json`;
-- the core `preflight-change` Skill;
-- material ambiguity resolution before implementation;
-- root-cause-first failure handling and repeated-failure hypothesis reset;
-- exact-head and intended-target/base freshness;
-- complete-diff review;
-- local/CI command parity for deterministic gates;
-- PR evidence that distinguishes PASS/FAIL/PENDING/N/A;
-- Android-specific deterministic preflight gates where applicable.
+Security remains unchanged: exact-head pinning, trusted requesters, least privilege and no production/signing/deployment secrets in change-branch execution.
 
-Preserve project-native commands. Do not add a universal wrapper merely for compliance.
+### 4. Upgrade E2E contract to 0.2.0
 
-A metadata-only 0.6 bump is not a valid migration.
+0.9.0 supersedes the 0.8.1 unconditional UI-media rule.
 
-## 0.7 execution-capability and blast-radius migration guidance
+Do **not** delete useful screenshot/video tooling. Change the requirement routing to risk-based modes:
 
-When migrating from 0.6.x to 0.7.x, the goal is to preserve strong validation while removing two kinds of waste: **human-as-runner fallback** and **full-CI-by-default**.
+- `ASSERTIONS` — UI incidental to deterministic non-visual behavior;
+- `SCREENSHOTS` — stable visible states/layout/hierarchy/copy/recovery/adaptive semantics;
+- `FULL_MEDIA` — motion/timing/progression/navigation transitions/lifecycle visibility/gesture continuity/release acceptance.
 
-Explicitly classify and merge:
+Migrate `.engineering/e2e.json` to contract `0.2.0` and declare each journey's minimum UI evidence mode.
 
-- `EXECUTION-CAPABILITY-CONTRACT.md` semantics;
-- `AGENT_LOCAL`, `REMOTE_AUTOMATED` and `REAL_ENVIRONMENT` executor classification;
-- the no-human-runner invariant: ordinary deterministic compile/test/lint/R8/build work is not delegated to the user merely because an agent lacks a local environment;
-- `remote-preflight` Skill and an agent-triggerable repository-owned remote execution surface when supported agents need one;
-- validation depth profiles `LEAN`, `SCOPED`, `STRONG`, `FULL`, with `auto` as the normal selection mode;
-- a deterministic project-owned blast-radius selector that reports profile, reason and affected modules/jobs;
-- fail-safe escalation for unknown executable paths;
-- `FULL` validation when the selector/global build inventory/toolchain/dependency graph itself changes or on stable/release promotion according to project policy;
-- automatic escalation when a repair broadens blast radius;
-- prohibition on silent downgrade below the `auto` profile;
-- least-privilege remote execution: trusted requesters, exact-head pinning, same-repository heads by default, no production/signing/deployment secrets in the code-execution job, and separate report-writing permission when necessary;
-- readiness states `READY_FOR_REMOTE_PREFLIGHT` and `AUTOMATED_PREFLIGHT_CONFIRMED`;
-- PR evidence separating selected validation profile, agent-local gates, remote-automated gates and real-environment evidence.
+Evidence required by the selected mode must remain identity-bearing, privacy-safe and bounded-retention. Missing required evidence stays `E2E_EVIDENCE_INCOMPLETE`.
 
-Do not replace an existing stronger scope detector. For example, a repository that already maps changed paths to Gradle modules/native/packaging jobs should extend that mechanism to emit the standard profiles rather than introduce a parallel selector.
+Do not downgrade an evidence mode after a run merely to obtain PASS.
 
-Do not make developers or repository owners choose a label on every PR just to control cost. The normal path is deterministic `auto` selection; manual input is for explicit stronger validation or exceptional justified downgrade, not routine routing.
+### 5. Migrate validation/preflight Skills
 
-A metadata-only 0.7 bump, a `/preflight` trigger that always runs the entire repository, or a process that still asks the user to run automatable commands is not a valid migration.
+Merge 0.9.0 semantics into:
 
-## 0.8 E2E environment-fidelity migration guidance
+- `validate-change` — fast `ITERATION`, risk-to-gate expansion, proportional E2E;
+- `preflight-change` — begins at `INTEGRATION`/`RELEASE`, reuses evidence before triggering work;
+- `remote-preflight` — satisfies only missing/stale/insufficient remote gates;
+- `structured-change` — proportional reasoning, no publication ceremony on every edit;
+- `plan-workstream` — observable vertical outcomes and early convergence.
 
-When migrating from 0.7.x to 0.8.x, preserve the existing E2E framework and add an explicit environment-fidelity model around it. The goal is to move ordinary whole-system discovery earlier while keeping genuinely target-specific evidence truthful.
+Preserve project-local customizations that encode real product/platform behavior.
 
-Explicitly classify and merge:
+### 6. Migrate workstream/branch strategy
 
-- `E2E-ENVIRONMENT-CONTRACT.md` semantics;
-- `.engineering/e2e.json` applicability and concrete specialization;
-- each material target environment and the device/platform/browser/runtime/hardware dimensions that affect product claims;
-- existing E2E execution environments (host/fake, emulator/simulator, browser grid, container/VM, device farm, physical lab, target environment) that should be `KEEP`;
-- a fidelity class for each execution environment without confusing it with `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT` executor classification;
-- each critical journey's complete outcome, target environment refs, automated environment refs and minimum expected automated fidelity;
-- built/package-artifact E2E where install/distribution/runtime packaging is part of the claim;
-- known fidelity gaps and whether residual target/real-environment confirmation is `required`, `conditional` or `not_required`;
-- explicit `automation_gap_reason` when a required journey genuinely has no automatable execution environment;
-- `verify_e2e.py` in repository health;
-- `validate-change` and `preflight-change` routing so E2E fidelity escalates from the cheapest sufficient environment only when blast radius/claim requires it;
-- Android/local-AI profile specialization where applicable.
+Parallel development does not imply stacked publication.
 
-Review the current final/manual/device test process. For failures that are repeatedly found there, classify each as:
+Prefer temporary independent branches/worktrees that converge early into the same coherent vertical outcome.
 
-- reproducible earlier in an existing automated environment -> move the regression E2E earlier;
-- reproducible earlier with a stronger practical automated environment -> add/strengthen that environment when the value justifies the cost;
-- genuinely dependent on residual physical/OEM/hardware/thermal/protected-external/manual judgement -> keep as real-environment evidence.
+Retain stacked PRs only when each level is independently mergeable/reviewable/value-bearing or separate ownership requires it.
 
-Do not replace Espresso/Compose UI Test/UI Automator, XCTest/XCUITest, Playwright, device farms or other strong incumbent tooling just to satisfy the contract. `.engineering/e2e.json` is routing/claim metadata around real mechanisms, not a new E2E framework.
+Treat repeated sync-only parent/child PRs as coordination debt to eliminate, not normal evidence ceremony.
 
-Do not claim `representative_physical` or `target_environment` merely because an automated CI job is green. Executor and environment fidelity are independent axes.
+### 7. Migrate documentation timing
 
-For Android, a built APK on an emulator may prove packaging/install/workflow behavior but remains `simulated_or_emulated` for physical-device claims. For local AI, a small deterministic model may prove orchestration while production-model/hardware memory, throughput and thermal claims remain residual evidence.
+During `ITERATION`, affected durable docs may remain pending while implementation changes.
 
-A metadata-only 0.8 bump, a copied placeholder `e2e.json`, or a process where the final device/manual run still acts as the first undocumented complete-system test is not a valid migration.
+Before `INTEGRATION`, every affected canonical documentation owner must be current with the exact candidate.
 
-## 0.8.1 UI E2E media-evidence migration guidance
+Keep `docs/current-state.md` as integrated/blocked/next repository truth. Do not churn it for every agent commit/branch sync.
 
-When migrating from 0.8.0 to 0.8.1, keep the existing E2E framework/environment strategy and strengthen the evidence produced by UI-bearing critical journeys.
+Completed plans remain delete-by-default after durable knowledge transfer.
 
-Explicitly classify and merge:
+### 8. Migrate PR evidence
 
-- `E2E-ENVIRONMENT-CONTRACT.md` 0.1.1 semantics;
-- `.engineering/e2e.json` principle `ui_journey_screenshot_and_video_artifacts_required`;
-- stable screenshot checkpoints covering materially important UI states and the final reachable outcome;
-- one continuous journey video from meaningful start through success or terminal failure;
-- platform/framework-native capture where an adequate mechanism already exists;
-- artifact identity tying screenshots/video to journey, source/build/run and execution environment;
-- privacy-safe media content and bounded local/CI retention;
-- `validate-change` and `preflight-change` behavior that reports `E2E_EVIDENCE_INCOMPLETE` when assertions pass but either media artifact class is missing;
-- PR/evidence output that exposes inspectable screenshot and video artifact references;
-- Android specialization using established instrumentation/device screenshot and screen-recording capabilities where applicable.
+Ordinary integration PRs should be concise:
 
-For a headless or otherwise non-UI journey, media evidence is `N/A`; do not invent screenshots/video. If a run fails before any UI can render or recording can begin, report the pre-UI/pre-recording failure truthfully rather than fabricating media evidence, but do not call the journey a successful E2E PASS.
+- observable outcome;
+- scope/risks;
+- concrete changes;
+- stage/profile/required gates;
+- reused/new validation evidence;
+- E2E only when applicable;
+- affected durable docs;
+- remaining real-environment gaps.
 
-A metadata-only 0.8.1 bump without real screenshot + video artifacts for applicable UI journeys is not a valid migration.
+Use a separate release template/checklist for `RELEASE` rather than turning every feature PR into a release dossier.
+
+### 9. Migrate stack profiles
+
+For Android in particular:
+
+- iteration should prefer affected compile/focused unit/direct-contract checks;
+- broad AndroidTest assembly, emulator, minified/release packaging, native packaging and media capture should be triggered by concrete integration/release risk rather than every edit;
+- Binder/public contracts, persistence, lifecycle, native/JNI, manifest/R8/package/variant and complete journeys retain appropriate stronger gates;
+- physical/OEM evidence remains residual for claims automation cannot faithfully prove.
+
+Apply equivalent native specialization for other adopted profiles.
+
+### 10. Add validation economics
+
+Where practical, start reviewing expensive gates for:
+
+- duration;
+- flake rate;
+- unique regression signal;
+- overlap.
+
+Use this to change **placement and scope**, not to delete meaningful safety evidence.
+
+The target is sufficient confidence per feedback time.
+
+## Migration validation
+
+A 0.9.0 migration is not complete until:
+
+- machine-readable contracts pass project verifiers;
+- relevant local Skills/guides no longer impose the superseded every-edit preflight or every-UI-video behavior;
+- risk selector/remote-preflight behavior is coherent with existing CI;
+- affected project-specific validation passes;
+- E2E environment/evidence semantics are truthful;
+- baseline metadata reports real behavior, not intent.
+
+For a repository whose validation/selector/CI machinery changes during migration, use `FULL` validation for the migration itself because the narrowing mechanism is part of the changed scope.
 
 ## Output
 
 Report:
 
-- old -> new baseline version;
-- deltas applied/merged/deferred/not applicable;
-- local customizations preserved;
-- operating/E2E-environment/product-experience/execution-capability mappings and migrations;
-- selected validation profile and why;
-- selected critical E2E journey/environment fidelity and residual gaps where applicable;
-- screenshot/video artifact completeness for UI-bearing E2E journeys;
-- validation/evidence executed locally, remotely and in real environments;
-- unresolved conflicts/deferred migrations.
-
-A version bump without applying or explicitly classifying relevant semantic deltas is not a valid migration.
+```text
+BASELINE: <old> -> <new>
+DELTAS:
+  APPLY: <items>
+  MERGE: <items>
+  N/A: <items>
+  DEFER: <items>
+  CONFLICT: <items>
+LOCAL_CUSTOMIZATIONS_PRESERVED: <items>
+DELIVERY_MODEL: <iteration/integration/release specialization>
+RISK_TO_GATE_SELECTOR: <strategy>
+REMOTE_PREFLIGHT_AND_REUSE: <strategy>
+E2E_ENVIRONMENT_AND_UI_EVIDENCE: <journeys/fidelity/modes/residual gaps>
+VALIDATION_ECONOMICS: <implemented/deferred>
+MIGRATION_VALIDATION: <evidence>
+```
