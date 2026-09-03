@@ -30,7 +30,7 @@ Do not load every profile or Skill when changing one concern.
 - Validation selectors identify risk dimensions and required gates before summarizing them as a profile; profiles must not become monolithic suite aliases.
 - Required validation strength is independent from the current coding agent's execution environment.
 - An automatable deterministic gate must not become a user task solely because the current agent lacks a shell, checkout, SDK or platform toolchain.
-- Equivalent successful exact-head/base/gate evidence should be reused instead of rerun solely because PR/collaboration metadata changed.
+- Equivalent successful evidence should be reused instead of rerun: exact-head/base/gates for integration candidates, and post-merge tree-equivalent reuse only when the Git tree and target/base relationship are provably unchanged.
 - When an equivalent local environment exists, local execution should precede CI confirmation; when it does not, repository-owned remote automation is a valid execution backend.
 - E2E execution capability and environment fidelity are independent; emulator/simulator evidence must not be promoted into physical/target-environment evidence.
 - UI E2E evidence is risk-based: `ASSERTIONS`, `SCREENSHOTS`, or `FULL_MEDIA`. UI presence alone does not force video. Missing artifacts required by the selected mode make evidence incomplete.
