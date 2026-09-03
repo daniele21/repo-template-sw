@@ -1,6 +1,6 @@
 # Using `repo-template-sw`
 
-This guide explains how to bootstrap, operate and migrate repositories with `repo-template-sw` 0.9.0.
+This guide explains how to bootstrap, operate and migrate repositories with `repo-template-sw` 0.9.1.
 
 `repo-template-sw` is a **bootstrap, audit and migration source**. After adoption, ordinary work is driven by the target repository itself.
 
@@ -31,7 +31,7 @@ project repository
   -> scripts / CI                deterministic enforcement/execution
 ```
 
-## 1. Ordinary development in 0.9.0
+## 1. Ordinary development in 0.9.x
 
 Do not treat every change as a release candidate.
 
@@ -101,27 +101,32 @@ rather than using file paths to select a giant suite mechanically.
 
 When the current agent lacks an SDK/toolchain, deterministic gates are `REMOTE_AUTOMATED`, not user tasks.
 
-Before dispatching remote preflight, search existing successful evidence.
-
-Reuse it when it still matches:
-
-- exact source head;
-- material target/base relationship;
-- required gates;
-- selected profile or stronger equivalent;
-- E2E environment/fidelity/evidence mode when applicable.
+Before dispatching remote preflight, search existing successful evidence. For the integration candidate, reuse it when it still matches exact source head, source tree when available, material target/base relationship, required gates, selected profile or stronger equivalent, and relevant E2E environment/fidelity/evidence mode.
 
 This means a recreated PR, draft -> ready transition or metadata-only collaboration change should not rerun unchanged validation solely because PR identity changed.
 
-Normal flow:
+Normal candidate flow:
 
 ```text
 required gates
--> reuse valid existing evidence
+-> reuse valid exact-head evidence
 -> find remaining gaps
 -> run only remaining remote gates
 -> combine readiness evidence
 ```
+
+### 0.9.1 post-merge reuse
+
+A squash/rebase may create a new commit SHA even when the validated source content is unchanged. Repository CI may skip a second heavy integration validation only when all of these are true:
+
+- the post-merge commit Git tree exactly equals the validated candidate tree;
+- the push base exactly equals the target/base revision used by candidate validation;
+- required gates/profile and relevant E2E identity remain sufficient;
+- the evidence comes from trusted repository-owned automation and is current.
+
+Call this `tree-equivalent` reuse, not exact-head reuse. The previous run did not execute on the new commit object; it proved the exact same source tree against the exact same integration base.
+
+A moved base, changed tree, broader gates, expired/missing evidence or direct push without matching proof must validate normally. `RELEASE` remains exact-candidate/reference-grade by default.
 
 ## 4. E2E environment fidelity
 
@@ -143,7 +148,7 @@ Final physical/manual/target testing should primarily close residual fidelity ga
 
 ## 5. UI E2E evidence
 
-0.9.0 replaces the 0.8.1 unconditional “screenshots + video for every UI-bearing journey” rule with risk-based evidence modes.
+0.9.0 replaced the 0.8.1 unconditional “screenshots + video for every UI-bearing journey” rule with risk-based evidence modes.
 
 ### ASSERTIONS
 
@@ -210,7 +215,7 @@ Completed implementation plans are deleted by default after durable truth is tra
 Useful prompt:
 
 ```text
-Adopt repo-template-sw 0.9.0 in <REPOSITORY>.
+Adopt repo-template-sw 0.9.1 in <REPOSITORY>.
 Use adopt-engineering-standard.
 Preserve stronger existing engineering/build/E2E/design mechanisms and specialize the template from repository evidence rather than copying placeholders blindly.
 ```
@@ -259,35 +264,12 @@ Key migration work:
 
 Existing screenshot/video capture infrastructure should normally be **kept**. 0.9.0 changes when it is required: use it for `SCREENSHOTS`/`FULL_MEDIA` claims instead of forcing video on every UI-bearing E2E run.
 
-Useful prompt:
+### Migrating 0.9.0 -> 0.9.1
 
-```text
-Migrate <REPOSITORY> from its recorded repo-template-sw baseline to 0.9.0.
-Use update-engineering-standard.
-Preserve local customizations and existing strong test/E2E/build mechanisms; apply the new staged delivery, risk-to-gate, evidence-reuse and risk-based UI evidence semantics.
-```
+This is an additive validation-economics patch:
 
-## 11. Validation economics
-
-Where practical, periodically review expensive gates for:
-
-- duration;
-- flake rate;
-- unique regressions caught;
-- overlap with other gates.
-
-Move cheap high-signal evidence earlier and expensive low-frequency evidence toward integration/release. Do not delete tests that protect real invariants merely to make CI faster.
-
-The objective is **sufficient confidence per feedback time**.
-
-## 12. Source-of-truth order after adoption
-
-For ordinary development on an adopted repository:
-
-1. target repository `AGENTS.md` and closest scoped guide;
-2. target `.engineering/commands.json` / `.engineering/e2e.json`;
-3. target architecture/feature/ADR/current-state owners;
-4. target implementation/direct consumers/tests;
-5. `repo-template-sw` only for baseline semantics, adoption or migration questions.
-
-An adopted repository remains self-contained; ordinary development must not depend on reading this source repository at runtime.
+1. add `source_tree` to reusable validation evidence identity;
+2. declare whether post-merge tree-equivalent reuse is supported;
+3. if supported, require exact same candidate tree + exact same target/base + sufficient gates/profile/E2E identity;
+4. retain exact-head candidate validation and exact-candidate RELEASE semantics;
+5. keep direct pushes and any base/tree mismatch on the normal validation path.
