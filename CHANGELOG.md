@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 0.9.1 — 2026-09-03
+
+Closes the remaining duplicate-validation gap after a green integration PR is merged with a content-preserving commit transformation:
+
+- adds Git `source_tree` to validation evidence identity alongside exact head, target/base, required gates, profile and E2E identity;
+- keeps exact-head evidence mandatory for the integration candidate itself and for normal RELEASE/reference-grade validation;
+- allows repository-owned post-merge CI to reuse successful integration evidence after squash/rebase only when the merged commit has the exact same Git tree as the validated candidate and the push base exactly matches the target/base used by that validation;
+- requires direct integration-branch pushes, moved bases, changed trees, broadened gates, stale evidence or otherwise unprovable identity to execute validation normally;
+- distinguishes truthfully between `exact-head` reuse and `tree-equivalent` reuse rather than pretending an older run executed on the new commit object;
+- adds machine-readable `post_merge_tree_equivalent_reuse_allowed`, `post_merge_tree_reuse_requires_same_target_base` and `direct_push_without_equivalent_evidence_must_validate` policy flags without changing operating contract `0.6.0`;
+- updates `remote-preflight` and the execution capability contract so collaboration metadata and content-preserving merge metadata do not force redundant heavy work when the actual validated source and integration base are unchanged.
+
+The 0.9.1 rule is: **reuse proof when content and integration relationship are provably equivalent; rerun when either changed.**
+
 ## 0.9.0 — 2026-09-02
 
 Introduces a **Development Velocity** model so repositories can deliver coherent value incrementally without turning every edit or small PR into a release-grade validation waterfall:

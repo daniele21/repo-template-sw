@@ -13,9 +13,9 @@ Agent-native reference engineering baseline for software repositories maintained
 - [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md) — target-environment/fidelity semantics and risk-based UI evidence modes.
 - [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) — optional stack-neutral UX/UI contract.
 
-## 0.9.0: Development Velocity
+## 0.9.x: Development Velocity
 
-The delivery model is now explicitly two-dimensional:
+The delivery model is explicitly two-dimensional:
 
 ```text
 Delivery stage:     ITERATION -> INTEGRATION -> RELEASE
@@ -52,7 +52,7 @@ The objective is:
 - fast deterministic feedback during implementation;
 - risk-to-gate validation instead of full-suite-by-default;
 - agent-triggerable remote automation when local tooling is unavailable;
-- reuse of equivalent successful CI/preflight evidence instead of duplicate same-head runs;
+- reuse of equivalent successful validation evidence instead of duplicate runs;
 - critical E2E matched to both claim strength and environment fidelity;
 - risk-based UI E2E evidence: `ASSERTIONS`, `SCREENSHOTS`, `FULL_MEDIA`;
 - reproducible builds and immutable traceable artifacts;
@@ -92,19 +92,24 @@ Typical examples:
 - selector/global build/toolchain/dependency inventory -> `FULL` because narrowing machinery changed;
 - stable/release promotion -> `FULL`.
 
-## Remote preflight evidence reuse
+## Remote preflight and evidence reuse
 
-Before starting another expensive remote run, reuse successful evidence when it still matches:
+Before starting another expensive run, reuse successful evidence when it still proves the required claim.
+
+For an integration candidate, evidence normally matches:
 
 - exact source head;
+- source Git tree when available;
 - material target/base relationship;
 - required gates;
 - selected profile or stronger equivalent;
 - E2E environment/fidelity/evidence mode where relevant.
 
-PR number, draft/ready state, labels and comments are not source-evidence identity by themselves.
+PR number, draft/ready state, labels and comments are not source-evidence identity by themselves. A replacement PR with the same head/base/gates should not rerun unchanged validation solely because its UI identity changed.
 
-A replacement PR with the same head/base/gates should not rerun minutes of unchanged validation solely because its UI identity changed.
+After a content-preserving squash/rebase into an integration branch, post-merge CI may reuse the green candidate evidence even though the commit SHA changed **only** when the final Git tree is identical and the push base is exactly the target/base used by the validation. A moved base, changed tree, broader gate set, direct push without trusted evidence or release candidate falls back to normal validation.
+
+This distinction preserves exact-head integration proof while avoiding a second expensive run caused only by commit-history metadata.
 
 ## E2E model
 
@@ -174,6 +179,6 @@ Later upgrades use `update-engineering-standard`: read the version delta, classi
 
 ## Current version
 
-Reference baseline: **0.9.0**.
+Reference baseline: **0.9.1**.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the adopter-facing delta.

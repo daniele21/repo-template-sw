@@ -1,275 +1,141 @@
 # Validation Execution Capability Contract
 
-Version: 0.3.0
+Version: 0.3.1
 
-This contract defines **when validation runs, how much validation is justified, and who executes it** when a repository is maintained by humans and coding agents. It complements `STANDARD.md`, `OPERATING-CONTRACT.md` and `E2E-ENVIRONMENT-CONTRACT.md` without weakening final confidence.
+This contract defines **when validation runs, how much evidence is justified, who executes it, and when existing proof may be reused**. It complements `STANDARD.md`, `OPERATING-CONTRACT.md` and `E2E-ENVIRONMENT-CONTRACT.md` without weakening final confidence.
 
-The governing rules are:
+## Governing rules
 
 > Optimize for sufficient confidence per unit of feedback time, not maximum validation on every edit.
 
-> Delivery stage and validation depth are separate dimensions.
+> Delivery stage and validation depth are independent.
 
-> Automation should execute automatable work. A human must not become the fallback test runner merely because a coding agent lacks a local shell, checkout, SDK or build environment.
+> Select concrete risk gates first; `LEAN`, `SCOPED`, `STRONG`, `FULL` are shorthand, not monolithic suites.
 
-> Validation selects required risk gates first; `LEAN`, `SCOPED`, `STRONG` and `FULL` are useful shorthand, not a mandate to execute a monolithic suite.
+> Automation executes automatable work; lack of local tooling does not make the user the test runner.
 
 ## 1. Delivery stages
 
-Every meaningful change operates in one of three stages.
-
 ### `ITERATION`
 
-Use while implementing a coherent slice or subtask.
+Fast falsification while implementing a coherent slice. Prefer touched formatting/static checks, affected compile and focused unit/contract tests. Exact-head publication evidence, full-diff review, durable-doc freshness, remote preflight and E2E are not defaults. Draft collaboration may exist without being integration-ready.
 
-The goal is rapid falsification of the current edit:
-
-- run the cheapest formatter/static/compile/unit/contract gates that can catch the likely defect;
-- do not require exact-head publication evidence, a complete diff review, durable-documentation freshness or remote preflight merely because a branch exists;
-- do not run E2E unless the current hypothesis genuinely crosses a complete workflow boundary;
-- a draft/collaboration PR may exist without being represented as integration-ready.
-
-Repositories should target a short feedback loop; the template default target is approximately three minutes where the stack permits it. This is a budget signal, not a hard timeout.
+Template feedback target: about three minutes where practical.
 
 ### `INTEGRATION`
 
-Use when a vertical slice is ready to converge into the shared integration branch or be marked ready for review/merge.
+A coherent observable slice is ready to converge. Refresh base/head identity, review the complete diff, make affected durable docs current, resolve risk dimensions and required gates, execute/rout deterministic evidence, and run only affected critical journeys that lower-level tests cannot prove.
 
-The goal is to prove the **observable slice outcome** and the material dependency cone:
-
-- refresh intended base/head identity;
-- inspect the complete diff;
-- make affected durable documentation current;
-- select risk dimensions and required gates;
-- execute/rout required deterministic validation;
-- run the smallest affected critical E2E journey when lower-level evidence cannot prove the outcome;
-- require exact-head evidence for the integration candidate.
-
-The template default feedback target is approximately eight minutes where practical. Stronger or slower gates remain justified when the risk demands them.
+Exact-head evidence is required for the integration candidate. Template feedback target: about eight minutes where practical.
 
 ### `RELEASE`
 
-Use for promotion, release candidates, stable-branch publication or equivalent reference-grade checkpoints.
-
-The goal is full release confidence:
-
-- `FULL` validation is expected;
-- release-critical journeys and required artifact/package gates run;
-- exact-head/base identity and durable documentation are current;
-- residual real-environment evidence remains explicit;
-- release/package/signing/promotion semantics apply.
-
-`FULL` is therefore normal at release and exceptional during ordinary feature iteration.
+Promotion/reference-grade checkpoint. `FULL` validation is normal, release-critical package/E2E gates run, exact candidate identity and docs are current, and residual real-environment evidence stays explicit.
 
 ## 2. Execution classes
 
-Every required validation gate is assigned, for the current agent/session, to exactly one execution class.
+Every required gate is one of:
 
-### `AGENT_LOCAL`
+- `AGENT_LOCAL` — executable directly by the current coding agent;
+- `REMOTE_AUTOMATED` — deterministic/automatable but unavailable locally, so repository automation owns execution;
+- `REAL_ENVIRONMENT` — genuinely requires representative hardware, protected authority, external environment or human judgement automation cannot truthfully replace.
 
-The current coding agent can execute the gate directly in its supported working environment.
-
-Examples include formatter/static checks, focused unit tests, module compilation and repository verifier scripts.
-
-When an equivalent local environment exists, use it before remote confirmation because it provides faster feedback.
-
-### `REMOTE_AUTOMATED`
-
-The gate is deterministic and automatable, but the current agent lacks the required checkout, shell, SDK, toolchain, service or compute capability.
-
-Examples include Android Gradle/R8 validation from a connector-only session or platform-specific builds unavailable in the agent sandbox.
-
-These gates must be delegated to repository-owned automation, not to the user.
-
-### `REAL_ENVIRONMENT`
-
-The evidence genuinely depends on representative hardware, an external protected environment, privileged authority or human judgement that automation cannot truthfully replace.
-
-Examples include physical-device thermals, real hardware/driver behavior, representative usability evidence or owner-only signing approval.
-
-`REAL_ENVIRONMENT` must never become a bucket for ordinary deterministic work that is merely inconvenient for the current agent.
+Ordinary compile, lint, unit, R8, unsigned build and emulator work is `REMOTE_AUTOMATED`, not `REAL_ENVIRONMENT`, when a coding agent lacks the toolchain.
 
 ## 3. Risk dimensions and validation depth
 
-Execution location and validation depth are independent from delivery stage.
+Selectors resolve **risk dimensions -> required gates -> profile shorthand**. Typical risks include executable owner/module, public API/protocol, persistence/migration, privacy/security, runtime/resource/lifecycle, native/JNI, dependency/manifest/package/R8, UI/accessibility/adaptive behavior, critical journeys and validation/build machinery.
 
-The repository selector should first identify **risk dimensions** and **required gates**, then summarize the result with a validation profile.
+- `LEAN` — docs/governance/metadata or cheap universal guards.
+- `SCOPED` — contained owner/module plus direct consumers and focused checks.
+- `STRONG` — cross-boundary or release-sensitive behavior such as public contracts, persistence/security, native/JNI, packaging/R8/manifest/dependency or lifecycle ownership.
+- `FULL` — release/promotion, selector/global-build/toolchain changes, unknown executable scope or explicit full request.
 
-Typical risk dimensions include:
+Unknown executable scope fails safe stronger. Selector/global validation machinery changes force `FULL`. Stronger explicit validation is allowed; silent downgrade below `auto` is not.
 
-- executable owner/module;
-- public/shared API or protocol;
-- persistence/migration;
-- privacy/security/trust boundary;
-- runtime/resource/concurrency/lifecycle;
-- native/JNI/backend;
-- dependency/manifest/variant/package/R8;
-- UI semantics/accessibility/adaptive behavior;
-- complete critical journey;
-- CI selector/global build/toolchain machinery.
+## 4. No-human-runner principle
 
-The selector output should be closer to:
+When a deterministic gate is required but unavailable locally:
 
 ```text
-risks: ui_behavior, direct_consumer
-required gates: format, compile app, focused unit tests, lint app, consumer contract test
-profile: SCOPED
+resolve required gate
+-> classify REMOTE_AUTOMATED
+-> reuse valid evidence if equivalent
+-> otherwise trigger repository automation
+-> inspect/fix owning cause
+-> rerun only invalidated evidence
 ```
 
-than to:
+Do not ask the user to run the same automatable command merely because the agent lacks a shell/SDK.
 
-```text
-touched app -> run everything
-```
+## 5. Evidence identity and reuse
 
-### `LEAN`
+Before starting expensive automation, search for successful evidence that still proves the required claim.
 
-Use for docs/governance/metadata-only changes or cheap universal guards with no executable/product blast radius.
-
-### `SCOPED`
-
-Use for contained implementation changes: affected owner/module, direct consumers, focused tests, relevant lint/static analysis and compilation.
-
-### `STRONG`
-
-Use for cross-boundary or release-sensitive changes such as public/shared contracts, persistence/security, native/JNI, packaging/R8/manifest/dependency/variant behavior, lifecycle ownership or multi-owner integration.
-
-`STRONG` means all evidence required by the material risk cone, not every repository job.
-
-### `FULL`
-
-Use when narrowing cannot be trusted or release policy deliberately requires complete validation.
-
-Typical triggers are promotion/release, selector/global-build/dependency-inventory/toolchain changes, unknown executable paths or an explicit full request.
-
-`FULL` should be exceptional on ordinary feature integration and absent from the normal edit loop.
-
-## 4. Automatic gate selection
-
-The default selector is `auto`.
-
-It should:
-
-- compare the intended base/head;
-- identify changed owners and risk dimensions;
-- expand to direct consumers/dependency cones only where required;
-- map risks to concrete gates rather than only broad suites;
-- treat docs-only/metadata-only work cheaply when safe;
-- fail safe stronger for unknown executable paths;
-- force `FULL` when the narrowing machinery itself changes;
-- report risks, required gates, profile and reason.
-
-Automatic escalation is allowed when additional risk is detected. Silent downgrade below the project selector is not.
-
-An explicit stronger request is allowed. A weaker-than-auto override is exceptional and must be justified.
-
-## 5. No-human-runner principle
-
-An automatable deterministic gate MUST NOT be delegated to the user solely because the coding agent lacks local execution capability.
-
-Incorrect:
-
-```text
-agent has no Android SDK -> ask user to run ./gradlew check
-```
-
-Correct:
-
-```text
-agent has no Android SDK
--> identify required Android gates
--> classify them REMOTE_AUTOMATED
--> reuse equivalent successful evidence when valid, otherwise trigger repository automation
--> inspect result/logs
--> fix owning cause
--> repeat only the invalidated gates
-```
-
-A user may explicitly choose a manual workaround, but repository procedure must not make that the default path.
-
-## 6. Remote preflight and evidence reuse
-
-Repositories expected to be maintained by execution-limited agents should expose an agent-triggerable remote preflight mechanism.
-
-Before starting a new expensive run, preflight must look for successful existing evidence whose identity is equivalent for the required claim. Evidence identity normally includes:
+Normal integration evidence identity includes:
 
 - exact source head;
+- source Git tree when available;
 - intended target/base relationship;
 - required gates;
 - selected profile or stronger equivalent profile;
-- selected E2E environment/fidelity when relevant.
+- relevant E2E environment/fidelity/evidence mode.
 
-PR number or UI object identity is **not** sufficient reason to rerun unchanged source evidence. Recreating a PR, changing draft/ready state or moving collaboration metadata does not invalidate equivalent evidence by itself.
+PR number, labels, comments and draft/ready state are collaboration metadata, not proof identity.
 
-Reuse is forbidden when the head changed, the material base relationship changed, required gates broadened, the previous profile was insufficient, the relevant E2E environment changed or the prior evidence is otherwise stale/invalid.
+### Exact-head reuse
 
-The normal algorithm is:
+Use when head, material base, gates/profile and relevant E2E identity still match. Recreating a PR or changing collaboration metadata alone does not invalidate evidence.
 
-```text
-required gates resolved
--> find equivalent successful evidence
--> reuse what remains valid
--> execute only missing/stale/insufficient gates
--> report one combined readiness result
-```
+### Content-preserving post-merge reuse
 
-Remote automation must preserve exact-head pinning, least privilege, no production/signing/deployment secrets in change-branch execution, bounded artifacts and project-owned command parity.
+After a squash/rebase or other content-preserving integration transformation, a repository may reuse successful **integration** evidence even though the commit SHA changed, but only when:
 
-## 7. Readiness states
+1. the post-merge commit Git tree exactly matches the validated candidate tree;
+2. the push base exactly matches the target/base revision used by that validation;
+3. required gates/profile and relevant E2E identity are equal or weaker than the validated proof;
+4. the evidence was produced by trusted repository-owned automation and is current.
 
-Publication readiness applies from `INTEGRATION`, not to every private edit, temporary branch push or draft collaboration update.
+This proves content equivalence, not that the previous run executed on the new commit object. Report the reused source run/identity truthfully.
 
-`preflight-change` reports:
+If the base advanced before merge, the tree differs, gates broaden, evidence expired, or identity cannot be established, **do not reuse**. A direct integration-branch push without matching trusted evidence validates normally.
 
-- `READY_FOR_CI` — all required deterministic integration gates available agent-local passed; CI may confirm independently;
-- `READY_FOR_REMOTE_PREFLIGHT` — semantic/base/diff/docs checks and available local gates passed, but missing required gates are `REMOTE_AUTOMATED`;
-- `AUTOMATED_PREFLIGHT_CONFIRMED` — every required deterministic automated gate for the exact integration/release candidate is satisfied by valid current evidence, whether reused or newly executed;
-- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — ambiguity, stale base/diff/docs, failed gate, missing automation, unsafe selection or another blocker prevents truthful readiness.
+`RELEASE` remains exact-candidate/reference-grade unless the repository explicitly defines a stronger release-specific equivalence rule.
 
-Real-environment evidence is tracked separately and may remain pending after automated preflight. It still blocks any stronger claim that depends on it.
+## 6. Remote preflight
 
-## 8. Failure loop
+Repositories maintained by execution-limited agents should expose an agent-triggerable remote path. Resolve required gates, reuse valid evidence, then execute only missing/stale/insufficient gates. New runs remain exact-head pinned, least-privilege, secret-safe and bounded.
 
-For a failing deterministic gate:
+Readiness states:
+
+- `READY_FOR_CI` — required deterministic integration gates available locally passed;
+- `READY_FOR_REMOTE_PREFLIGHT` — semantic/base/diff/docs checks passed but remote deterministic gates remain;
+- `AUTOMATED_PREFLIGHT_CONFIRMED` — all required deterministic gates are satisfied by current valid evidence, reused or newly executed;
+- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — ambiguity, stale base/docs/diff, failed/missing evidence or unsafe scope prevents readiness.
+
+Real-environment evidence is tracked separately and still blocks claims that depend on it.
+
+## 7. Failure loop
 
 ```text
 failure
 -> inspect evidence
 -> classify cause
--> identify violated invariant + owner
+-> identify invariant + owner
 -> patch owning cause
 -> re-evaluate risks/gates
 -> invalidate only affected evidence
--> rerun/reuse as appropriate
+-> reuse/rerun what remains
 ```
 
-Do not rerun a full suite merely because one focused gate changed unless the repair broadened the risk cone.
+Do not weaken legitimate gates or repeatedly patch symptoms without a new falsifiable hypothesis.
 
-Do not suppress legitimate tests, downgrade selection to escape a failure or repeatedly patch symptoms without a new falsifiable hypothesis.
+## 8. Validation economics
 
-## 9. Validation economics
+Where practical observe duration, flake rate, unique regression signal and overlap. Move high-signal cheap checks earlier and expensive low-frequency checks to the checkpoint where they add value. Frequent `FULL` on contained work is selector/design feedback; repeated misses by narrow gates mean the mapping should strengthen.
 
-Validation is an engineering system with cost and signal.
+The goal is not fewer tests. It is **the cheapest feedback loop that preserves sufficient confidence at the current delivery stage**.
 
-Where practical, repositories should observe per-gate:
+## 9. Capability gaps
 
-- duration;
-- flake rate;
-- unique regression signal;
-- overlap/redundancy with other gates.
-
-Use those observations to move high-signal cheap gates earlier and expensive low-frequency gates toward integration/release checkpoints without deleting evidence that protects a real invariant.
-
-The target is not “fewer tests”. The target is:
-
-> the cheapest feedback loop that preserves sufficient confidence at the current delivery stage.
-
-If `FULL` runs frequently for contained changes, treat that as selector/design feedback. If a narrow gate repeatedly misses relevant defects, strengthen the risk-to-gate mapping.
-
-## 10. Capability and scope gaps are repository defects
-
-If a required deterministic gate is automatable but unavailable both locally and remotely, classify `AUTOMATION_CAPABILITY_GAP`.
-
-If the repository cannot reliably determine affected risks/gates, classify `VALIDATION_SCOPE_GAP` and fail safe stronger while improving the selector.
-
-The long-term fix is better automation and scope detection, not permanent human execution or full-CI-by-default.
+If required deterministic work is automatable but unavailable locally and remotely, report `AUTOMATION_CAPABILITY_GAP`. If affected risks/gates cannot be determined safely, report `VALIDATION_SCOPE_GAP` and fail safe stronger while improving the selector.

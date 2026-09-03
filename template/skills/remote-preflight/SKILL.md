@@ -1,6 +1,6 @@
 ---
 name: remote-preflight
-description: Satisfy integration/release deterministic gates through repository-owned remote automation when local execution is unavailable, reusing equivalent successful evidence first and executing only missing, stale or insufficient gates.
+description: Satisfy integration/release deterministic gates through repository-owned remote automation, reusing equivalent successful evidence before executing only missing, stale or insufficient gates.
 ---
 
 # Remote Preflight
@@ -13,121 +13,73 @@ The governing rules are:
 
 > Do not turn every integration slice into a full repository/release build.
 
-> Before triggering a new expensive run, reuse successful equivalent evidence when it still proves the required claim.
+> Reuse successful evidence when source identity, target relationship and required claim are still equivalent.
 
 ## 1. Confirm required gates
 
-Read `.engineering/commands.json` and record:
+Read `.engineering/commands.json` and record stage, exact head, intended target/base, source tree when available, risks, required gates, profile, applicable E2E environment/fidelity/evidence mode, remote trigger and security constraints.
 
-- stage: `INTEGRATION` or `RELEASE`;
-- exact head and intended target/base;
-- resolved risks, required gates and validation profile;
-- selected E2E journey/environment/fidelity/evidence mode when applicable;
-- remote trigger mechanism and security constraints.
-
-If required deterministic work has no usable automation path, report `AUTOMATION_CAPABILITY_GAP`.
-
-If the repository cannot safely narrow risk/gates, report `VALIDATION_SCOPE_GAP` and fail safe stronger while repairing the selector.
+If required deterministic work has no usable automation path, report `AUTOMATION_CAPABILITY_GAP`. If risk/gates cannot be narrowed safely, report `VALIDATION_SCOPE_GAP` and fail safe stronger while repairing the selector.
 
 ## 2. Search for reusable evidence
 
 Before dispatching anything, inspect successful validation already associated with the candidate.
 
-Evidence is reusable when it remains sufficient for:
+For an integration candidate before merge, evidence normally matches:
 
 - exact source head;
 - material target/base relationship;
-- required gate identity;
+- required gates;
 - selected profile or stronger equivalent profile;
 - selected E2E environment/fidelity/evidence mode where applicable.
 
-PR identity is not part of the proof by itself. A replacement PR using the same head/base/gates does not require an expensive rerun solely because its number changed.
+Collaboration metadata is not evidence identity. Recreating a PR, changing draft/ready state, labels or comments does not require a rerun when the source proof is unchanged.
 
-Draft/ready transitions, labels, comments and other collaboration metadata do not invalidate source evidence.
+### Content-preserving post-merge reuse
 
-Do not reuse evidence after a material head/base/dependency change or when the previous run did not include the currently required gates.
+A repository may also reuse successful integration evidence after a content-preserving merge transformation such as squash/rebase **only** when all of the following are true:
 
-Record every reused run/gate explicitly.
+- the validated integration candidate had successful current evidence;
+- the post-merge commit has the exact same Git source tree as the validated candidate;
+- the push base is the same target/base revision against which that candidate was validated;
+- required gates/profile and relevant E2E environment/evidence mode are equal or weaker than the validated proof;
+- the repository-owned workflow controls the evidence identity and artifact lookup.
+
+The post-merge commit SHA may differ because commit metadata/history changed; the source tree may not. Treat this as content-equivalent reuse, not as proof that the old run executed on the new commit object.
+
+Never apply tree-equivalent reuse to `RELEASE` unless the release policy explicitly allows it. Never apply it when the target/base moved, the Git tree differs, gates broadened, evidence expired, or validation identity cannot be proven.
+
+A direct push to an integration branch without matching trusted evidence must run the selected validation normally.
+
+Record reused evidence and its identity explicitly.
 
 ## 3. Resolve only missing work
 
-After evidence reuse, determine the remaining unsatisfied remote gates.
+If every required deterministic gate is satisfied by valid evidence, return `AUTOMATED_PREFLIGHT_CONFIRMED` without starting another expensive run. Otherwise trigger only the narrowest repository-owned automation needed for missing gates, defaulting to the project `auto` selector.
 
-If none remain, return `AUTOMATED_PREFLIGHT_CONFIRMED` without starting another execution workflow.
+Do not request `full` merely because it is simpler operationally.
 
-Otherwise trigger the narrowest repository-owned automation capable of satisfying the missing gates. Default to the project `auto` selector unless a stronger profile is required.
+## 4. Trigger new automation safely
 
-Do not request `full` merely because it is operationally simpler.
-
-## 4. Trigger exact-head automation
-
-For every new run:
-
-- pin the exact current head;
-- preserve intended base identity;
-- request only the necessary profile/gates;
-- correlate result identity with the candidate;
-- verify the reported selected risks/profile/gates match expectation.
-
-A remote execution backend may orchestrate environment setup and caching, but deterministic semantics must remain project-owned rather than duplicated in workflow YAML.
+For every new run, pin the exact current head, preserve target/base identity, request only necessary gates/profile, correlate the result with the candidate, and verify reported risks/profile/gates. Deterministic semantics remain project-owned rather than duplicated inconsistently in orchestration YAML.
 
 ## 5. Inspect results and evidence
 
-For each required gate record `PASS`, `FAIL`, `PENDING` or `N/A`.
-
-For E2E also record:
-
-- journey;
-- execution environment;
-- fidelity class;
-- selected UI evidence mode;
-- required evidence artifacts for that mode.
-
-`ASSERTIONS` does not require media merely because a UI process existed. `SCREENSHOTS` requires the selected checkpoints. `FULL_MEDIA` requires screenshots plus continuous journey video.
-
-Missing evidence required by the selected mode is `E2E_EVIDENCE_INCOMPLETE`.
+For each gate record `PASS`, `FAIL`, `PENDING` or `N/A`. For E2E also record journey, environment, fidelity, selected UI evidence mode and required artifacts. Missing artifacts required by the selected mode are `E2E_EVIDENCE_INCOMPLETE`.
 
 ## 6. Repair autonomously
 
-On failure:
+On failure: inspect the failing evidence; classify `CHANGE_REGRESSION`, `BASELINE_FAILURE`, `ENVIRONMENT`, `FLAKY`, `BASE_DRIFT` or `ASSUMPTION`; identify the owner; patch the owning cause; re-evaluate risks/gates/profile; invalidate only affected evidence; then reuse or rerun only what remains necessary.
 
-1. inspect the failing job/step/log;
-2. classify `CHANGE_REGRESSION`, `BASELINE_FAILURE`, `ENVIRONMENT`, `FLAKY`, `BASE_DRIFT` or `ASSUMPTION`;
-3. identify the violated invariant and owner;
-4. patch the owning cause when unambiguous;
-5. re-evaluate risks/gates/profile because the repair may change scope;
-6. invalidate only affected evidence;
-7. reuse still-valid evidence and rerun only what remains necessary.
+Do not ask the user to execute the same automatable test between repair attempts. Repeated failure after a repair requires a new falsifiable hypothesis.
 
-Do not ask the user to execute the same automatable test between repair attempts.
+## 7. Validation economics
 
-If the same gate fails after a repair, form a new falsifiable hypothesis before another patch.
+When an expensive gate runs frequently, assess whether it catches unique regressions at that stage, belongs earlier as a cheaper focused test, belongs later at integration/release, overlaps substantially with another gate, or is triggered by overly broad risk mapping. Improve placement/scope without deleting a real invariant.
 
-## 7. Validation economics feedback
+## 8. Security
 
-Remote latency is an engineering signal.
-
-When an expensive gate runs frequently, ask whether it:
-
-- catches unique regressions at that stage;
-- belongs earlier as a cheaper focused test;
-- belongs later at integration/release rather than iteration;
-- overlaps substantially with another gate;
-- is being triggered because the selector maps risk too broadly.
-
-Do not delete a real safety invariant for speed. Improve placement and scope.
-
-## 8. Security requirements
-
-Remote execution of change-branch code should use:
-
-- trusted requesters;
-- exact-head pinning;
-- same-repository heads by default;
-- no production/deployment/signing secrets in execution jobs;
-- read-only/no write credentials while change code executes;
-- separate reporting permission when needed;
-- bounded timeout and artifact retention.
+Remote execution of change-branch code should use trusted requesters, exact-head pinning for new runs, same-repository heads by default, no production/deployment/signing secrets, read-only execution credentials, separate reporting permission where needed, and bounded timeout/evidence retention.
 
 Evidence reuse must not weaken these trust boundaries.
 
@@ -138,12 +90,13 @@ Report:
 ```text
 STAGE: INTEGRATION|RELEASE
 HEAD: <revision>
+SOURCE_TREE: <tree|N/A>
 TARGET: <branch>@<revision>
 RISKS: <dimensions>
 VALIDATION_PROFILE: LEAN|SCOPED|STRONG|FULL
 REQUIRED_GATES: <list>
 REUSED_EVIDENCE:
-  <gate>: <run/ref>|N/A
+  <gate>: <run/ref/identity>|N/A
 NEW_REMOTE_GATES:
   <gate>: PASS|FAIL|PENDING|N/A
 E2E:
@@ -154,4 +107,4 @@ REAL_ENVIRONMENT:
 READINESS: AUTOMATED_PREFLIGHT_CONFIRMED|NOT_READY_FOR_AUTOMATED_PREFLIGHT
 ```
 
-`AUTOMATED_PREFLIGHT_CONFIRMED` requires every required deterministic automated gate to be satisfied by valid current evidence; it does not require rerunning evidence that is already equivalent and sufficient.
+`AUTOMATED_PREFLIGHT_CONFIRMED` requires every required deterministic automated gate to be satisfied by valid evidence; it never requires rerunning proof solely because collaboration metadata or a content-preserving integration commit changed commit identity.
