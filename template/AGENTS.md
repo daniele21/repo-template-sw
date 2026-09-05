@@ -9,7 +9,7 @@ Always read this guide. Then read only:
 1. the closest scoped `AGENTS.md`, if present;
 2. the canonical architecture/feature/workstream source required by the task;
 3. `.engineering/commands.json` for delivery stage, commands, execution capability and integration/release readiness;
-4. `.engineering/e2e.json` only for complete-workflow/environment/fidelity/UI-evidence questions;
+4. `.engineering/e2e.json` only for complete-workflow/environment/fidelity/stage/UI-evidence questions;
 5. `validate-change` while iterating, `preflight-change` at integration/release readiness, and `remote-preflight` only for required deterministic gates unavailable locally;
 6. when `product-ui` applies, the relevant design contracts and `design-product-experience`;
 7. owning implementation, direct consumers and nearby tests.
@@ -48,15 +48,17 @@ Default while implementation changes. Falsify the current edit quickly with the 
 
 ### `INTEGRATION`
 
-Use when a coherent vertical slice provides an observable user/system outcome and is ready to converge. Refresh base/head, inspect the complete diff, make affected durable docs current, select risk gates, execute/rout deterministic evidence and add the smallest necessary critical E2E.
+Use when a coherent vertical slice provides an observable user/system outcome and is ready to converge into the shared development/integration branch. Refresh base/head, inspect the complete diff, make affected durable docs current, select risk gates, execute/route deterministic evidence and prove affected complete workflows with the smallest sufficient automated critical E2E.
+
+Residual `REAL_ENVIRONMENT` requirements are declared as `DEFERRED_TO_RELEASE`; they do not normally block the branch/PR from entering the shared development branch once required automated evidence is complete.
 
 ### `RELEASE`
 
-Use for stable promotion/release/reference checkpoints. Expect `FULL` validation plus release-critical artifact/E2E and residual environment evidence.
+Use for stable promotion/release/reference checkpoints. Expect `FULL` validation plus release-critical artifact/E2E and every applicable blocking real-environment confirmation before `RELEASE_READY`.
 
 ## Project operating commands
 
-`.engineering/commands.json` owns commands/development-velocity/execution routing; `.engineering/e2e.json` owns E2E environment/evidence routing.
+`.engineering/commands.json` owns commands/development-velocity/execution routing; `.engineering/e2e.json` owns E2E environment/stage/evidence routing.
 
 - `check` — broad cheap validation;
 - `test` — unit/integration/contract behavior;
@@ -82,17 +84,21 @@ Escalate because the changed invariant requires stronger evidence, not because a
 
 Route deterministic gates unavailable locally to repository automation; do not make the user the runner. At integration/release, reuse successful evidence matching exact head, material target/base relationship, required gates/profile and relevant E2E environment/evidence mode. PR recreation or draft/ready metadata alone does not invalidate equivalent evidence.
 
+At `INTEGRATION`, every affected automatable gate must pass. Keep real-environment requirements visible but defer them to release. At `RELEASE`, applicable required real-environment gates are blocking.
+
 ## E2E routing
 
-Executor and environment fidelity are independent. Use the cheapest automated E2E environment that proves the claim and escalate only for a material missing target dimension.
+Executor and environment fidelity are independent. At integration, use the cheapest automated E2E environment that proves the complete changed outcome and carry only residual target-specific gaps to release.
 
-For UI journeys select evidence from the claim:
+For UI journeys select evidence from the claim and stage:
 
 - `ASSERTIONS` — UI incidental to deterministic system behavior;
-- `SCREENSHOTS` — stable visible layout/hierarchy/copy/state/recovery/adaptive semantics changed;
-- `FULL_MEDIA` — motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release acceptance needs observation over time.
+- `SCREENSHOTS` — bounded stable visible layout/hierarchy/copy/state/recovery/adaptive semantics need inspection;
+- `FULL_MEDIA` — screenshots plus continuous journey video when UI/UX is materially part of the integration outcome, or when motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release acceptance needs observation over time.
 
-UI presence alone does not force video. Missing evidence required by the selected mode means `E2E_EVIDENCE_INCOMPLETE`. Final target testing primarily confirms residual fidelity gaps.
+A material UI/UX critical journey entering the shared development branch uses `FULL_MEDIA` by default. UI presence alone does not force video when the UI is merely an incidental harness for a non-visual invariant. Missing evidence required by the selected mode means `E2E_EVIDENCE_INCOMPLETE`.
+
+Final target testing primarily confirms residual fidelity gaps at release.
 
 ## Product experience routing
 
@@ -109,9 +115,10 @@ Structural UX uses the full sequence; interaction changes start from the owning 
 5. Use `structured-change` for meaningful behavior and `validate-change` during `ITERATION`; diagnose the owning invariant before patching failures.
 6. Move to `INTEGRATION` when the slice has an observable outcome.
 7. At integration update affected durable docs, refresh base/head, review the complete diff and select required risk gates.
-8. Use proportional E2E only when lower-level evidence cannot prove the complete outcome.
+8. Prove affected complete journeys automatically; use `FULL_MEDIA` for material UI/UX journeys and record residual real-environment gaps as deferred.
 9. Use `preflight-change`, reuse equivalent successful evidence, then route only missing remote gates through `remote-preflight`.
-10. Finalize/delete completed workstreams after durable truth transfers.
+10. At release close required real-environment gaps before `RELEASE_READY`.
+11. Finalize/delete completed workstreams after durable truth transfers.
 
 ## Documentation lifecycle
 
@@ -126,10 +133,11 @@ Run repository health checks including:
 ```bash
 python3 scripts/verify_operations.py
 python3 scripts/verify_e2e.py
+python3 scripts/verify_stage_environment_policy.py
 python3 scripts/verify_product_experience.py
 ```
 
-Report executor class plus E2E environment/fidelity/evidence mode. Where practical, review gate duration, flake rate, unique regression signal and overlap; move cheap high-signal gates earlier and expensive low-frequency gates toward integration/release without deleting real safety invariants.
+Report executor class plus E2E environment/fidelity/evidence mode and stage placement. Where practical, review gate duration, flake rate, unique regression signal and overlap; move cheap high-signal gates earlier, affected automated E2E to integration and expensive real-environment confirmation to release without deleting real safety invariants.
 
 ## Agent context discipline
 
@@ -137,4 +145,4 @@ Prefer scoped search/targeted reads. Do not read generated outputs, dependencies
 
 ## Stop conditions
 
-Surface conflicts instead of improvising when a request would violate a durable invariant/ADR, leave material ambiguity unresolved, expose secrets/private state, create a second source of truth, bypass required migration/security/resource review, delegate automatable validation to the user, publish an integration/release candidate with stale affected docs, overclaim E2E/environment evidence, or suppress a legitimate gate merely for speed.
+Surface conflicts instead of improvising when a request would violate a durable invariant/ADR, leave material ambiguity unresolved, expose secrets/private state, create a second source of truth, bypass required migration/security/resource review, delegate automatable validation to the user, publish an integration/release candidate with stale affected docs, overclaim E2E/environment evidence, treat deferred real-environment evidence as already passed, or suppress a legitimate gate merely for speed.
