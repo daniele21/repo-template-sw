@@ -6,12 +6,12 @@ This repository owns the reusable engineering baseline distributed to other proj
 
 - `STANDARD.md` owns universal engineering invariants and maturity levels.
 - `OPERATING-CONTRACT.md` owns universal setup/dev/test/E2E/build/smoke/package/artifact/runtime/cleanup semantics.
-- `E2E-ENVIRONMENT-CONTRACT.md` owns universal E2E target-environment/fidelity semantics plus risk-based UI evidence modes.
+- `E2E-ENVIRONMENT-CONTRACT.md` owns universal E2E target-environment/fidelity semantics, delivery-stage environment policy and UI evidence modes.
 - `EXECUTION-CAPABILITY-CONTRACT.md` owns delivery stages, risk-based validation depth, executor classification, remote-preflight/evidence-reuse and no-human-runner semantics.
 - `PRODUCT-EXPERIENCE-CONTRACT.md` owns universal UX/UI semantics for repositories that opt into `product-ui`.
 - `template/` owns files copied/specialized into projects.
 - `template/.engineering/commands.json` owns the machine-readable adopter operating, development-velocity and execution-routing shape/defaults.
-- `template/.engineering/e2e.json` owns machine-readable adopter E2E target environments, execution environments, fidelity gaps, critical journeys and UI evidence policy.
+- `template/.engineering/e2e.json` owns machine-readable adopter E2E target environments, execution environments, stage policy, fidelity gaps, critical journeys and UI evidence policy.
 - `template/design/` owns opt-in adopter UX/brand contract templates.
 - `template/skills/` owns project-local recurring workflows, including validation/preflight/remote-preflight/workstream planning.
 - `profiles/` owns optional stack/domain/product-surface additions and native mappings.
@@ -27,14 +27,16 @@ Do not load every profile or Skill when changing one concern.
 - Common command names define semantics, not a universal build tool; do not force wrappers merely for uniformity.
 - Delivery stage (`ITERATION`, `INTEGRATION`, `RELEASE`) and validation depth (`LEAN`, `SCOPED`, `STRONG`, `FULL`) are independent dimensions.
 - Ordinary implementation optimizes for sufficient confidence per feedback time; exact-head/full-diff/docs/preflight ceremony begins at integration readiness, not every private edit or draft update.
+- `INTEGRATION` must satisfy affected automatable gates and critical E2E before the coherent outcome enters the shared development/integration branch; residual `REAL_ENVIRONMENT` requirements are declared and `DEFERRED_TO_RELEASE`, not normal integration blockers.
+- `RELEASE` requires `FULL` release-grade evidence and every applicable blocking `REAL_ENVIRONMENT` confirmation before `RELEASE_READY`.
 - Validation selectors identify risk dimensions and required gates before summarizing them as a profile; profiles must not become monolithic suite aliases.
 - Required validation strength is independent from the current coding agent's execution environment.
 - An automatable deterministic gate must not become a user task solely because the current agent lacks a shell, checkout, SDK or platform toolchain.
 - Equivalent successful evidence should be reused instead of rerun: exact-head/base/gates for integration candidates, and post-merge tree-equivalent reuse only when the Git tree and target/base relationship are provably unchanged.
 - When an equivalent local environment exists, local execution should precede CI confirmation; when it does not, repository-owned remote automation is a valid execution backend.
 - E2E execution capability and environment fidelity are independent; emulator/simulator evidence must not be promoted into physical/target-environment evidence.
-- UI E2E evidence is risk-based: `ASSERTIONS`, `SCREENSHOTS`, or `FULL_MEDIA`. UI presence alone does not force video. Missing artifacts required by the selected mode make evidence incomplete.
-- `FULL_MEDIA` is required when the claim materially depends on motion/timing/progression/navigation/transition sequence/lifecycle visibility/gesture continuity or release-grade journey acceptance.
+- UI E2E evidence is risk-based: `ASSERTIONS`, `SCREENSHOTS`, or `FULL_MEDIA`. A material UI/UX critical journey entering the shared integration branch uses `FULL_MEDIA` by default; UI that is merely an incidental harness for a non-visual invariant may remain assertion-only.
+- Missing artifacts required by the selected UI evidence mode make evidence incomplete; the mode must not be downgraded after execution to obtain green status.
 - Remote execution of change-branch code must preserve least privilege and must not gain production/signing/deployment secrets merely for convenience.
 - Product-experience semantics define clarity/accessibility/recoverability, not one visual style or component framework.
 - `product-ui` is opt-in and only appropriate for repositories with a material user-facing interface.
@@ -68,6 +70,7 @@ Do not load every profile or Skill when changing one concern.
 python3 template/scripts/verify_repository.py --root template --template-mode
 python3 template/scripts/verify_operations.py --root template --template-mode
 python3 template/scripts/verify_e2e.py --root template --template-mode
+python3 template/scripts/verify_stage_environment_policy.py --root template --template-mode
 python3 template/scripts/verify_product_experience.py --root template --template-mode
 python3 template/scripts/verify_docs.py --root template --template-mode
 python3 template/scripts/verify_agent_context.py --root template --template-mode
