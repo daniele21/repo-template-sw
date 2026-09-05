@@ -1,6 +1,6 @@
 # Validation Execution Capability Contract
 
-Version: 0.3.1
+Version: 0.3.2
 
 This contract defines **when validation runs, how much evidence is justified, who executes it, and when existing proof may be reused**. It complements `STANDARD.md`, `OPERATING-CONTRACT.md` and `E2E-ENVIRONMENT-CONTRACT.md` without weakening final confidence.
 
@@ -14,6 +14,8 @@ This contract defines **when validation runs, how much evidence is justified, wh
 
 > Automation executes automatable work; lack of local tooling does not make the user the test runner.
 
+> Integration proves the coherent outcome automatically; required real-environment confirmation is a release acceptance gate.
+
 ## 1. Delivery stages
 
 ### `ITERATION`
@@ -24,13 +26,15 @@ Template feedback target: about three minutes where practical.
 
 ### `INTEGRATION`
 
-A coherent observable slice is ready to converge. Refresh base/head identity, review the complete diff, make affected durable docs current, resolve risk dimensions and required gates, execute/rout deterministic evidence, and run only affected critical journeys that lower-level tests cannot prove.
+A coherent observable slice is ready to converge into the shared development/integration branch. Refresh base/head identity, review the complete diff, make affected durable docs current, resolve risk dimensions and required gates, execute/route deterministic evidence, and run affected critical journeys automatically when lower-level tests cannot prove the outcome.
 
-Exact-head evidence is required for the integration candidate. Template feedback target: about eight minutes where practical.
+Exact-head automated evidence is required for the integration candidate. Residual `REAL_ENVIRONMENT` requirements are classified and reported but do not normally block integration into the shared development branch.
+
+Template feedback target: about eight minutes where practical.
 
 ### `RELEASE`
 
-Promotion/reference-grade checkpoint. `FULL` validation is normal, release-critical package/E2E gates run, exact candidate identity and docs are current, and residual real-environment evidence stays explicit.
+Promotion/reference-grade checkpoint. `FULL` validation is normal, release-critical package/E2E gates run, exact candidate identity and docs are current, and every required real-environment gate must pass before `RELEASE_READY`.
 
 ## 2. Execution classes
 
@@ -40,7 +44,9 @@ Every required gate is one of:
 - `REMOTE_AUTOMATED` — deterministic/automatable but unavailable locally, so repository automation owns execution;
 - `REAL_ENVIRONMENT` — genuinely requires representative hardware, protected authority, external environment or human judgement automation cannot truthfully replace.
 
-Ordinary compile, lint, unit, R8, unsigned build and emulator work is `REMOTE_AUTOMATED`, not `REAL_ENVIRONMENT`, when a coding agent lacks the toolchain.
+Ordinary compile, lint, unit, R8, unsigned build, package and emulator work is `REMOTE_AUTOMATED`, not `REAL_ENVIRONMENT`, when a coding agent lacks the toolchain.
+
+Execution class does not by itself decide delivery-stage placement. `REAL_ENVIRONMENT` evidence belongs to `RELEASE` by default; an earlier physical/manual run may still be useful for diagnosis of an explicitly environment-specific defect without becoming an integration blocker.
 
 ## 3. Risk dimensions and validation depth
 
@@ -67,6 +73,8 @@ resolve required gate
 ```
 
 Do not ask the user to run the same automatable command merely because the agent lacks a shell/SDK.
+
+`REAL_ENVIRONMENT` is not a loophole for missing automation. Use it only for a claim automation cannot truthfully reproduce.
 
 ## 5. Evidence identity and reuse
 
@@ -110,10 +118,9 @@ Readiness states:
 
 - `READY_FOR_CI` — required deterministic integration gates available locally passed;
 - `READY_FOR_REMOTE_PREFLIGHT` — semantic/base/diff/docs checks passed but remote deterministic gates remain;
-- `AUTOMATED_PREFLIGHT_CONFIRMED` — all required deterministic gates are satisfied by current valid evidence, reused or newly executed;
-- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — ambiguity, stale base/docs/diff, failed/missing evidence or unsafe scope prevents readiness.
-
-Real-environment evidence is tracked separately and still blocks claims that depend on it.
+- `AUTOMATED_PREFLIGHT_CONFIRMED` — all required automated integration gates, including affected automated E2E, are satisfied by current valid evidence, reused or newly executed; residual real-environment evidence may remain deferred to release;
+- `RELEASE_READY` — release-grade automated evidence and every applicable blocking real-environment gate pass;
+- `NOT_READY_FOR_AUTOMATED_PREFLIGHT` — ambiguity, stale base/docs/diff, failed/missing automated evidence or unsafe scope prevents readiness.
 
 ## 7. Failure loop
 
@@ -130,12 +137,18 @@ failure
 
 Do not weaken legitimate gates or repeatedly patch symptoms without a new falsifiable hypothesis.
 
+A physical/target-environment failure found before release may legitimately feed back into development. The repair is still re-proven automatically before reintegration; the physical confirmation remains a release acceptance concern.
+
 ## 8. Validation economics
 
 Where practical observe duration, flake rate, unique regression signal and overlap. Move high-signal cheap checks earlier and expensive low-frequency checks to the checkpoint where they add value. Frequent `FULL` on contained work is selector/design feedback; repeated misses by narrow gates mean the mapping should strengthen.
+
+Real-environment testing is intentionally concentrated at release when it protects a residual fidelity claim instead of being repeated for every branch/PR integration.
 
 The goal is not fewer tests. It is **the cheapest feedback loop that preserves sufficient confidence at the current delivery stage**.
 
 ## 9. Capability gaps
 
 If required deterministic work is automatable but unavailable locally and remotely, report `AUTOMATION_CAPABILITY_GAP`. If affected risks/gates cannot be determined safely, report `VALIDATION_SCOPE_GAP` and fail safe stronger while improving the selector.
+
+If a release claim genuinely requires real-environment evidence that cannot currently be obtained, report the release as blocked rather than weakening or reclassifying the requirement.
