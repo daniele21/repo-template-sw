@@ -58,7 +58,7 @@ Those gates remain available; they move to the stage where their signal justifie
 
 ### `INTEGRATION`
 
-When a coherent vertical slice is ready to converge, add gates based on actual Android risks.
+When a coherent vertical slice is ready to converge into the shared development/integration branch, add gates based on actual Android risks and prove affected complete journeys automatically.
 
 Examples:
 
@@ -72,6 +72,12 @@ Examples:
 | native/JNI/ABI | native host/package/ABI gates required by changed boundary |
 | complete navigation/user journey | smallest relevant instrumentation/E2E journey |
 
+For every affected critical journey, prefer the cheapest sufficient automated Android environment, normally emulator/instrumentation or a built APK installed on an emulator.
+
+When UI/UX is materially part of the observable journey, integration evidence is `FULL_MEDIA`: bounded screenshot checkpoints plus one continuous screen recording from meaningful start through success or terminal failure. If an Activity/Compose surface is only an incidental harness for a non-visual system invariant, assertions may remain sufficient.
+
+A required physical/OEM/target-environment confirmation does **not** block ordinary branch/PR integration into the shared development branch. Record the residual device gap and defer that confirmation to `RELEASE`.
+
 Do not map every “Local AI”, lifecycle or UI change to `STRONG` merely because the feature area is important. Map concrete risk dimensions to gates.
 
 ### `RELEASE`
@@ -83,9 +89,9 @@ Use release/reference-grade confidence:
 - release-critical instrumentation/E2E;
 - consumer/Binder compatibility where product-critical;
 - artifact identity/package/install checks;
-- residual representative physical/OEM evidence where required.
+- every required representative physical/OEM/target-environment confirmation.
 
-`FULL` is expected here and exceptional during ordinary feature iteration.
+`FULL` is expected here and exceptional during ordinary feature iteration. Required real-device evidence is blocking here, not during normal integration into the development branch.
 
 ## Android validation routing
 
@@ -112,7 +118,7 @@ host/JVM or fake-backed workflow
 -> emulator/instrumentation workflow
 -> built APK installed on emulator
 -> automated representative physical device/device farm when justified
--> residual target/OEM physical-device confirmation
+-> residual target/OEM physical-device confirmation at release
 ```
 
 Not every project/change needs every rung.
@@ -130,7 +136,7 @@ Prefer lower-level deterministic tests for logic that does not require a complet
 
 ## Android UI E2E evidence modes
 
-A journey touching an Activity/Compose surface does not automatically require video.
+A journey touching an Activity/Compose surface does not automatically require video when the UI is only incidental. Material UI/UX integration journeys do.
 
 ### `ASSERTIONS`
 
@@ -143,7 +149,7 @@ Use when UI is incidental to a non-visual claim, for example:
 
 ### `SCREENSHOTS`
 
-Use when the changed claim is a stable visible state:
+Use for bounded stable-state inspection where the configured journey is not itself a material UI/UX integration outcome:
 
 - hierarchy/layout;
 - copy/content;
@@ -156,8 +162,9 @@ Use native/established screenshot capture and keep checkpoints bounded.
 
 ### `FULL_MEDIA`
 
-Use when correctness depends on observing time/sequence:
+Use for a material UI/UX integration outcome and whenever correctness depends on observing time/sequence:
 
+- end-to-end user navigation being integrated into the shared development branch;
 - animation/motion;
 - transition/navigation sequencing;
 - loading/progress timing;
@@ -173,6 +180,8 @@ Missing media required by the **selected evidence mode** is `E2E_EVIDENCE_INCOMP
 
 ## Physical-device evidence
 
+Physical/OEM evidence is a **release acceptance layer** by default. It should not sit in the normal branch/PR -> development integration loop.
+
 The final physical/OEM run should primarily validate residual device-specific gaps such as:
 
 - ABI/native backend behavior;
@@ -183,6 +192,8 @@ The final physical/OEM run should primarily validate residual device-specific ga
 - TalkBack/usability evidence requiring a representative environment.
 
 Broken navigation, persistence, Binder/IPC wiring, install/launch, request/response flow or ordinary restart/recovery defects should move into earlier deterministic/emulator evidence whenever practical.
+
+A developer may still run a physical device earlier for diagnosis of an explicitly hardware-specific problem. That diagnostic run does not turn real-device testing into a standard integration blocker.
 
 ## Build/resource lifecycle
 
@@ -199,6 +210,6 @@ Where practical track expensive gates such as AndroidTest assembly, emulator boo
 - unique regressions caught;
 - overlap with cheaper gates.
 
-Use the result to place high-signal cheap checks in `ITERATION`, affected integration gates in `INTEGRATION`, and release-grade breadth in `RELEASE`.
+Use the result to place high-signal cheap checks in `ITERATION`, affected automated integration gates in `INTEGRATION`, and real-device/release-grade breadth in `RELEASE`.
 
 The objective is not fewer Android tests. It is faster evidence at the stage where each test provides the most value.
