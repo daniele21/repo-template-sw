@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.2.0",
+  "contract_version": "0.2.1",
   "applicability": {
     "status": "recommended",
     "reason": "<REPLACE_WITH_WHY_E2E_IS_REQUIRED_RECOMMENDED_OR_NA>"
