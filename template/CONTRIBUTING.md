@@ -20,17 +20,19 @@ Use the cheapest checks that can falsify the current edit. Exact-head readiness,
 
 ### INTEGRATION
 
-When a coherent slice provides an observable outcome, refresh head/base, inspect the complete diff, make affected durable docs current, select risk gates and prove the required integration outcome.
+When a coherent slice provides an observable outcome, refresh head/base, inspect the complete diff, make affected durable docs current, select risk gates and prove affected complete workflows with automated evidence before the slice enters the shared development/integration branch.
+
+Residual `REAL_ENVIRONMENT` requirements are declared but do not normally block integration; carry them as `DEFERRED_TO_RELEASE`.
 
 ### RELEASE
 
-Use full release/reference-grade validation and release-critical E2E/artifact/environment evidence.
+Use full release/reference-grade validation, release-critical E2E/artifact evidence and every applicable blocking real-environment confirmation before `RELEASE_READY`.
 
 ## Canonical project commands
 
 `.engineering/commands.json` is the canonical repository-level mapping for `setup`, `doctor`, `dev`, `check`, `test`, `e2e`, `build`, `smoke`, `package`, `stop` and `clean`, plus development-velocity, publication and execution routing.
 
-`.engineering/e2e.json` is the canonical E2E environment/fidelity/evidence mapping.
+`.engineering/e2e.json` is the canonical E2E environment/fidelity/stage/evidence mapping.
 
 Use project-native tooling behind those intents. Do not introduce a second undocumented build/test/E2E/run path merely for convenience.
 
@@ -54,7 +56,7 @@ changed outcome
 -> AGENT_LOCAL | REMOTE_AUTOMATED | REAL_ENVIRONMENT executor
 ```
 
-Run the narrowest useful checks while iterating, then required integration/repository gates for the actual risk cone. Do not suppress failing tests or weaken a gate merely to make a change green.
+Run the narrowest useful checks while iterating, then all required automated integration/repository gates for the actual risk cone. Do not suppress failing tests or weaken a gate merely to make a change green.
 
 When a gate fails, classify it before changing production code: current-change regression, baseline failure, environment/toolchain issue, flaky behavior, stale-base effect or incorrect assumption/contract. Fix the owning invariant rather than applying unexplained symptom patches.
 
@@ -64,16 +66,19 @@ Run repository health checks before publishing engineering-governance changes:
 python3 scripts/verify_repository.py
 python3 scripts/verify_operations.py
 python3 scripts/verify_e2e.py
+python3 scripts/verify_stage_environment_policy.py
 python3 scripts/verify_product_experience.py
 python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-For required integration/release gates:
+For required gates:
 
 - run `AGENT_LOCAL` work directly;
 - use repository automation for deterministic `REMOTE_AUTOMATED` work;
-- reserve `REAL_ENVIRONMENT` for genuinely representative hardware/external authority/manual judgement.
+- reserve `REAL_ENVIRONMENT` for genuinely representative hardware/external authority/manual judgement;
+- at `INTEGRATION`, report required real-environment evidence as deferred rather than making it the recurring PR test loop;
+- at `RELEASE`, require applicable blocking real-environment evidence to pass.
 
 Do not ask the user to run an automatable deterministic command merely because the current agent lacks tooling.
 
@@ -89,15 +94,15 @@ Rerun only missing, stale or insufficient gates.
 
 Use E2E only when a complete critical outcome needs to be proven across assembled boundaries and lower-level tests are insufficient. `smoke` is not a substitute for E2E.
 
-Select the affected critical journey plus the cheapest environment whose fidelity is sufficient for the claim. Escalate only when a material target dimension requires it.
+At integration, select the affected critical journey plus the cheapest automated environment whose fidelity is sufficient for the complete changed outcome. Carry only residual physical/target-specific gaps to release.
 
-For UI journeys select evidence mode based on the changed claim:
+For UI journeys select evidence mode based on the changed claim and stage:
 
 - `ASSERTIONS` — UI is incidental to deterministic system behavior;
-- `SCREENSHOTS` — stable visible layout/hierarchy/copy/state/recovery/adaptive semantics changed;
-- `FULL_MEDIA` — motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release/product acceptance depends on observing the journey over time.
+- `SCREENSHOTS` — bounded stable visible layout/hierarchy/copy/state/recovery/adaptive semantics need inspection;
+- `FULL_MEDIA` — screenshots plus continuous video when UI/UX is materially part of the integration outcome, or when motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release/product acceptance depends on observing the journey over time.
 
-UI presence alone does not force video. Missing evidence required by the **selected mode** is `E2E_EVIDENCE_INCOMPLETE`.
+A material UI/UX critical journey entering the shared development branch uses `FULL_MEDIA` by default. UI presence alone does not force video when the UI is merely an incidental harness for a non-visual invariant. Missing evidence required by the **selected mode** is `E2E_EVIDENCE_INCOMPLETE`.
 
 Keep E2E evidence identity-bearing, privacy-safe and bounded. Clean project-owned servers/listeners, browser/device sessions, test data and temporary state after success/failure/cancellation.
 
@@ -115,12 +120,16 @@ Preflight must:
 - review the complete diff;
 - verify affected durable documentation is current;
 - select risks/gates/profile;
+- select affected automated E2E and UI evidence mode;
 - reuse equivalent successful evidence;
-- execute/rout only unsatisfied deterministic gates.
+- execute/route only unsatisfied deterministic/automated gates;
+- classify residual real-environment gaps separately.
 
-`AUTOMATED_PREFLIGHT_CONFIRMED` means every deterministic automated gate required by the exact candidate is satisfied by valid current evidence. Real-environment evidence may remain explicitly pending and still block stronger claims that depend on it.
+`AUTOMATED_PREFLIGHT_CONFIRMED` means every automated gate required by the exact integration candidate is satisfied by valid current evidence. Real-environment evidence may remain explicitly `DEFERRED_TO_RELEASE`.
 
-Final target-environment testing should primarily close declared residual fidelity gaps. If it repeatedly discovers ordinary workflow failures reproducible earlier, move that evidence earlier.
+`RELEASE_READY` additionally requires every applicable blocking real-environment confirmation to pass.
+
+Final target-environment testing should primarily close declared residual fidelity gaps. If it repeatedly discovers ordinary workflow failures reproducible earlier, move that evidence into automated integration E2E.
 
 ## Dependencies and architecture
 
@@ -128,7 +137,7 @@ Avoid dynamic versions and speculative dependencies. New abstractions/dependenci
 
 ## Pull requests
 
-Keep integration PRs focused on an observable outcome. Describe scope/risks, required gates, reused/new evidence, E2E only when applicable, affected durable documentation and remaining residual gaps.
+Keep integration PRs focused on an observable outcome. Describe scope/risks, required gates, reused/new evidence, affected automated E2E, UI screenshots/video when required, affected durable documentation and remaining residual release gaps.
 
 Use the release PR template for `RELEASE` checkpoints instead of turning every ordinary PR into a release dossier.
 
