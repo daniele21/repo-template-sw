@@ -23,6 +23,7 @@ REAL_CONFIRMATION = {"required", "conditional", "not_required"}
 UI_EVIDENCE_MODES = ["assertions", "screenshots", "full_media"]
 UI_EVIDENCE_MODE_SET = set(UI_EVIDENCE_MODES)
 REQUIRED_FULL_MEDIA_TRIGGERS = {
+    "material_ui_integration_outcome",
     "motion_or_animation",
     "timing_or_progression",
     "navigation_or_transition_sequence",
@@ -143,8 +144,8 @@ def main() -> int:
 
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
-    if data.get("contract_version") != "0.2.0":
-        errors.append("contract_version must be 0.2.0")
+    if data.get("contract_version") != "0.2.1":
+        errors.append("contract_version must be 0.2.1")
 
     applicability = data.get("applicability")
     if not isinstance(applicability, dict):
@@ -181,6 +182,36 @@ def main() -> int:
     for key in REQUIRED_PRINCIPLES:
         if principles.get(key) is not True:
             errors.append(f"principles.{key} must be true")
+
+    stage_policy = data.get("stage_policy")
+    if not isinstance(stage_policy, dict):
+        errors.append("stage_policy must be an object")
+        stage_policy = {}
+    integration_policy = stage_policy.get("integration")
+    if not isinstance(integration_policy, dict):
+        errors.append("stage_policy.integration must be an object")
+        integration_policy = {}
+    if integration_policy.get("automated_e2e_before_shared_integration") is not True:
+        errors.append("stage_policy.integration.automated_e2e_before_shared_integration must be true")
+    if integration_policy.get("real_environment_blocking") is not False:
+        errors.append("stage_policy.integration.real_environment_blocking must be false")
+    if integration_policy.get("real_environment_deferred_to_release") is not True:
+        errors.append("stage_policy.integration.real_environment_deferred_to_release must be true")
+    if integration_policy.get("material_ui_journey_minimum_evidence_mode") != "full_media":
+        errors.append("stage_policy.integration.material_ui_journey_minimum_evidence_mode must be full_media")
+    if integration_policy.get("incidental_ui_may_use_assertions") is not True:
+        errors.append("stage_policy.integration.incidental_ui_may_use_assertions must be true")
+
+    release_policy = stage_policy.get("release")
+    if not isinstance(release_policy, dict):
+        errors.append("stage_policy.release must be an object")
+        release_policy = {}
+    if release_policy.get("full_validation_required") is not True:
+        errors.append("stage_policy.release.full_validation_required must be true")
+    if release_policy.get("release_critical_e2e_required") is not True:
+        errors.append("stage_policy.release.release_critical_e2e_required must be true")
+    if release_policy.get("required_real_environment_blocking") is not True:
+        errors.append("stage_policy.release.required_real_environment_blocking must be true")
 
     ui_evidence = data.get("ui_evidence")
     if not isinstance(ui_evidence, dict):
