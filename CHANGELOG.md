@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 0.9.2 — 2026-09-05
+
+Makes the boundary between development integration and release acceptance explicit so real-environment testing no longer sits in every feature PR loop:
+
+- defines `INTEGRATION` as automated confidence for a coherent vertical outcome entering the shared development/integration branch;
+- requires affected critical E2E journeys to be proven automatically before integration when lower-level tests cannot establish the complete outcome;
+- makes residual `REAL_ENVIRONMENT` requirements non-blocking at `INTEGRATION` and carries them explicitly to `RELEASE`;
+- makes every required residual real-environment confirmation blocking for final stable/release readiness;
+- strengthens material UI/UX integration journeys to `FULL_MEDIA` evidence by default: bounded screenshot checkpoints plus a continuous journey video, while preserving `ASSERTIONS` when UI is only an incidental harness for a non-visual system invariant;
+- adds machine-readable integration/release stage policy to `.engineering/commands.json` and `.engineering/e2e.json`;
+- adds `verify_stage_environment_policy.py` and wires it into both the reference template CI and adopted repository-health workflow;
+- updates `preflight-change` readiness semantics so `AUTOMATED_PREFLIGHT_CONFIRMED` can integrate with real-environment evidence explicitly `DEFERRED_TO_RELEASE`, while `RELEASE_READY` additionally requires applicable real-environment gates to pass;
+- updates the Android profile so emulator/instrumentation/built-APK E2E plus UI screenshots/video establish development-branch confidence, while physical/OEM/device-specific evidence becomes release acceptance by default;
+- keeps early physical-device runs valid for diagnosis of explicitly hardware-specific defects without turning them into a standard branch/PR integration blocker;
+- bumps the reference baseline and `preflight-change` source version to **0.9.2**.
+
+The 0.9.2 rule is: **prove the feature automatically before dev; prove the residual target-environment delta before main/release.**
+
 ## 0.9.1 — 2026-09-03
 
 Closes the remaining duplicate-validation gap after a green integration PR is merged with a content-preserving commit transformation:

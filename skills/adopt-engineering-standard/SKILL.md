@@ -1,6 +1,6 @@
 ---
 name: adopt-engineering-standard
-description: Align a new or existing repository with repo-template-sw 0.9.0 without overwriting stronger project-specific architecture, CI, documentation, build/E2E tooling, design systems or agent guidance. Audit first, then specialize staged delivery, risk-based validation and the smallest useful baseline.
+description: Align a new or existing repository with repo-template-sw 0.9.2 without overwriting stronger project-specific architecture, CI, documentation, build/E2E tooling, design systems or agent guidance. Audit first, then specialize staged delivery, risk-based validation and the smallest useful baseline.
 ---
 
 # Adopt Engineering Standard
@@ -9,7 +9,7 @@ description: Align a new or existing repository with repo-template-sw 0.9.0 with
 
 Make a repository self-contained and aligned with the Agent-Native Reference Engineering Standard while preserving good existing engineering/product decisions.
 
-Adoption is semantic. Do not call a repository 0.9.0-compliant merely because files or version metadata were copied.
+Adoption is semantic. Do not call a repository 0.9.2-compliant merely because files or version metadata were copied.
 
 ## 1. Discover before changing
 
@@ -57,7 +57,9 @@ Mark only genuinely irrelevant intents `n/a`.
 
 Do not introduce a wrapper framework solely for naming consistency.
 
-## 4. Specialize the 0.9.0 development-velocity model
+Use operating contract `0.6.1` and preserve its integration/release real-environment stage fields.
+
+## 4. Specialize the 0.9.2 development-velocity model
 
 Preserve the three delivery stages:
 
@@ -69,17 +71,19 @@ Preserve the three delivery stages:
 
 ### `INTEGRATION`
 
-- coherent observable vertical outcome;
+- coherent observable vertical outcome ready for the shared development/integration branch;
 - exact head/base;
 - complete diff review;
 - affected durable docs current;
 - concrete risk gates satisfied;
-- smallest necessary critical E2E.
+- affected complete critical journeys proven automatically when lower-level evidence is insufficient;
+- residual `REAL_ENVIRONMENT` evidence explicit and `DEFERRED_TO_RELEASE`, not a normal integration blocker.
 
 ### `RELEASE`
 
 - release/promotion/reference checkpoint;
-- `FULL` validation and release-critical artifact/E2E/residual environment evidence.
+- `FULL` validation and release-critical artifact/E2E evidence;
+- every real-environment confirmation required by the release claim passes before `RELEASE_READY`.
 
 Keep delivery stage separate from validation depth.
 
@@ -113,13 +117,13 @@ Unknown executable scope fails safe stronger. Selector/global-build machinery th
 
 ## 6. Configure execution capability and remote preflight
 
-Required deterministic gates are classified as:
+Required gates are classified as:
 
 - `AGENT_LOCAL`;
 - `REMOTE_AUTOMATED`;
 - `REAL_ENVIRONMENT`.
 
-Do not delegate ordinary automatable compile/lint/test/R8/package work to the user because the current agent lacks tooling.
+Do not delegate ordinary automatable compile/lint/test/R8/package/emulator work to the user because the current agent lacks tooling.
 
 When agents may lack a local environment, provide repository-owned remote automation with least privilege.
 
@@ -127,14 +131,17 @@ Configure evidence reuse so successful existing results can satisfy integration/
 
 PR number/draft/ready/label/comment identity must not independently force duplicate validation.
 
-## 7. Configure E2E environments and journeys
+Execution class and stage placement are separate: classify residual real-environment requirements during integration, but execute/block on required ones at release by default.
+
+## 7. Configure E2E environments, stage policy and journeys
 
 Decide E2E applicability explicitly.
 
-When applicable, `.engineering/e2e.json` declares:
+When applicable, `.engineering/e2e.json` contract `0.2.1` declares:
 
 - target environments and material dimensions;
 - automated execution environments and fidelity classes;
+- integration/release `stage_policy`;
 - bounded high-value critical journeys;
 - minimum automated fidelity;
 - known/residual fidelity gaps;
@@ -143,19 +150,23 @@ When applicable, `.engineering/e2e.json` declares:
 
 Preserve existing Compose/Espresso/UI Automator/XCUITest/Playwright/API/CLI/device-farm tooling when strong.
 
-Use the cheapest sufficient automated environment first; stronger virtual/physical/target evidence is added only for material missing dimensions.
+At integration, use the cheapest sufficient automated environment to prove the complete changed outcome. Carry only residual physical/target-specific gaps to release.
+
+An early physical/target run may still be useful for diagnosing an explicitly environment-specific defect without becoming the standard branch/PR integration gate.
 
 ## 8. Configure risk-based UI E2E evidence
 
-0.9.0 does **not** require video for every journey that happens to traverse a UI.
+0.9.2 does **not** return to the old rule that every journey touching UI needs video.
 
 Use:
 
 - `ASSERTIONS` — UI incidental to non-visual deterministic behavior;
-- `SCREENSHOTS` — stable visible states/layout/hierarchy/copy/recovery/adaptive semantics;
-- `FULL_MEDIA` — motion/timing/progression/navigation transitions/lifecycle visibility/gesture continuity/release acceptance.
+- `SCREENSHOTS` — bounded stable visible states/layout/hierarchy/copy/recovery/adaptive semantics;
+- `FULL_MEDIA` — screenshots plus continuous journey video when UI/UX is materially part of the integration outcome, or when motion/timing/progression/navigation transitions/lifecycle visibility/gesture continuity/release acceptance matters.
 
-Preserve existing screenshot/video infrastructure where useful. Route it to the modes that need it rather than deleting it.
+A material UI/UX critical journey entering the shared development branch uses `FULL_MEDIA` by default.
+
+Preserve existing screenshot/video infrastructure where useful. Route it to the modes/stages that need it rather than deleting it.
 
 Evidence required by the selected mode must be identity-bearing, privacy-safe and bounded-retention. Missing required evidence is `E2E_EVIDENCE_INCOMPLETE`.
 
@@ -220,18 +231,18 @@ Where practical, identify expensive gates and begin collecting/reviewing:
 - unique regression signal;
 - overlap.
 
-Do not delete real safety evidence for speed. Use the signal to improve where gates run: iteration, integration or release.
+Do not delete real safety evidence for speed. Use the signal to improve where gates run: cheap/focused evidence in iteration, affected automated E2E in integration and real-environment acceptance in release.
 
 ## 14. Finalize adoption
 
-Run applicable repository/operations/E2E/product-experience/docs/context verifiers and project-specific validation needed by the migration itself.
+Run applicable repository/operations/E2E/stage-policy/product-experience/docs/context verifiers and project-specific validation needed by the adoption itself.
 
-Only then update `.engineering/baseline.json` to `0.9.0` and record local Skill customization truthfully.
+Only then update `.engineering/baseline.json` to `0.9.2` and record local Skill customization truthfully.
 
 Report:
 
 ```text
-BASELINE: 0.9.0
+BASELINE: 0.9.2
 PROFILES: <list>
 KEEP: <strong existing mechanisms preserved>
 ADAPT: <mechanisms merged with new semantics>
@@ -240,7 +251,7 @@ N/A: <non-applicable concerns>
 DELIVERY_MODEL: ITERATION / INTEGRATION / RELEASE <specialization>
 RISK_SELECTOR: <owner/risk/gate strategy>
 REMOTE_PREFLIGHT: <trigger + evidence reuse strategy>
-E2E: <journeys/environments/residual gaps/UI evidence modes>
+E2E: <journeys/environments/stage policy/residual gaps/UI evidence modes>
 VALIDATION_ECONOMICS: <implemented/deferred>
 VALIDATION: <evidence>
 DEFERRED_OR_CONFLICTS: <items or N/A>

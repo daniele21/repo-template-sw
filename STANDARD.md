@@ -1,6 +1,6 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.9.0
+Version: 0.9.2
 
 ## Purpose
 
@@ -20,7 +20,7 @@ The automation rule is:
 
 The E2E rule is:
 
-> Final target-environment validation should confirm residual environment-specific claims, not become the first complete-system test.
+> Integration must prove affected complete workflows automatically. Final target-environment validation confirms residual environment-specific claims at release rather than becoming part of every feature-integration loop.
 
 For products with a material UI:
 
@@ -50,15 +50,17 @@ Delivery stage and validation depth are independent axes.
 
 `INTEGRATION`
 
-- begins when a coherent vertical slice produces an observable user/system outcome and is ready to converge;
-- refresh exact head/base, review the complete diff, make affected durable documentation current and execute/rout the required risk gates;
-- use the smallest affected critical E2E journey when lower-level evidence cannot prove the outcome.
+- begins when a coherent vertical slice produces an observable user/system outcome and is ready to converge into the shared development/integration branch;
+- refresh exact head/base, review the complete diff, make affected durable documentation current and execute/route the required risk gates;
+- affected complete workflows are proven with the smallest sufficient automated E2E journey when lower-level evidence cannot prove the outcome;
+- residual `REAL_ENVIRONMENT` requirements are recorded but do not normally block integration into the shared development branch.
 
 `RELEASE`
 
 - stable-branch promotion, release candidates and reference-grade checkpoints;
 - `FULL` validation is expected;
-- release-critical build/package/E2E and residual environment evidence apply.
+- release-critical build/package/E2E run;
+- every required residual `REAL_ENVIRONMENT` confirmation is blocking before the strongest release/stable claim is made.
 
 ### Validation depth
 
@@ -131,17 +133,21 @@ Cleanup must cover success, failure, timeout, cancellation, interruption and par
 
 ## 6. Automation and execution capability
 
-Every required deterministic gate at integration/release is classified for the current agent/session as:
+Every required gate is classified for the current agent/session as:
 
 - `AGENT_LOCAL` — current agent can execute it directly;
 - `REMOTE_AUTOMATED` — deterministic/automatable but unavailable in the current agent environment;
 - `REAL_ENVIRONMENT` — genuinely requires representative hardware, protected authority/external environment or human judgement.
 
-An ordinary compile/lint/test/R8/package gate does not become `REAL_ENVIRONMENT` merely because the current agent lacks the SDK.
+An ordinary compile/lint/test/R8/package/emulator gate does not become `REAL_ENVIRONMENT` merely because the current agent lacks the SDK.
 
 A human must not become the fallback runner for automatable deterministic work.
 
 When equivalent local execution exists, use it for faster feedback. When it does not, repository-owned remote automation is a valid execution backend.
+
+At `INTEGRATION`, all affected automatable gates must be satisfied; `REAL_ENVIRONMENT` evidence is classified and deferred to `RELEASE` unless the repository explicitly defines a different product branch model.
+
+At `RELEASE`, required `REAL_ENVIRONMENT` evidence is blocking.
 
 ## 7. Equivalent evidence reuse
 
@@ -167,7 +173,7 @@ A CI Android emulator can be `REMOTE_AUTOMATED` while only `simulated_or_emulate
 
 Critical E2E journeys declare target environments, automated execution environments and fidelity gaps in `.engineering/e2e.json`.
 
-Use the cheapest automated environment sufficient for the changed claim, then escalate only when a material target dimension requires it.
+At `INTEGRATION`, use the cheapest automated environment sufficient to prove the complete changed outcome. Carry remaining target-environment deltas explicitly to `RELEASE` instead of repeatedly paying real-environment cost on every feature PR.
 
 ## 9. E2E evidence
 
@@ -175,13 +181,13 @@ E2E proves a complete critical user/system outcome across assembled boundaries w
 
 Do not move deterministic logic coverage into E2E merely because an E2E framework exists.
 
-For UI-bearing journeys, evidence strength follows the actual claim:
+For UI-bearing journeys, evidence strength follows the actual claim and stage:
 
 - `ASSERTIONS` — UI is incidental to deterministic system behavior;
-- `SCREENSHOTS` — stable visible layout/hierarchy/copy/state/recovery/adaptive semantics changed;
-- `FULL_MEDIA` — motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release/product acceptance depends on observing the journey over time.
+- `SCREENSHOTS` — bounded stable visible layout/hierarchy/copy/state/recovery/adaptive semantics need inspection;
+- `FULL_MEDIA` — screenshots plus continuous video when UI/UX is materially part of the integration outcome, or when motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release/product acceptance depends on observing the journey over time.
 
-UI presence alone does not require video.
+For a material UI/UX critical journey entering the shared development branch, `FULL_MEDIA` is the default integration evidence. UI presence alone still does not force video when the UI is merely an incidental harness for a non-visual system invariant.
 
 A run is `E2E_EVIDENCE_INCOMPLETE` when evidence required by the **selected mode** is missing. Never silently downgrade the selected mode after execution to obtain a green result.
 
@@ -272,6 +278,8 @@ Use this evidence to move cheap high-signal checks earlier and expensive low-fre
 
 This is not a mandate to delete tests. It is a mandate to place each test where its confidence contribution justifies its feedback cost.
 
+Real-environment validation is intentionally concentrated at release when it protects a residual target-specific claim; it is not a default per-feature integration tax.
+
 If `FULL` runs frequently for contained changes, improve scope/risk selection. If narrow validation repeatedly misses affected regressions, strengthen the risk-to-gate mapping.
 
 ## 15. Maturity levels
@@ -299,7 +307,7 @@ L0 plus:
 
 - integration/contract tests for critical boundaries;
 - bounded high-value automated E2E where full workflow evidence is needed;
-- target/fidelity gaps declared and residual real-environment confirmation identified;
+- target/fidelity gaps declared and residual real-environment confirmation identified for release;
 - migration/backward-compatibility strategy where state/contracts persist;
 - critical failure/cancellation/recovery coverage;
 - performance/resource budgets for important paths;
@@ -315,8 +323,8 @@ L1 plus:
 - architecture fitness functions for critical ownership/dependency invariants;
 - resource/memory/performance regression gates where stable measurement is possible;
 - fault/pressure coverage for important lifecycle boundaries;
-- high-value critical journeys at the highest practical automated fidelity before residual target testing;
-- representative hardware/device evidence when hardware materially changes behavior;
+- high-value critical journeys at the highest practical automated fidelity before residual release target testing;
+- representative hardware/device evidence when hardware materially changes release behavior;
 - machine-enforced docs/context/operating/E2E/product-experience health;
 - periodic validation-economics review so avoidable cost/flake/overlap is reduced;
 - explicit complexity/dependency review for meaningful additions;
@@ -334,6 +342,7 @@ It is done at the relevant stage when:
 - changed owners/contracts/failure/resource semantics agree;
 - the narrowest sufficient required evidence for that stage is satisfied;
 - affected durable documentation is current before integration/release;
-- stronger residual environment/release evidence remains explicit rather than falsely claimed.
+- at `INTEGRATION`, all required automated evidence passes and residual real-environment requirements are explicitly deferred;
+- at `RELEASE`, every applicable blocking real-environment requirement passes.
 
 The engineering objective is **high-confidence incremental delivery without validation waterfall**.

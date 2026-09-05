@@ -10,7 +10,7 @@ Agent-native reference engineering baseline for software repositories maintained
 - [`STANDARD.md`](STANDARD.md) — canonical L0/L1/L2 engineering standard.
 - [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md) — command/build/artifact/runtime lifecycle semantics.
 - [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md) — delivery stages, risk-based validation, executor routing and evidence reuse.
-- [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md) — target-environment/fidelity semantics and risk-based UI evidence modes.
+- [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md) — target-environment/fidelity semantics, stage policy and UI evidence modes.
 - [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) — optional stack-neutral UX/UI contract.
 
 ## 0.9.x: Development Velocity
@@ -35,11 +35,19 @@ Do not automatically require exact-head publication evidence, complete-diff revi
 
 ### INTEGRATION
 
-Begins when a coherent **vertical outcome** is ready to converge. Refresh exact head/base, inspect the complete diff, update affected durable docs, select concrete risk gates and run the smallest required critical E2E.
+Begins when a coherent **vertical outcome** is ready to converge into the shared development/integration branch. Refresh exact head/base, inspect the complete diff, update affected durable docs, select concrete risk gates and prove affected complete workflows with the smallest sufficient automated E2E.
+
+For a material UI/UX critical journey, integration evidence defaults to `FULL_MEDIA`: bounded screenshots plus a continuous journey video. If UI is only an incidental harness for a non-visual invariant, assertions may remain sufficient.
+
+Residual `REAL_ENVIRONMENT` requirements are explicit but **do not normally block integration**. They are `DEFERRED_TO_RELEASE`.
 
 ### RELEASE
 
-Promotion/release/reference checkpoints use `FULL` validation plus release-critical build/package/E2E and residual real-environment evidence.
+Promotion/release/reference checkpoints use `FULL` validation plus release-critical build/package/E2E. Every real-environment confirmation required by the release claim is blocking before `RELEASE_READY`.
+
+The practical rule is:
+
+> **Prove the feature automatically before dev; prove the residual target-environment delta before main/release.**
 
 The objective is:
 
@@ -54,7 +62,8 @@ The objective is:
 - agent-triggerable remote automation when local tooling is unavailable;
 - reuse of equivalent successful validation evidence instead of duplicate runs;
 - critical E2E matched to both claim strength and environment fidelity;
-- risk-based UI E2E evidence: `ASSERTIONS`, `SCREENSHOTS`, `FULL_MEDIA`;
+- material UI/UX integration evidence that is directly inspectable through screenshots + video;
+- real-environment validation concentrated at release rather than repeated on every feature PR;
 - reproducible builds and immutable traceable artifacts;
 - zero-residue runtime/build/E2E lifecycles;
 - low repository/documentation entropy and low agent context cost;
@@ -69,7 +78,7 @@ Core principles:
 
 > **Automation executes automatable work; humans make material decisions and provide genuinely real-environment evidence.**
 
-> **Final target-environment validation confirms residual fidelity gaps rather than becoming the first complete-system test.**
+> **Integration proves the complete changed outcome automatically; final target-environment validation confirms only the residual release gap.**
 
 ## Validation model
 
@@ -91,6 +100,8 @@ Typical examples:
 - Binder/shared contract, persistence, lifecycle, native/JNI, packaging/R8/manifest -> relevant `STRONG` risk cone;
 - selector/global build/toolchain/dependency inventory -> `FULL` because narrowing machinery changed;
 - stable/release promotion -> `FULL`.
+
+Execution class and stage placement remain separate. A physical-device requirement may be real-environment evidence without becoming an integration blocker; required real-environment evidence becomes blocking at release.
 
 ## Remote preflight and evidence reuse
 
@@ -123,15 +134,15 @@ host/fake
 -> target environment
 ```
 
-Use the cheapest automated environment that proves the claim and escalate only for material target dimensions.
+At integration, use the cheapest automated environment that proves the complete changed outcome. Carry only the residual fidelity delta to release.
 
-For UI-bearing critical journeys, select evidence from the changed claim:
+For UI-bearing critical journeys, select evidence from the changed claim and stage:
 
 - `ASSERTIONS` — UI is incidental to deterministic system behavior;
-- `SCREENSHOTS` — stable visible layout/hierarchy/copy/state/recovery/adaptive behavior changed;
-- `FULL_MEDIA` — motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release acceptance requires observing sequence over time.
+- `SCREENSHOTS` — bounded stable visible layout/hierarchy/copy/state/recovery/adaptive behavior needs inspection;
+- `FULL_MEDIA` — screenshots plus continuous journey video when UI/UX is materially part of the integration outcome, or when motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release acceptance requires observing sequence over time.
 
-UI presence alone does not force video. Evidence required by the selected mode must be complete and identity-bearing.
+UI presence alone does not force video when the UI is merely an incidental harness. Evidence required by the selected mode must be complete and identity-bearing.
 
 ## Vertical slices and parallel work
 
@@ -150,11 +161,11 @@ Parallel development does not imply stacked publication. Stacked PRs remain usef
 - `STANDARD.md` — universal engineering standard.
 - `OPERATING-CONTRACT.md` — operations/build/artifact/runtime contract.
 - `EXECUTION-CAPABILITY-CONTRACT.md` — development velocity, validation/executor/evidence-reuse contract.
-- `E2E-ENVIRONMENT-CONTRACT.md` — E2E environment/evidence contract.
+- `E2E-ENVIRONMENT-CONTRACT.md` — E2E environment/stage/evidence contract.
 - `PRODUCT-EXPERIENCE-CONTRACT.md` — optional UX/UI contract.
 - `template/` — files adopted and then specialized locally.
 - `template/.engineering/commands.json` — machine-readable commands, stages, validation routing and preflight policy.
-- `template/.engineering/e2e.json` — machine-readable E2E environments, journeys and UI evidence policy.
+- `template/.engineering/e2e.json` — machine-readable E2E environments, stage policy, journeys and UI evidence policy.
 - `template/skills/` — recurring project-local agent workflows.
 - `profiles/` — optional stack/domain/product deltas such as Android/local-AI/product-ui.
 - `skills/adopt-engineering-standard/` — first adoption.
@@ -166,7 +177,7 @@ Parallel development does not imply stacked publication. Stacked PRs remain usef
 2. Copy/specialize `template/`.
 3. Select only applicable profiles.
 4. Map `.engineering/commands.json` to the project's native commands and specialize `development_velocity`/risk selector/remote-preflight routing.
-5. Decide E2E applicability and specialize `.engineering/e2e.json` with target/execution environments, critical journeys, residual gaps and minimum UI evidence modes.
+5. Decide E2E applicability and specialize `.engineering/e2e.json` with target/execution environments, stage policy, critical journeys, residual gaps and minimum UI evidence modes.
 6. If UI is material, adopt `product-ui` and map the real design-system/brand owner.
 7. Preserve stronger existing tooling rather than replacing it for compliance aesthetics.
 8. Record baseline version/profiles and run repository health checks.
@@ -179,6 +190,6 @@ Later upgrades use `update-engineering-standard`: read the version delta, classi
 
 ## Current version
 
-Reference baseline: **0.9.1**.
+Reference baseline: **0.9.2**.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the adopter-facing delta.

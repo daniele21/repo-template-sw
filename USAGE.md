@@ -1,6 +1,6 @@
 # Using `repo-template-sw`
 
-This guide explains how to bootstrap, operate and migrate repositories with `repo-template-sw` 0.9.1.
+This guide explains how to bootstrap, operate and migrate repositories with `repo-template-sw` 0.9.2.
 
 `repo-template-sw` is a **bootstrap, audit and migration source**. After adoption, ordinary work is driven by the target repository itself.
 
@@ -13,7 +13,7 @@ repo-template-sw
   -> STANDARD.md                      core invariants/maturity
   -> OPERATING-CONTRACT.md            commands/build/artifact/runtime
   -> EXECUTION-CAPABILITY-CONTRACT.md stages + risk gates + executor + evidence reuse
-  -> E2E-ENVIRONMENT-CONTRACT.md      environment fidelity + UI evidence modes
+  -> E2E-ENVIRONMENT-CONTRACT.md      environment fidelity + stage policy + UI evidence modes
   -> PRODUCT-EXPERIENCE-CONTRACT.md   optional UX/UI semantics
   -> template/                        adoptable project baseline
   -> profiles/                        stack/domain/product specialization
@@ -25,7 +25,7 @@ After adoption:
 project repository
   -> AGENTS.md                    routing/invariants
   -> .engineering/commands.json  commands + development velocity + validation/preflight
-  -> .engineering/e2e.json       E2E environments/journeys/evidence policy
+  -> .engineering/e2e.json       E2E environments/stage/journeys/evidence policy
   -> local Skills                recurring workflows
   -> durable docs                current integrated truth
   -> scripts / CI                deterministic enforcement/execution
@@ -56,7 +56,7 @@ A temporary branch or draft PR may exist for collaboration without being integra
 
 ### INTEGRATION
 
-Move here when the work forms a coherent **observable vertical outcome**.
+Move here when the work forms a coherent **observable vertical outcome** ready to enter the shared development/integration branch.
 
 Now:
 
@@ -67,7 +67,11 @@ Now:
 5. classify each gate as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT`;
 6. reuse equivalent successful evidence;
 7. execute only missing/stale/insufficient deterministic gates;
-8. add the smallest required critical E2E journey.
+8. run affected complete critical journeys automatically when lower-level evidence is insufficient;
+9. for a material UI/UX critical journey, use `FULL_MEDIA`: bounded screenshot checkpoints plus continuous journey video;
+10. record residual `REAL_ENVIRONMENT` gaps as `DEFERRED_TO_RELEASE` rather than blocking ordinary integration.
+
+`AUTOMATED_PREFLIGHT_CONFIRMED` means the exact integration candidate has sufficient automated evidence. It does not claim that deferred physical/target-environment release evidence already passed.
 
 ### RELEASE
 
@@ -75,8 +79,19 @@ For stable promotion/release/reference checkpoints:
 
 - use `FULL` validation;
 - run release-critical build/package/artifact gates;
-- run release-critical E2E at sufficient environment fidelity;
-- close residual real-environment evidence required by the release claim.
+- run release-critical automated E2E at sufficient fidelity;
+- close every residual real-environment confirmation required by the release claim;
+- declare `RELEASE_READY` only when those required residual gates pass.
+
+The practical stage boundary is:
+
+```text
+branch / PR -> shared dev
+  = automated confidence
+
+dev / integration -> main / stable
+  = release confidence + required real environment
+```
 
 ## 2. Validation depth
 
@@ -108,11 +123,12 @@ This means a recreated PR, draft -> ready transition or metadata-only collaborat
 Normal candidate flow:
 
 ```text
-required gates
+required automated gates
 -> reuse valid exact-head evidence
--> find remaining gaps
+-> find remaining automated gaps
 -> run only remaining remote gates
--> combine readiness evidence
+-> automated preflight confirmed
+-> integrate
 ```
 
 ### 0.9.1 post-merge reuse
@@ -142,13 +158,15 @@ host_or_fake
 -> target_environment
 ```
 
-Use the cheapest declared environment sufficient for the claim. Escalate only when the changed invariant depends on a missing material dimension.
+At integration, use the cheapest declared **automated** environment sufficient to prove the complete changed outcome. Escalate automated fidelity only when the integration claim requires it.
 
-Final physical/manual/target testing should primarily close residual fidelity gaps rather than discover ordinary navigation, persistence, IPC or packaging failures that practical automation could catch earlier.
+Residual physical/manual/target testing belongs to release acceptance by default and should primarily close fidelity gaps rather than discover ordinary navigation, persistence, IPC or packaging failures that practical automation could catch earlier.
+
+An earlier real-device run remains valid for diagnosis of an explicitly hardware-specific issue. It does not become a standard branch/PR integration gate.
 
 ## 5. UI E2E evidence
 
-0.9.0 replaced the 0.8.1 unconditional “screenshots + video for every UI-bearing journey” rule with risk-based evidence modes.
+UI evidence remains risk-based, with one important 0.9.2 stage rule: when UI/UX is materially part of a critical outcome entering the shared development branch, use `FULL_MEDIA` so the integrated experience is directly inspectable.
 
 ### ASSERTIONS
 
@@ -156,11 +174,11 @@ Use when UI is incidental to a deterministic system claim, such as persistence, 
 
 ### SCREENSHOTS
 
-Use when stable visual/product states changed: hierarchy, layout, copy, recovery state, progressive disclosure or adaptive presentation.
+Use for bounded stable-state inspection when the complete UI/UX journey itself is not the material integration claim: hierarchy, layout, copy, recovery state, progressive disclosure or adaptive presentation.
 
 ### FULL_MEDIA
 
-Use when sequence over time matters: motion/animation, timing/progression, navigation/transition sequencing, lifecycle visibility, gesture continuity or release/product acceptance.
+Use for a material UI/UX integration journey and whenever sequence over time matters: motion/animation, timing/progression, navigation/transition sequencing, lifecycle visibility, gesture continuity or release/product acceptance.
 
 `FULL_MEDIA` includes required screenshots plus continuous journey video.
 
@@ -206,16 +224,16 @@ Completed implementation plans are deleted by default after durable truth is tra
 3. Replace project placeholders from actual repository evidence.
 4. Map canonical command intents to native tooling in `.engineering/commands.json`.
 5. Specialize `development_velocity`, risk/gate selector, execution classes and remote-preflight trigger/reuse semantics.
-6. Decide E2E applicability and specialize `.engineering/e2e.json` with target environments, execution environments, critical journeys, residual gaps and minimum UI evidence mode.
+6. Decide E2E applicability and specialize `.engineering/e2e.json` with target environments, execution environments, stage policy, critical journeys, residual gaps and minimum UI evidence mode.
 7. If the product has material UI, adopt `product-ui` and point to the real design-system/brand owner.
 8. Preserve stronger existing tooling rather than introducing parallel frameworks.
-9. Run repository/operations/E2E/product-experience/docs/context verifiers.
+9. Run repository/operations/E2E/stage-policy/product-experience/docs/context verifiers.
 10. Record the adopted baseline version only when behavior really matches it.
 
 Useful prompt:
 
 ```text
-Adopt repo-template-sw 0.9.1 in <REPOSITORY>.
+Adopt repo-template-sw 0.9.2 in <REPOSITORY>.
 Use adopt-engineering-standard.
 Preserve stronger existing engineering/build/E2E/design mechanisms and specialize the template from repository evidence rather than copying placeholders blindly.
 ```
@@ -273,3 +291,16 @@ This is an additive validation-economics patch:
 3. if supported, require exact same candidate tree + exact same target/base + sufficient gates/profile/E2E identity;
 4. retain exact-head candidate validation and exact-candidate RELEASE semantics;
 5. keep direct pushes and any base/tree mismatch on the normal validation path.
+
+### Migrating 0.9.1 -> 0.9.2
+
+This is a delivery-stage simplification with stronger automated integration semantics:
+
+1. add integration/release stage policy to `.engineering/commands.json` and `.engineering/e2e.json`;
+2. require affected complete critical journeys to pass automatically before shared development integration;
+3. mark integration `REAL_ENVIRONMENT` evidence non-blocking and explicitly `DEFERRED_TO_RELEASE`;
+4. make required release real-environment evidence blocking before `RELEASE_READY`;
+5. use `FULL_MEDIA` for material UI/UX critical journeys entering the shared development branch, while keeping assertion-only UI harnesses valid for non-visual system claims;
+6. add `verify_stage_environment_policy.py` to repository health;
+7. update `preflight-change` so `AUTOMATED_PREFLIGHT_CONFIRMED` and `RELEASE_READY` are distinct readiness claims;
+8. for Android, keep emulator/instrumentation/built-APK E2E in integration and move physical/OEM target confirmation to release by default.

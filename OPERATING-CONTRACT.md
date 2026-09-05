@@ -1,6 +1,6 @@
 # Project Operating Contract
 
-Version: 0.6.0
+Version: 0.6.1
 
 This contract defines common operational semantics for adopted repositories. It standardizes **intent and lifecycle**, not implementation tools.
 
@@ -10,7 +10,7 @@ The governing rule is:
 
 The delivery rule is:
 
-> Iterate with the cheapest useful feedback, establish exact-head readiness when a coherent slice integrates, and use full release-grade evidence at release checkpoints.
+> Iterate with the cheapest useful feedback, establish exact-head automated readiness when a coherent slice integrates, and reserve required real-environment acceptance for release checkpoints.
 
 Execution and validation-stage semantics are further defined in [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md). E2E fidelity/evidence semantics live in [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md).
 
@@ -44,7 +44,7 @@ Use focused evidence that can falsify the current edit quickly. Exact-head readi
 
 ### `INTEGRATION`
 
-Begins when a coherent vertical slice delivers an observable outcome and is ready to converge into the shared integration branch or be marked ready for merge/review.
+Begins when a coherent vertical slice delivers an observable outcome and is ready to converge into the shared development/integration branch or be marked ready for merge/review.
 
 At this point:
 
@@ -52,12 +52,16 @@ At this point:
 - review the complete diff;
 - make affected durable documentation current;
 - select concrete risk dimensions and required gates;
-- execute/rout deterministic evidence;
-- run the smallest affected E2E journey when lower-level evidence is insufficient.
+- execute/route deterministic evidence;
+- run affected critical E2E journeys automatically when lower-level evidence is insufficient;
+- for material UI/UX journeys, preserve reviewable screenshot + video evidence;
+- record residual `REAL_ENVIRONMENT` requirements and defer them to `RELEASE` rather than blocking ordinary integration.
 
 ### `RELEASE`
 
-Stable/promotion/release-candidate checkpoints use full release-grade validation, artifact/package checks and release-critical E2E/residual environment evidence.
+Stable/promotion/release-candidate checkpoints use full release-grade validation, artifact/package checks, release-critical E2E and every required residual real-environment confirmation.
+
+Required real-environment evidence is blocking here.
 
 ## 3. Validation execution model
 
@@ -70,6 +74,8 @@ Required gates are classified for the current session as:
 An automatable deterministic gate MUST NOT be delegated to the user solely because the agent lacks tooling.
 
 When equivalent local execution exists, use it for rapid feedback. Otherwise repository-owned remote automation is a valid execution backend.
+
+Classification and delivery-stage placement are separate: a `REAL_ENVIRONMENT` requirement is reported at integration and normally executed as release acceptance.
 
 ## 4. Integration/release readiness
 
@@ -84,12 +90,15 @@ observable outcome ready
 -> inspect complete diff
 -> make affected durable docs current
 -> identify risks + required gates
--> select E2E journey/environment/evidence mode when needed
+-> select affected automated E2E journey/environment/evidence mode
 -> classify executors
 -> reuse equivalent successful evidence
--> execute only missing/stale/insufficient deterministic gates
+-> execute only missing/stale/insufficient automated gates
 -> automated preflight confirmed
--> residual real-environment evidence when required
+-> integrate into shared development branch
+-> release checkpoint
+-> required residual real-environment evidence
+-> release ready
 ```
 
 ### Material ambiguity
@@ -125,12 +134,14 @@ The normal algorithm is:
 ```text
 resolve required gates
 -> reuse equivalent successful evidence
--> identify unsatisfied evidence
--> execute only missing/stale/insufficient gates
--> combine into one readiness result
+-> identify unsatisfied automated evidence
+-> execute only missing/stale/insufficient automated gates
+-> combine into one integration readiness result
 ```
 
 Never rerun an expensive gate solely because an otherwise identical PR was recreated or moved from draft to ready.
+
+Release-specific real-environment evidence may also be reused only when its target/environment/build identity remains sufficient for the release claim.
 
 ## 6. Remote preflight
 
@@ -147,6 +158,8 @@ Remote execution must:
 - use bounded timeout/artifact retention.
 
 A separate reporting job may hold PR write permission when necessary.
+
+Automated preflight does not need to wait for deferred real-environment release evidence to confirm integration readiness.
 
 ## 7. Test vs E2E vs smoke
 
@@ -169,11 +182,11 @@ Use stack-native established tooling. The universal standard does not mandate on
 
 When the claim concerns distributable behavior, run against the built/package artifact when material and practical.
 
-For UI-bearing journeys, evidence mode is selected from the claim:
+For UI-bearing journeys, evidence mode is selected from the claim and stage:
 
 - `ASSERTIONS` — UI incidental to deterministic system behavior;
-- `SCREENSHOTS` — stable visible states/layout/hierarchy/copy/recovery/adaptive behavior changed;
-- `FULL_MEDIA` — motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release acceptance requires observation over time.
+- `SCREENSHOTS` — bounded stable visible states/layout/hierarchy/copy/recovery/adaptive behavior need inspection;
+- `FULL_MEDIA` — screenshots plus continuous video when UI/UX is materially part of the integration outcome, or when motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release acceptance requires observation over time.
 
 Missing evidence required by the selected mode is `E2E_EVIDENCE_INCOMPLETE`. Do not silently downgrade the evidence mode after execution.
 
@@ -248,7 +261,7 @@ Defaults where applicable:
 
 Where practical, observe expensive gates for duration, flake rate, unique regression signal and overlap.
 
-Move cheap high-signal gates earlier and expensive low-frequency gates toward integration/release checkpoints. This changes **placement and scope**, not the final invariant protected.
+Move cheap high-signal gates earlier, affected automated E2E to integration, and expensive real-environment confirmation to release. This changes **placement and scope**, not the final invariant protected.
 
 The operating objective is:
 

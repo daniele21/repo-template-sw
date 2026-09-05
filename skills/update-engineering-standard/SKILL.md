@@ -180,12 +180,89 @@ Use this to change **placement and scope**, not to delete meaningful safety evid
 
 The target is sufficient confidence per feedback time.
 
+## 0.9.2 Release-only real-environment migration
+
+When migrating from 0.9.1 to 0.9.2, the goal is to make the stage boundary unambiguous: **integration proves the feature automatically; release proves the residual real-environment delta**.
+
+### 1. Upgrade machine-readable contracts
+
+Migrate:
+
+- `.engineering/commands.json` to operating contract `0.6.1`;
+- `.engineering/e2e.json` to E2E contract `0.2.1`;
+- `EXECUTION-CAPABILITY-CONTRACT.md` `0.3.2` semantics;
+- `preflight-change` to source version `0.9.2`.
+
+Do not bump `.engineering/baseline.json` until these semantics are actually implemented.
+
+### 2. Make integration automated and real-environment non-blocking
+
+In `development_velocity.integration`, preserve exact-head/diff/docs/risk-gate readiness and add:
+
+- `automated_e2e_required_when_affected: true`;
+- `real_environment_blocking: false`;
+- `real_environment_deferred_to_release: true`.
+
+Affected complete critical journeys must pass automatically before the coherent slice enters the shared development/integration branch when lower-level tests cannot prove the outcome.
+
+A missing local SDK does not change this into user-run testing; use repository-owned remote automation.
+
+### 3. Make required real-environment evidence blocking at release
+
+In `development_velocity.release`, require `required_real_environment_blocking: true`.
+
+`AUTOMATED_PREFLIGHT_CONFIRMED` is an integration-readiness claim. `RELEASE_READY` additionally requires every applicable real-environment confirmation required by the release claim to pass.
+
+Do not present `DEFERRED_TO_RELEASE` evidence as already passed.
+
+### 4. Add E2E stage policy
+
+In `.engineering/e2e.json`, add `stage_policy` so the project explicitly records:
+
+- automated E2E before shared integration;
+- non-blocking real environment at integration;
+- real-environment deferral to release;
+- required real environment blocking at release.
+
+Keep target environments, execution environments, critical journeys and residual gaps truthful to the project.
+
+### 5. Strengthen material UI/UX integration evidence
+
+Keep UI evidence risk-based, but make the stage rule explicit:
+
+- `ASSERTIONS` remains valid when UI is only an incidental harness for a non-visual system invariant;
+- `SCREENSHOTS` remains valid for bounded stable-state inspection when the complete UI/UX journey itself is not the material integration claim;
+- `FULL_MEDIA` is the default for a **material UI/UX critical journey entering the shared development branch** and includes bounded screenshots plus one continuous journey video.
+
+This is not a return to the 0.8.1 rule that every UI-bearing test needs video.
+
+### 6. Add deterministic policy enforcement
+
+Adopt `scripts/verify_stage_environment_policy.py` and wire it into repository health alongside `verify_operations.py` and `verify_e2e.py`.
+
+The existing operation/E2E verifiers should also enforce contract versions `0.6.1` and `0.2.1` plus the new stage fields.
+
+### 7. Specialize platform profiles
+
+For Android, the normal integration path is:
+
+```text
+focused lower-level gates
+-> emulator/instrumentation or built-APK automated E2E
+-> screenshot + video when UI/UX is materially part of the journey
+-> shared development branch
+```
+
+Release then closes applicable physical/OEM/device-specific gaps such as real memory pressure, thermals, native backend/ABI behavior or OEM lifecycle differences.
+
+An early physical-device run remains valid for diagnosis of an explicitly hardware-specific defect; it does not become the default branch/PR integration blocker.
+
 ## Migration validation
 
-A 0.9.0 migration is not complete until:
+A migration is not complete until:
 
 - machine-readable contracts pass project verifiers;
-- relevant local Skills/guides no longer impose the superseded every-edit preflight or every-UI-video behavior;
+- relevant local Skills/guides no longer impose superseded stage/media behavior;
 - risk selector/remote-preflight behavior is coherent with existing CI;
 - affected project-specific validation passes;
 - E2E environment/evidence semantics are truthful;

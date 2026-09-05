@@ -15,6 +15,8 @@ The governing rules are:
 
 > Exact-head, complete-diff and durable-documentation readiness start at `INTEGRATION`.
 
+> `INTEGRATION` proves the coherent outcome with automated evidence. Required `REAL_ENVIRONMENT` confirmation is carried explicitly to `RELEASE`, not used as a normal blocker for merging into the shared integration branch.
+
 > Select required risk gates first; validation profiles summarize the result.
 
 > Reuse successful equivalent evidence before starting a new expensive run.
@@ -27,7 +29,7 @@ Record `INTEGRATION` or `RELEASE` and state the user/system outcome the candidat
 
 A technical layer that does not independently provide an observable slice outcome should normally remain part of a larger integration slice unless independent publication/review is genuinely useful.
 
-`RELEASE` expects `FULL`. `INTEGRATION` uses the narrowest sufficient risk profile.
+`RELEASE` expects `FULL`. `INTEGRATION` uses the narrowest sufficient risk profile and must satisfy the affected automated critical journeys.
 
 ## 2. Resolve material ambiguity
 
@@ -106,15 +108,19 @@ Do not escalate based on broad feature labels. Escalate because a risk dimension
 When lower-level evidence cannot prove the complete affected outcome, read `.engineering/e2e.json` and select:
 
 1. smallest affected critical journey;
-2. cheapest sufficient automated environment/fidelity;
-3. UI evidence mode required by the claim:
-   - `ASSERTIONS` when UI is incidental;
-   - `SCREENSHOTS` when stable visible states/hierarchy/layout/copy/recovery/adaptive behavior changed;
-   - `FULL_MEDIA` when motion, timing/progression, navigation/transition sequence, lifecycle visibility, gesture continuity or release/product acceptance requires journey replay.
+2. cheapest sufficient **automated** environment/fidelity;
+3. UI evidence mode required by the claim and delivery stage.
 
-At `RELEASE`, the repository may deliberately require stronger E2E/media evidence for critical journeys.
+At `INTEGRATION`:
 
-Do not promote emulator evidence into physical-device claims.
+- affected critical journeys must be exercised automatically before merging into the shared integration branch;
+- if UI/UX is materially part of the observable outcome, use `FULL_MEDIA`: bounded screenshot checkpoints plus one continuous journey video;
+- if UI is only an incidental harness for a non-visual invariant, `ASSERTIONS` may remain sufficient;
+- stable visual-only evidence may still use `SCREENSHOTS` when the configured journey is not a material UI/UX integration outcome.
+
+At `RELEASE`, use release-critical journeys and any stronger media/evidence required for final product acceptance.
+
+Do not promote emulator/simulator evidence into a physical-device claim. Automated integration evidence proves the complete workflow at its declared fidelity; residual physical/target gaps are carried to release.
 
 ## 8. Build the gate matrix
 
@@ -126,7 +132,11 @@ For every required gate assign:
 
 Execution capability and E2E environment fidelity remain separate.
 
-Ordinary formatter/compile/lint/unit/R8/package work is not `REAL_ENVIRONMENT` merely because the current agent lacks the SDK.
+Ordinary formatter/compile/lint/unit/R8/package/emulator work is not `REAL_ENVIRONMENT` merely because the current agent lacks the SDK.
+
+At `INTEGRATION`, classify and report residual `REAL_ENVIRONMENT` needs but do **not** execute or block the integration candidate on them. They become release acceptance requirements.
+
+At `RELEASE`, every `REAL_ENVIRONMENT` gate marked required by the product claim must pass before the strongest stable/release claim is made.
 
 ## 9. Reuse equivalent successful evidence first
 
@@ -159,7 +169,9 @@ Do not ask the user to execute automatable deterministic work.
 
 For E2E, verify evidence required by the selected UI mode exists. Missing required artifacts means `E2E_EVIDENCE_INCOMPLETE`; never downgrade the selected mode after the fact to claim PASS.
 
-`REAL_ENVIRONMENT` evidence may remain pending after automated preflight but still blocks a stronger claim that depends on it.
+At `INTEGRATION`, unresolved real-environment evidence is reported as `DEFERRED_TO_RELEASE` and does not prevent `AUTOMATED_PREFLIGHT_CONFIRMED` when all required automated evidence is complete.
+
+At `RELEASE`, required real-environment evidence is a blocking acceptance gate.
 
 ## 11. Failure loop
 
@@ -210,8 +222,10 @@ REMOTE_AUTOMATED:
 E2E:
   <journey>: <environment>/<fidelity>/<ASSERTIONS|SCREENSHOTS|FULL_MEDIA> / PASS|FAIL|PENDING|N/A
 REAL_ENVIRONMENT:
-  <gate>: PASS|PENDING|N/A
-READINESS: READY_FOR_CI|READY_FOR_REMOTE_PREFLIGHT|AUTOMATED_PREFLIGHT_CONFIRMED|NOT_READY_FOR_AUTOMATED_PREFLIGHT
+  <gate>: DEFERRED_TO_RELEASE|PASS|FAIL|PENDING|N/A
+READINESS: READY_FOR_CI|READY_FOR_REMOTE_PREFLIGHT|AUTOMATED_PREFLIGHT_CONFIRMED|RELEASE_READY|NOT_READY_FOR_AUTOMATED_PREFLIGHT
 ```
 
-`AUTOMATED_PREFLIGHT_CONFIRMED` means every deterministic automated gate required by the exact integration/release candidate is satisfied by valid evidence, whether reused or newly executed.
+At `INTEGRATION`, `AUTOMATED_PREFLIGHT_CONFIRMED` means every deterministic automated gate and affected automated E2E requirement for the exact candidate is satisfied; residual real-environment evidence may remain `DEFERRED_TO_RELEASE`.
+
+At `RELEASE`, `RELEASE_READY` additionally requires every applicable blocking `REAL_ENVIRONMENT` gate to pass.
