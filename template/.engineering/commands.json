@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "0.6.1",
+  "contract_version": "0.7.0",
   "commands": {
     "setup": {"status": "required", "run": "<REPLACE_WITH_SETUP_COMMAND>"},
     "doctor": {"status": "recommended", "run": "<REPLACE_WITH_DOCTOR_COMMAND_OR_NA>"},
@@ -168,5 +168,35 @@
     "stale_resource_recovery": true,
     "ownership_required_before_cleanup": true,
     "post_cleanup_verification": true
+  },
+  "agent_reporting": {
+    "schema_version": 1,
+    "format": "summary_with_evidence_references",
+    "required_summary_fields": [
+      "stage",
+      "source_identity",
+      "risks",
+      "profile",
+      "required_gates",
+      "evidence",
+      "remaining_gaps",
+      "next_action"
+    ],
+    "gate_fields": [
+      "id",
+      "reason",
+      "executor",
+      "status"
+    ],
+    "source_identity_fields": [
+      "head",
+      "source_tree",
+      "target_base",
+      "dirty"
+    ],
+    "bounded_output": true,
+    "full_report_on_demand": true,
+    "preserve_failed_pending_gates": true,
+    "summary_is_not_evidence_verification": true
   }
 }

@@ -1,6 +1,6 @@
 # Validation Execution Capability Contract
 
-Version: 0.3.2
+Version: 0.4.0
 
 This contract defines **when validation runs, how much evidence is justified, who executes it, and when existing proof may be reused**. It complements `STANDARD.md`, `OPERATING-CONTRACT.md` and `E2E-ENVIRONMENT-CONTRACT.md` without weakening final confidence.
 
@@ -135,7 +135,7 @@ failure
 -> reuse/rerun what remains
 ```
 
-Do not weaken legitimate gates or repeatedly patch symptoms without a new falsifiable hypothesis.
+Do not weaken legitimate gates or repeatedly patch symptoms without a new falsifiable hypothesis. Record evidence, hypothesis, discriminating experiment and result briefly when needed. After two failed repairs with the same failure signature, change strategy and obtain new evidence before another repair. Targeted instrumentation, a smaller reproducer or revisiting the owner can distinguish causes. The project-local `validate-change` Skill owns the procedure; it remains autonomous and proportional.
 
 A physical/target-environment failure found before release may legitimately feed back into development. The repair is still re-proven automatically before reintegration; the physical confirmation remains a release acceptance concern.
 
@@ -152,3 +152,7 @@ The goal is not fewer tests. It is **the cheapest feedback loop that preserves s
 If required deterministic work is automatable but unavailable locally and remotely, report `AUTOMATION_CAPABILITY_GAP`. If affected risks/gates cannot be determined safely, report `VALIDATION_SCOPE_GAP` and fail safe stronger while improving the selector.
 
 If a release claim genuinely requires real-environment evidence that cannot currently be obtained, report the release as blocked rather than weakening or reclassifying the requirement.
+
+## 10. Cost of a correct outcome
+
+Alongside validation economics, assess significant agent-guidance changes on representative tasks: correct completions/regressions first, then tokens per correct task, repair attempts, time to first useful evidence and duplicate reads/runs. Compare the same tasks, source snapshots, model/settings and environment, repeating enough to see variability. Separate character-based context estimates from measured runtime tokens and cached input; unknown telemetry stays unknown. Reference-template scenarios are milestone evaluations, not mandatory gates on every adopter PR. Static configuration checks do not prove agent effectiveness.

@@ -190,6 +190,12 @@ Later upgrades use `update-engineering-standard`: read the version delta, classi
 
 ## Current version
 
-Reference baseline: **0.9.2**.
+Reference baseline: **0.10.0**.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the adopter-facing delta.
+
+## Agent efficiency
+
+0.10.0 routes context by task, keeps outcome/owner/invariant/proof concise, requires a diagnostic pivot after repeated failed repairs and resumes multi-session work from bounded evidence pointers. Native selectors/reporters expose compact decisions; source identity and required failed/pending gates remain visible.
+
+Run `python3 template/scripts/verify_agent_context.py --root template --template-mode` to measure complete representative reading routes, or select `--route bug --format json` for file/cost output. These are character-based instruction/configuration estimates, not measured session consumption. See `evals/README.md` for behavioral scenarios used when the template's guidance changes significantly.

@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 0.10.0 — 2026-09-06
+
+Reduces repeated agent context and makes diagnosis, implementation and resumption more concrete:
+
+- compresses adopter AGENTS and the structured-change/validate/preflight/remote procedures around canonical task/stage owners;
+- upgrades documentation policy to schema 2 and measures full representative routes, including Skills/configuration, applicable scoped-guide chains and optional active workstreams, with bounded text/JSON reports;
+- upgrades operating contract to 0.7.0 and execution contract to 0.4.0 with compact native selector/gate reporting, explicit source identity, gate reasons, evidence pointers and preserved failures/gaps;
+- defines a short outcome/owner/invariant/proof statement for meaningful changes without mandatory extra plans;
+- makes repeated-repair diagnosis evidence-driven, requiring a strategy change and new evidence after two unsuccessful repairs with the same signature;
+- adds optional resume checkpoints to existing workstreams and preserves release obligations when closing integration plans;
+- aligns copied procedures with material UI integration FULL_MEDIA and real-environment confirmation deferred to release;
+- adds five reference behavioral scenarios and meaningful context-verifier regression tests; these do not install per-PR agent benchmarks in adopting projects;
+- updates baseline metadata, verifiers, usage and explicit adoption/migration guidance together.
+
+Context reports are estimates; behavioral smoke evaluation is distinct from measured end-to-end agent performance. No automatic migration of adopting repositories is implied.
+
 ## 0.9.2 — 2026-09-05
 
 Makes the boundary between development integration and release acceptance explicit so real-environment testing no longer sits in every feature PR loop:

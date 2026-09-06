@@ -90,3 +90,7 @@ A useful plan lets a fresh agent determine quickly:
 - which iteration checks belong to subtasks;
 - which integration/release gates belong to checkpoints;
 - what durable knowledge must remain after the plan is deleted.
+
+## Resume without reconstructing history
+
+For multi-session work use the optional resume checkpoint in the existing workstream: source/base/dirty state, confirmed facts with evidence, excluded hypotheses, unresolved questions and the next concrete action. Replace it after a meaningful finding or handoff; do not keep a diary or a second status file. On resume verify current source identity and relevant changes before trusting old evidence. Transfer durable lessons into tests/contracts/docs at completion, then delete the plan.

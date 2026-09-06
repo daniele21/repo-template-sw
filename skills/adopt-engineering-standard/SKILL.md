@@ -1,6 +1,6 @@
 ---
 name: adopt-engineering-standard
-description: Align a new or existing repository with repo-template-sw 0.9.2 without overwriting stronger project-specific architecture, CI, documentation, build/E2E tooling, design systems or agent guidance. Audit first, then specialize staged delivery, risk-based validation and the smallest useful baseline.
+description: Align a new or existing repository with repo-template-sw 0.10.0 without overwriting stronger project-specific architecture, CI, documentation, build/E2E tooling, design systems or agent guidance. Audit first, then specialize staged delivery, risk-based validation and the smallest useful baseline.
 ---
 
 # Adopt Engineering Standard
@@ -9,7 +9,7 @@ description: Align a new or existing repository with repo-template-sw 0.9.2 with
 
 Make a repository self-contained and aligned with the Agent-Native Reference Engineering Standard while preserving good existing engineering/product decisions.
 
-Adoption is semantic. Do not call a repository 0.9.2-compliant merely because files or version metadata were copied.
+Adoption is semantic. Do not call a repository 0.10.0-compliant merely because files or version metadata were copied.
 
 ## 1. Discover before changing
 
@@ -57,9 +57,9 @@ Mark only genuinely irrelevant intents `n/a`.
 
 Do not introduce a wrapper framework solely for naming consistency.
 
-Use operating contract `0.6.1` and preserve its integration/release real-environment stage fields.
+Use operating contract `0.7.0` and preserve its integration/release real-environment stage fields.
 
-## 4. Specialize the 0.9.2 development-velocity model
+## 4. Specialize the 0.10.0 development-velocity model
 
 Preserve the three delivery stages:
 
@@ -156,7 +156,7 @@ An early physical/target run may still be useful for diagnosing an explicitly en
 
 ## 8. Configure risk-based UI E2E evidence
 
-0.9.2 does **not** return to the old rule that every journey touching UI needs video.
+0.10.0 does **not** return to the old rule that every journey touching UI needs video.
 
 Use:
 
@@ -237,12 +237,12 @@ Do not delete real safety evidence for speed. Use the signal to improve where ga
 
 Run applicable repository/operations/E2E/stage-policy/product-experience/docs/context verifiers and project-specific validation needed by the adoption itself.
 
-Only then update `.engineering/baseline.json` to `0.9.2` and record local Skill customization truthfully.
+Only then update `.engineering/baseline.json` to `0.10.0` and record local Skill customization truthfully.
 
 Report:
 
 ```text
-BASELINE: 0.9.2
+BASELINE: 0.10.0
 PROFILES: <list>
 KEEP: <strong existing mechanisms preserved>
 ADAPT: <mechanisms merged with new semantics>
@@ -258,3 +258,11 @@ DEFERRED_OR_CONFLICTS: <items or N/A>
 ```
 
 Bootstrap structure alone does not prove L1/L2 maturity. Report maturity truthfully from actual evidence.
+
+## Context, diagnosis and reporting in 0.10.0
+
+Specialize the compact AGENTS owner/task routing without losing local invariants. Merge documentation-policy schema 2 and its context routes; include actual scoped guide chains, Skills, configuration and conditional design/active-workstream sources. Run the route reporter; do not lower costs by removing necessary reads. Routes estimate instruction/configuration cost, not total session tokens.
+
+Map `agent_reporting` into the existing native selector/CI result surface: identity, risk/gate reasons, statuses, evidence, gaps and next action. The source template has placeholder native commands; configure real execution/reporting before claiming adoption. Preserve source/provenance validation and explicit unknown identity during iteration.
+
+Use the updated change/validation/preflight/remote Skills; preserve the integration FULL_MEDIA and deferred physical-release rules. Add short outcome/owner/invariant/proof statements only for meaningful changes. Use diagnostic pivots after repeated unsuccessful repairs and the existing workstream resume checkpoint only when useful. Reference `evals/` belongs to template maintenance; do not copy an agent benchmark gate into every project.

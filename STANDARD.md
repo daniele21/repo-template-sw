@@ -1,6 +1,6 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.9.2
+Version: 0.10.0
 
 ## Purpose
 
@@ -264,6 +264,12 @@ Do not update `current-state.md` for every agent commit or branch synchronizatio
 Completed workstream plans are deleted by default after durable knowledge transfer; Git retains history.
 
 Machines should enforce what machines can check. Avoid spending agent context repeating deterministic rules already enforced by scripts/CI.
+
+Context is loaded by task and stage. Measure representative reading routes including applicable guide chains, required Skills and configuration, not just individual file size. Routes are accounting aids; relevant source/consumers and applicable instructions remain required. Summaries are derived views with source identity, never new policy or evidence authority. Prefer bounded tool results and on-demand logs.
+
+For meaningful implementation state the observable outcome, owner, preserved invariants and proof in the existing task/PR. Multi-session work may keep a compact checkpoint in its active workstream: confirmed/excluded/unresolved facts, evidence and next action. Refresh source identity on resume. Do not maintain duplicate progress documents.
+
+After two failed repairs with the same failure signature, change diagnostic strategy and gather new evidence before another repair. This does not imply a user approval step; diagnosis remains autonomous within the authorized task.
 
 ## 14. Validation economics
 

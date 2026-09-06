@@ -1,6 +1,6 @@
 # Project Operating Contract
 
-Version: 0.6.1
+Version: 0.7.0
 
 This contract defines common operational semantics for adopted repositories. It standardizes **intent and lifecycle**, not implementation tools.
 
@@ -266,3 +266,9 @@ Move cheap high-signal gates earlier, affected automated E2E to integration, and
 The operating objective is:
 
 > the cheapest feedback loop that preserves sufficient confidence at the current delivery stage.
+
+## Agent-facing summaries
+
+`.engineering/commands.json` `agent_reporting` defines the bounded selector/gate-report surface. Existing native selectors and CI reporters should expose it without adding a second selector or universal command wrapper. Report stage, source identity (head/tree/base/dirty, unknown explicitly), risks/profile, required gates with reasons/executor/status, evidence refs, remaining gaps and next action. A pre-execution required gate is PENDING, never implicitly PASS.
+
+Keep full logs/reports accessible by reference. Successful gates need brief results; failures need the first relevant error with enough surrounding context. A summary does not verify evidence or prove reuse: apply the execution capability contract's identity/trust rules. Do not hide failed/pending required gates, stale evidence, unresolved scope or deferred release obligations to meet an output budget. During iteration unknown/uncommitted identity is explicit and does not impose an exact-head publication gate.
