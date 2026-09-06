@@ -1,6 +1,6 @@
 # Using `repo-template-sw`
 
-This guide explains how to bootstrap, operate and migrate repositories with `repo-template-sw` 0.9.2.
+This guide explains how to bootstrap, operate and migrate repositories with `repo-template-sw` 0.10.0.
 
 `repo-template-sw` is a **bootstrap, audit and migration source**. After adoption, ordinary work is driven by the target repository itself.
 
@@ -233,7 +233,7 @@ Completed implementation plans are deleted by default after durable truth is tra
 Useful prompt:
 
 ```text
-Adopt repo-template-sw 0.9.2 in <REPOSITORY>.
+Adopt repo-template-sw 0.10.0 in <REPOSITORY>.
 Use adopt-engineering-standard.
 Preserve stronger existing engineering/build/E2E/design mechanisms and specialize the template from repository evidence rather than copying placeholders blindly.
 ```
@@ -304,3 +304,9 @@ This is a delivery-stage simplification with stronger automated integration sema
 6. add `verify_stage_environment_policy.py` to repository health;
 7. update `preflight-change` so `AUTOMATED_PREFLIGHT_CONFIRMED` and `RELEASE_READY` are distinct readiness claims;
 8. for Android, keep emulator/instrumentation/built-APK E2E in integration and move physical/OEM target confirmation to release by default.
+
+### Migrating to 0.10.0
+
+Use the explicit delta procedure in `skills/update-engineering-standard/SKILL.md`. Merge local guidance/commands/reporting and schema-2 context routes; preserve project customizations and required evidence. Measure paths with `python3 scripts/verify_agent_context.py --route bug --path <affected-path> --format json`; add `--workstream <plan>` when resuming. Without path selection the report uses the largest applicable guide chain, not unrelated scoped guides added together. It reports estimates and file pointers, not a validation decision.
+
+For significant template behavior changes, use `evals/README.md` and its five scenarios. Character estimates and static health PASS do not demonstrate lower runtime token cost or better fixes.

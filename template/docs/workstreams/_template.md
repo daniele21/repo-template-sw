@@ -39,6 +39,18 @@ Validation:
 
 - `<targeted command or evidence>`
 
+## Resume checkpoint
+
+<!-- Optional for multi-session work. Replace these pointers at a meaningful finding/handoff, not after every edit. -->
+
+- Source: <repository/branch/head and target/base; dirty/uncommitted work if any>
+- Confirmed: <facts with source/run/artifact references>
+- Excluded: <hypotheses and the observations that ruled them out>
+- Unresolved: <remaining uncertainty; distinguish it from facts>
+- Next: <one concrete experiment or implementation action>
+
+Recheck current revisions, changed files and evidence validity before acting. Notes do not override code/contracts or prove a gate passed. Retain no private payloads; link bounded evidence.
+
 ## Integration points
 
 - <contract/merge point between parallel slices>

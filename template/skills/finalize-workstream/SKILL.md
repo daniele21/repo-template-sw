@@ -16,7 +16,7 @@ A workstream is not documentation-complete merely because its code and tests are
 ## Workflow
 
 1. Read the workstream goal, invariants, DAG, acceptance and validation.
-2. Confirm every required slice is `DONE` and no acceptance/evidence claim is unresolved. If real-device/hardware evidence is required but missing, the workstream is not fully complete; keep the relevant state truthful.
+2. Confirm every required slice is `DONE` at the declared delivery stage. An integration workstream may close after required automated acceptance passes when residual real-environment obligations are transferred to the canonical release owner/journey with `DEFERRED_TO_RELEASE`, acceptance and evidence pointers. A release workstream cannot close with required real-environment evidence missing. Never delete the only record of a deferred release obligation.
 3. Inspect the resulting code/contracts/tests rather than trusting the plan's narrative.
 4. Assess documentation impact from the final observable behavior. Use `docs/README.md` when ownership is unclear.
 5. Extract only knowledge that future maintainers/users need about the system **as it exists now**:

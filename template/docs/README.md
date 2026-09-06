@@ -96,3 +96,9 @@ For `product-ui`, keep only bounded key reference views needed to communicate th
 8. Delete obsolete temporary planning/mockup material and stale instructions/examples.
 
 Do not create a document solely to record that a PR/task completed.
+
+## Context routes and resume pointers
+
+`.engineering/documentation-policy.json` defines representative instruction/configuration reading routes and budgets, including Skills and actual scoped-guide chains. `scripts/verify_agent_context.py` reports their files/costs; read relevant source, consumers and additional contracts as the task requires. Avoid treating the route manifest as a complete context limit or validation selector.
+
+Multi-session state stays in the optional checkpoint of the active workstream. Refresh repository/source identity before trusting it; preserve confirmed facts separately from hypotheses. On integration completion, transfer residual physical acceptance to the canonical release owner before deleting the plan. No duplicate status or narrative archive is needed.

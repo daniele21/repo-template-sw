@@ -22,9 +22,9 @@ Replace this with the simplest accurate map for the project. Do not force layers
 
 ## Ownership
 
-| Concern | Canonical owner | Direct consumers | Important invariants |
+| Concern | Canonical owner | Direct consumers | Important invariants / regression evidence |
 | --- | --- | --- | --- |
-| <concern> | <path/module> | <paths/modules> | <short invariant> |
+| <concern> | <path/module> | <paths/modules> | <short invariant and owning test/command> |
 
 ## Resource ownership
 

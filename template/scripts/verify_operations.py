@@ -117,8 +117,27 @@ def main() -> int:
 
     if data.get("schema_version") != 1:
         errors.append("schema_version must be 1")
-    if data.get("contract_version") != "0.6.1":
-        errors.append("contract_version must be 0.6.1")
+    if data.get("contract_version") != "0.7.0":
+        errors.append("contract_version must be 0.7.0")
+
+    reporting = data.get("agent_reporting")
+    if not isinstance(reporting, dict):
+        errors.append("agent_reporting must be an object")
+        reporting = {}
+    if reporting.get("schema_version") != 1:
+        errors.append("agent_reporting.schema_version must be 1")
+    if reporting.get("format") != "summary_with_evidence_references":
+        errors.append("agent_reporting.format must be summary_with_evidence_references")
+    for key, required in {
+        "required_summary_fields": {"stage", "source_identity", "risks", "profile", "required_gates", "evidence", "remaining_gaps", "next_action"},
+        "gate_fields": {"id", "reason", "executor", "status"},
+        "source_identity_fields": {"head", "source_tree", "target_base", "dirty"},
+    }.items():
+        values = reporting.get(key)
+        if not isinstance(values, list) or not all(isinstance(v, str) for v in values) or not required.issubset(values):
+            errors.append(f"agent_reporting.{key} must include {sorted(required)}")
+    for key in ("bounded_output", "full_report_on_demand", "preserve_failed_pending_gates", "summary_is_not_evidence_verification"):
+        expect_true(reporting, key, errors, "agent_reporting")
 
     commands = data.get("commands")
     if not isinstance(commands, dict):

@@ -43,6 +43,16 @@ Examples:
 
 Preserve stronger existing mechanisms and avoid adding parallel wrappers/frameworks solely because an older migration note introduced them as one option.
 
+## 0.10.0 Agent efficiency migration
+
+1. Merge compact `AGENTS.md` and changed local Skills without deleting project-specific invariants or hazards. Each procedure has one owner; retain self-contained local links.
+2. Upgrade operating/reporting contract to `0.7.0`, execution semantics to `0.4.0`, and documentation-policy to schema 2. Preserve 0.9.2 stage/media and 0.9.1 evidence-reuse requirements.
+3. Specialize representative context routes and budgets for actual guide chains, Skills, configuration, optional product UI and workstream reads. Update `verify_agent_context.py` and run all applicable routes. Estimates are not runtime token telemetry; required context cannot be silently excluded.
+4. Map the compact report fields into the existing selector/CI reporter; keep native commands, source identity, gate reasons, FAIL/PENDING, evidence refs and unresolved scope. A summary cannot authorize evidence reuse or substitute for validation.
+5. Add the short outcome/owner/invariant/proof statement to meaningful tasks/PRs, the diagnostic pivot to local failure procedures and optional resume checkpoints to existing multi-session workstreams. Avoid new documents for trivial changes.
+6. Before deleting integration plans, transfer deferred physical obligations to the release owner; release acceptance still requires them to pass.
+7. Run appropriate structural and project validation, then update per-Skill versions/customization and baseline. Review the five reference scenarios for significant guidance changes; do not install an expensive per-PR agent benchmark in adopters.
+
 ## 0.9.0 Development Velocity migration
 
 When migrating from 0.8.x to 0.9.0, the goal is to remove **validation waterfall and coordination ceremony** without weakening integration/release confidence.

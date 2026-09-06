@@ -74,6 +74,9 @@ python3 template/scripts/verify_stage_environment_policy.py --root template --te
 python3 template/scripts/verify_product_experience.py --root template --template-mode
 python3 template/scripts/verify_docs.py --root template --template-mode
 python3 template/scripts/verify_agent_context.py --root template --template-mode
+python3 -m unittest discover -s tests -v
 ```
 
 Inspect the full diff and ensure no placeholder intended for adopter specialization leaked into universal claims as if it were already configured.
+
+For significant agent-guidance changes, use the read-only decision scenarios in `evals/README.md`; report behavioral smoke separately from measured implementation performance.

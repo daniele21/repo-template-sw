@@ -4,7 +4,7 @@
 
 ## Scope / risks
 
-<!-- Changed owners and material risk dimensions only: public contract, persistence, lifecycle, native, packaging, UI semantics, etc. -->
+<!-- Canonical owner, invariants to preserve and material risk dimensions. Outcome + owner + invariants + proof can stay in this PR; no extra plan required. -->
 
 ## What changed
 
@@ -29,4 +29,4 @@
 
 ## Remaining gaps
 
-<!-- REAL_ENVIRONMENT evidence or other explicitly residual risk. N/A when none. -->
+<!-- REAL_ENVIRONMENT requirements are DEFERRED_TO_RELEASE at integration; link their canonical release owner. Preserve failed/pending required automated gates. N/A when none. -->
