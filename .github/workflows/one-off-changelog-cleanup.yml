@@ -1,0 +1,34 @@
+name: One-off changelog cleanup
+
+on:
+  push:
+    branches: [feat/product-engineering-contract]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/product-engineering-contract
+      - name: Restore historical changelog wording
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('CHANGELOG.md')
+          text = path.read_text()
+          old = 'high-value workflows use the highest practical automated fidelity before final validation;'
+          new = 'high-value workflows use the highest practical automated fidelity before final target validation;'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one historical wording drift, found {text.count(old)}')
+          path.write_text(text.replace(old, new))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CHANGELOG.md
+          git commit -m "Restore historical changelog wording"
+          git push origin HEAD:feat/product-engineering-contract
