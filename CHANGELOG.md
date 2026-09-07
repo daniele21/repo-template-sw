@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 0.11.0 — 2026-09-07
+
+Extends the baseline from strong agent-native software engineering into proportional **product engineering** without introducing PRD/process ceremony for implementation-only work:
+
+- adds `PRODUCT-DEVELOPMENT-CONTRACT.md` as the canonical stack-neutral owner for product intent, proportional product-impact depth, value/usability/feasibility/viability risks, assumptions/evidence, shaping, success, rollout and post-release learning;
+- introduces independent `PRODUCT_NONE`, `PRODUCT_LOCAL`, `PRODUCT_FEATURE` and `PRODUCT_STRATEGIC` depth so product reasoning scales with impact/uncertainty/reversibility rather than file count or engineering delivery stage;
+- adds machine-readable `.engineering/product.json` and durable `docs/product.md` routing for product mission, users/consumers, problems/jobs, value, outcomes, non-goals, principles, quality attributes and success signals;
+- adds the core `shape-product-change` Skill, allowing discovery to conclude BUILD, NARROW_SCOPE, CHOOSE_ALTERNATIVE or DO_NOT_BUILD and preferring the cheapest useful evidence over full implementation as an experiment;
+- distinguishes acceptance, user/consumer outcome and product impact so `SHIPPED` is not silently treated as `PRODUCT_SUCCESS_CONFIRMED`;
+- treats privacy, reliability, performance/resource budgets, compatibility, accessibility, developer experience and similar quality attributes as product requirements when they materially shape value, with engineering owners translating them into measurable invariants/evidence;
+- extends the existing workstream rather than adding parallel PRD/progress artifacts: material product work may prepend a compact Product Intent/Risks/Success section before the engineering DAG;
+- adds a bounded `product` agent context route and zero-dependency `verify_product_development.py`, wired into reference and adopter repository-health CI;
+- updates the baseline standard/agent routing so product depth remains independent from `ITERATION -> INTEGRATION -> RELEASE` and `LEAN | SCOPED | STRONG | FULL`;
+- bumps the reference baseline to **0.11.0** and registers the new copied Skill.
+
+The 0.11.0 rule is: **problem -> outcome -> material risks/assumptions -> smallest sufficient solution -> evidence; ship safely, then learn only where real-use uncertainty remains.**
+
 ## 0.10.0 — 2026-09-06
 
 Reduces repeated agent context and makes diagnosis, implementation and resumption more concrete:
@@ -114,7 +131,7 @@ Makes E2E validation explicitly environment-aware so final physical/manual/targe
 - requires E2E-applicable repositories to identify the target environment and the automated environments used before final validation instead of treating all E2E runs as equivalent evidence;
 - updates `validate-change` and `preflight-change` so E2E selection follows both blast radius and the cheapest sufficient declared environment fidelity, escalating only when the product claim depends on missing target dimensions;
 - requires E2E evidence to report the actual environment/fidelity used and prevents emulator/simulator evidence from being promoted into physical/target-environment claims;
-- strengthens L1/L2 maturity so critical journeys explicitly retain residual fidelity gaps and high-value workflows use the highest practical automated fidelity before final target validation;
+- strengthens L1/L2 maturity so critical journeys explicitly retain residual fidelity gaps and high-value workflows use the highest practical automated fidelity before final validation;
 - specializes Android guidance around host/JVM -> emulator -> built APK on emulator -> representative physical device -> target/OEM confirmation, while preserving native Compose UI Test/Espresso/UI Automator tooling;
 - specializes local-AI guidance so small deterministic model/runtime E2E proves orchestration while representative model/backend/hardware evidence remains required for memory, throughput, thermals and accelerator-specific claims;
 - updates adoption/migration guidance so existing strong E2E frameworks are preserved while target/fidelity semantics are layered onto them rather than replaced.
