@@ -2,7 +2,6 @@
   "schema_version": 1,
   "applicable": true,
   "strategy_source": "docs/product.md",
-  "contract_source": "PRODUCT-DEVELOPMENT-CONTRACT.md",
   "change_depths": [
     "product_none",
     "product_local",
