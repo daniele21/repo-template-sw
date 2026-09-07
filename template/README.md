@@ -6,6 +6,19 @@
 
 <REPLACE_WITH_THE_PRIMARY_USER_OR_SYSTEM_OUTCOME>
 
+## Product development
+
+Durable product mission, primary users/consumers, owned problems/jobs, core outcomes, non-goals, principles, material quality attributes and success signals live in [`docs/product.md`](docs/product.md). Product-development applicability/routing lives in [`.engineering/product.json`](.engineering/product.json).
+
+Product impact is independent from engineering delivery stage:
+
+- `PRODUCT_NONE` — implementation-only/no material product-promise change; no product ceremony;
+- `PRODUCT_LOCAL` — settled local behavior; state user/consumer impact, outcome and acceptance only;
+- `PRODUCT_FEATURE` — meaningful capability/behavior change; establish problem, outcome, material product risks/assumptions, success and non-goals before substantial implementation;
+- `PRODUCT_STRATEGIC` — broad product boundary/value/trust/platform/distribution change; use stronger evidence, alternatives, rollout/compatibility and learning reasoning.
+
+For `PRODUCT_FEATURE` / `PRODUCT_STRATEGIC`, use `skills/shape-product-change/SKILL.md`. Discovery may narrow, change or reject a requested solution. `SHIPPED` proves delivery, not product impact.
+
 ## Architecture
 
 See [`docs/architecture.md`](docs/architecture.md) for current boundaries and ownership. Keep this README focused on purpose, setup and public usage rather than implementation history.
@@ -58,13 +71,13 @@ Use the declared `dev` command when applicable. Local servers/processes must fol
 
 ## Use
 
-<REPLACE_WITH_THE_SHORTEST_SUCCESSFUL_PUBLIC_USAGE_PATH: CLI/API/UI FLOW OR COPY-PASTE EXAMPLE>
+<REPLACE_WITH_THE_SHORTEST_SUCCESSFUL_PUBLIC_USAGE_PATH: CLI/API/UI FLOW OR COPY-PASTE_EXAMPLE>
 
 Document the normal user/developer path, required inputs and the smallest useful example here. Link to deeper feature/API documentation rather than duplicating large contracts. If a feature change makes this path incomplete, wrong or misleading, update this section when the coherent slice moves to integration.
 
 ## Configuration
 
-<REPLACE_WITH_PUBLIC_CONFIGURATION_THAT_A_NORMAL_USER_OR_DEVELOPER_MUST_KNOW, OR REMOVE_THIS_SECTION_IF_NOT_APPLICABLE>
+<REPLACE_WITH_PUBLIC_CONFIGURATION_THAT_A_NORMAL_USER_OR_DEVELOPER_MUST_KNOW, OR_REMOVE_THIS_SECTION_IF_NOT_APPLICABLE>
 
 Document supported public options/defaults and required environment/configuration inputs. Internal implementation knobs that are not part of supported usage belong with their canonical technical owner instead.
 
@@ -80,12 +93,14 @@ Start with repository health checks when engineering-governance files change:
 python3 scripts/verify_repository.py
 python3 scripts/verify_operations.py
 python3 scripts/verify_e2e.py
+python3 scripts/verify_stage_environment_policy.py
+python3 scripts/verify_product_development.py
 python3 scripts/verify_product_experience.py
 python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-`verify_e2e.py` validates E2E target/execution environments, critical journeys and risk-based UI evidence policy. `verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
+`verify_product_development.py` validates product routing/source structure without pretending CI can prove product-market value. `verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
 
 During `ITERATION`, use the cheapest `check`/focused test/compile gates that can falsify the current edit. Do not run full repository/release validation mechanically.
 
