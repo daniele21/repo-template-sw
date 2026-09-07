@@ -4,6 +4,19 @@ Status: active
 Owner: <DOMAIN_OR_REPOSITORY>
 Read when: implementing or coordinating <WORKSTREAM_SCOPE>
 
+## Product intent
+
+<!-- Keep this section only for PRODUCT_FEATURE / PRODUCT_STRATEGIC work. Delete it for PRODUCT_NONE / PRODUCT_LOCAL. -->
+
+- Product depth: <PRODUCT_FEATURE_OR_PRODUCT_STRATEGIC>
+- User / consumer: <PRIMARY_USER_OR_CONSUMER>
+- Problem / job: <PROBLEM_BEING_SOLVED>
+- Desired outcome: <OBSERVABLE_OUTCOME>
+- Product risks: <VALUE / USABILITY / FEASIBILITY / VIABILITY material items only>
+- Material assumptions: <ASSUMPTIONS_OR_N/A>
+- Success evidence: <ACCEPTANCE / OUTCOME / PRODUCT_IMPACT as applicable>
+- Post-release question: <QUESTION_OR_N/A>
+
 ## Goal
 
 <ONE_CLEAR_OUTCOME>
@@ -57,6 +70,7 @@ Recheck current revisions, changed files and evidence validity before acting. No
 
 ## Durable documentation destinations
 
+- `docs/product.md`: <only if mission/users/problems/outcomes/principles/quality promises change>
 - `docs/architecture.md`: <only if architecture/ownership changes>
 - `docs/features/<feature>.md`: <only durable current behavior>
 - `docs/adr/<adr>.md`: <only if a material durable decision is made>
@@ -64,4 +78,4 @@ Recheck current revisions, changed files and evidence validity before acting. No
 
 ## Completion
 
-The workstream is complete only when applicable code, integration, failure/resource behavior, validation/evidence and durable docs agree. Then update `docs/current-state.md` and delete this file by default.
+The workstream is complete only when applicable product intent, code, integration, failure/resource behavior, validation/evidence and durable docs agree. Then update `docs/current-state.md` and delete this file by default.

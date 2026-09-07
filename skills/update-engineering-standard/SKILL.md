@@ -1,6 +1,6 @@
 ---
 name: update-engineering-standard
-description: Migrate an already-adopted repository from its recorded repo-template-sw baseline to a newer version through an explicit semantic delta review that preserves local engineering/product customizations and applies only relevant changes.
+description: Migrate an already-adopted repository from its recorded repo-template-sw baseline to a newer version through an explicit semantic delta review that preserves local product/engineering customizations and applies only relevant changes.
 ---
 
 # Update Engineering Standard
@@ -13,7 +13,7 @@ A version bump without applying or explicitly classifying relevant behavioral de
 
 ## Workflow
 
-1. Read the target repository's `.engineering/baseline.json`, `.engineering/commands.json`, `.engineering/e2e.json`, relevant local Skills/guides and design contracts when `product-ui` applies.
+1. Read the target repository's `.engineering/baseline.json`, `.engineering/product.json` when present/applicable, `.engineering/commands.json`, `.engineering/e2e.json`, relevant local Skills/guides, canonical product source and design contracts when `product-ui` applies.
 2. Read `VERSION`, `CHANGELOG.md`, `STANDARD.md` and changed focused contracts in `repo-template-sw` from the recorded version to the requested target.
 3. Classify each delta:
    - `APPLY` — relevant and local mechanism is effectively baseline-compatible;
@@ -22,12 +22,12 @@ A version bump without applying or explicitly classifying relevant behavioral de
    - `DEFER` — intentionally postponed with reason/owner;
    - `CONFLICT` — requires explicit architecture/product decision.
 4. Inspect actual local behavior before replacing text or config.
-5. Preserve stronger project-native commands, CI scope detectors, E2E frameworks/device providers, build/release systems, design systems and security boundaries.
+5. Preserve stronger project-native product strategy/discovery sources, commands, CI scope detectors, E2E frameworks/device providers, build/release systems, design systems and security boundaries.
 6. Implement the smallest migration that makes the new semantics real.
 7. Validate the migration itself at the appropriate risk/stage.
 8. Update contract versions/mappings only after behavior matches them.
 9. Update `.engineering/baseline.json` and per-Skill `source_version` last, preserving `customized: true` where intentional local divergence remains.
-10. Update durable project docs only when current behavior/ownership changed.
+10. Update durable project docs only when current product behavior/ownership changed.
 11. Delete migration workstreams after durable truth is transferred unless independent archive/audit value exists.
 
 ## Historical migration principle
@@ -36,12 +36,104 @@ Older baseline deltas remain documented in `CHANGELOG.md` and their focused cont
 
 Examples:
 
+- product intent/risk/evidence/learning semantics are owned by `PRODUCT-DEVELOPMENT-CONTRACT.md`;
 - operating/build/artifact semantics are owned by `OPERATING-CONTRACT.md`;
 - execution/no-human-runner/validation routing by `EXECUTION-CAPABILITY-CONTRACT.md`;
 - E2E fidelity/evidence by `E2E-ENVIRONMENT-CONTRACT.md`;
 - product experience by `PRODUCT-EXPERIENCE-CONTRACT.md`.
 
-Preserve stronger existing mechanisms and avoid adding parallel wrappers/frameworks solely because an older migration note introduced them as one option.
+Preserve stronger existing mechanisms and avoid adding parallel product/process/wrapper frameworks solely because a migration note introduced one option.
+
+## 0.11.0 Product Engineering migration
+
+The 0.11.0 goal is to make repositories reason explicitly about **what/why/success** for material product changes while keeping implementation-only work as cheap as before.
+
+### 1. Add product-development routing without adding a second management system
+
+Adopt or merge:
+
+- `.engineering/product.json` schema 1;
+- a concise canonical product source, `docs/product.md` by default;
+- `skills/shape-product-change/SKILL.md`;
+- `scripts/verify_product_development.py` and repository-health CI wiring;
+- the bounded `product` context route.
+
+If the repository already has a strong product charter/strategy/requirements source, keep it and point `strategy_source` there. Do not create duplicate product truth for template aesthetics.
+
+### 2. Separate product depth from delivery stage and validation depth
+
+Preserve:
+
+```text
+PRODUCT_NONE | PRODUCT_LOCAL | PRODUCT_FEATURE | PRODUCT_STRATEGIC
+ITERATION -> INTEGRATION -> RELEASE
+LEAN | SCOPED | STRONG | FULL
+```
+
+These are independent.
+
+- `PRODUCT_NONE` bypasses product shaping.
+- `PRODUCT_LOCAL` uses only user/consumer impact, desired outcome and acceptance.
+- `PRODUCT_FEATURE` establishes user/problem/outcome, material product risks/assumptions, non-goals, quality constraints and success before substantial implementation.
+- `PRODUCT_STRATEGIC` adds stronger evidence/alternatives/rollout/compatibility/learning because downstream cost of a wrong decision is broader.
+
+Do not classify by ticket size or changed-file count.
+
+### 3. Preserve product outcomes over requested output
+
+Merge `shape-product-change` so it can conclude:
+
+- `BUILD`;
+- `NARROW_SCOPE`;
+- `CHOOSE_ALTERNATIVE`;
+- `DO_NOT_BUILD`.
+
+Treat uncertain high-consequence beliefs as assumptions, not facts. Prefer existing evidence or the cheapest useful falsification/confirmation over implementing the whole feature as the default experiment.
+
+### 4. Integrate with existing workstreams instead of adding PRDs
+
+For `PRODUCT_FEATURE`/`PRODUCT_STRATEGIC`, allow the existing workstream to prepend compact current product intent:
+
+- user/consumer;
+- problem/job;
+- desired outcome;
+- material value/usability/feasibility/viability risks;
+- material assumptions;
+- success evidence;
+- post-release question when material.
+
+Do not create separate `prd.md`, `product-plan.md`, `progress.md` and `workstream.md` for the same change unless the repository deliberately already uses a stronger product operating system.
+
+### 5. Translate product-quality promises into engineering invariants
+
+If privacy, reliability, latency/performance, memory/CPU/GPU/battery/thermals, offline behavior, compatibility, accessibility, developer experience or cost materially shape product value, keep the product promise in the product source and map measurable thresholds/budgets/contracts/evidence to the technical owner.
+
+Do not leave critical quality attributes as untestable marketing prose, and do not move implementation detail into the product source.
+
+### 6. Separate delivery success from product success
+
+For material product work distinguish:
+
+- acceptance — the supported behavior was implemented;
+- outcome — user/consumer can achieve the intended result better;
+- product impact — meaningful real-use signal improved when such evidence matters.
+
+Do not add telemetry by default. Use the least invasive sufficient evidence: user observation, support signal, dogfooding, benchmark, operational quality, privacy-safe aggregate telemetry or another appropriate source.
+
+A release may be technically `RELEASE_READY` while product impact remains intentionally `UNCONFIRMED` pending real-use evidence.
+
+### 7. Validate the migration
+
+Run:
+
+```text
+verify_repository
+verify_product_development
+verify_agent_context (including product route)
+plus normal affected operating/E2E/product-experience/docs checks
+```
+
+Then update baseline metadata to `0.11.0` and register `shape-product-change` only after local routing/source truth really exists.
 
 ## 0.10.0 Agent efficiency migration
 
@@ -271,11 +363,12 @@ An early physical-device run remains valid for diagnosis of an explicitly hardwa
 
 A migration is not complete until:
 
-- machine-readable contracts pass project verifiers;
-- relevant local Skills/guides no longer impose superseded stage/media behavior;
+- machine-readable contracts pass project verifiers, including product routing from 0.11.0 onward;
+- relevant local Skills/guides no longer impose superseded product/stage/media behavior;
 - risk selector/remote-preflight behavior is coherent with existing CI;
 - affected project-specific validation passes;
 - E2E environment/evidence semantics are truthful;
+- product source/routing is truthful rather than copied ceremony;
 - baseline metadata reports real behavior, not intent.
 
 For a repository whose validation/selector/CI machinery changes during migration, use `FULL` validation for the migration itself because the narrowing mechanism is part of the changed scope.
@@ -293,6 +386,7 @@ DELTAS:
   DEFER: <items>
   CONFLICT: <items>
 LOCAL_CUSTOMIZATIONS_PRESERVED: <items>
+PRODUCT_SOURCE_AND_ROUTING: <source + product-depth strategy or N/A>
 DELIVERY_MODEL: <iteration/integration/release specialization>
 RISK_TO_GATE_SELECTOR: <strategy>
 REMOTE_PREFLIGHT_AND_REUSE: <strategy>

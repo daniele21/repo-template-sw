@@ -2,6 +2,10 @@
 
 <!-- What observable user/system outcome becomes true if this vertical slice is integrated? -->
 
+## Product impact
+
+<!-- PRODUCT_NONE / PRODUCT_LOCAL / PRODUCT_FEATURE / PRODUCT_STRATEGIC. For FEATURE/STRATEGIC, summarize problem/outcome/non-goals plus unresolved material product risk only; do not paste a PRD. -->
+
 ## Scope / risks
 
 <!-- Canonical owner, invariants to preserve and material risk dimensions. Outcome + owner + invariants + proof can stay in this PR; no extra plan required. -->
@@ -25,8 +29,8 @@
 
 ## Documentation
 
-<!-- Affected durable owners only. At INTEGRATION they must be current; do not list every possible doc category when clearly unrelated. -->
+<!-- Affected durable owners only, including docs/product.md when durable product truth changed. At INTEGRATION they must be current; do not list every possible doc category when clearly unrelated. -->
 
 ## Remaining gaps
 
-<!-- REAL_ENVIRONMENT requirements are DEFERRED_TO_RELEASE at integration; link their canonical release owner. Preserve failed/pending required automated gates. N/A when none. -->
+<!-- REAL_ENVIRONMENT requirements are DEFERRED_TO_RELEASE at integration; link their canonical release owner. Preserve failed/pending required automated gates. For material product work, also preserve a post-release product question only when real use is needed to answer it. N/A when none. -->

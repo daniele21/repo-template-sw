@@ -1,12 +1,16 @@
 # Agent-Native Reference Engineering Standard
 
-Version: 0.10.0
+Version: 0.11.0
 
 ## Purpose
 
-This standard defines the minimum engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for correctness, operational simplicity, bounded resources, change safety, reproducibility, clean lifecycle behavior, product-experience quality where applicable, low context cost and **fast delivery at sufficient confidence**.
+This standard defines the minimum product-engineering properties expected from software repositories maintained by humans and coding agents. It optimizes for product-outcome clarity, correctness, operational simplicity, bounded resources, change safety, reproducibility, clean lifecycle behavior, product-experience quality where applicable, low context cost and **fast delivery at sufficient confidence**.
 
-The central rule is:
+The product rule is:
+
+> Outcomes before output. Evidence before commitment. Product reasoning must be proportional to product risk.
+
+The central engineering rule is:
 
 > Make ownership, limits, failures and costs explicit, using the simplest solution that preserves the required invariants.
 
@@ -26,18 +30,28 @@ For products with a material UI:
 
 > Make the user's next decision obvious, reveal complexity progressively, communicate state clearly, and keep the interface consistent, accessible and recoverable.
 
-The standard is intentionally not a framework. Common semantics do not require common build, test, design or UI tools.
+The standard is intentionally not a framework. Common semantics do not require common product-management, build, test, design or UI tools.
 
 Focused normative contracts:
 
+- [`PRODUCT-DEVELOPMENT-CONTRACT.md`](PRODUCT-DEVELOPMENT-CONTRACT.md) — product intent, proportional discovery/shaping, product risks, assumptions/evidence, success and learning semantics;
 - [`OPERATING-CONTRACT.md`](OPERATING-CONTRACT.md) — command/build/artifact/runtime lifecycle semantics;
 - [`EXECUTION-CAPABILITY-CONTRACT.md`](EXECUTION-CAPABILITY-CONTRACT.md) — delivery stages, risk-based validation, executor routing and evidence reuse;
 - [`E2E-ENVIRONMENT-CONTRACT.md`](E2E-ENVIRONMENT-CONTRACT.md) — E2E environment fidelity and UI evidence modes;
 - [`PRODUCT-EXPERIENCE-CONTRACT.md`](PRODUCT-EXPERIENCE-CONTRACT.md) — optional UX/UI semantics.
 
-## 1. Delivery model
+## 1. Product impact and engineering delivery are separate
 
-Delivery stage and validation depth are independent axes.
+Product impact depth, delivery stage and validation depth are independent axes.
+
+### Product impact depth
+
+- `PRODUCT_NONE` — no material change to supported behavior/product promise; no product ceremony;
+- `PRODUCT_LOCAL` — small already-settled behavior change; establish local user/consumer outcome and acceptance only;
+- `PRODUCT_FEATURE` — new capability or meaningful supported workflow/behavior change; establish product intent, risks/assumptions, success and non-goals before substantial implementation;
+- `PRODUCT_STRATEGIC` — material change to target user, product boundary, value proposition, trust/platform/distribution/business model or another broad product decision; use stronger discovery/evidence and rollout/learning reasoning.
+
+Product depth follows impact, uncertainty and reversibility, not file count or estimated coding effort. Discovery may validly conclude `DO_NOT_BUILD`, `NARROW_SCOPE` or `CHOOSE_ALTERNATIVE`.
 
 ### Delivery stages
 
@@ -77,11 +91,11 @@ The selector should identify **risk dimensions and concrete required gates first
 
 Every dependency, abstraction, cache, worker, service, queue, layer and document adds maintenance and reasoning cost. Add one only for an observed or clearly specified problem.
 
-Mutable state, public contracts, configuration values, persisted data, caches, significant resources, design tokens and durable decisions must have an identifiable owner. Avoid parallel sources of truth and duplicated policy.
+Mutable state, public contracts, configuration values, persisted data, caches, significant resources, product intent, design tokens and durable decisions must have an identifiable owner. Avoid parallel sources of truth and duplicated policy.
 
 Before changing a shared boundary, inspect its owner, direct consumers, fakes/adapters and nearby tests.
 
-A repository should be understandable at a high level from its README, architecture document and accepted ADRs without broad historical ingestion.
+A repository should be understandable at a high level from its product source where applicable, README, architecture document and accepted ADRs without broad historical ingestion.
 
 ## 3. Vertical outcomes and parallel work
 
@@ -221,7 +235,45 @@ Never introduce silent cloud fallback, secret persistence, sensitive payload log
 
 Remote execution of change-branch code uses least privilege and does not gain production/signing/deployment secrets merely for convenience.
 
-## 12. Product experience
+## 12. Product development
+
+When product development is applicable, the repository declares a concise durable product owner such as `docs/product.md` and machine-readable routing in `.engineering/product.json`.
+
+Meaningful product work follows at proportional depth:
+
+```text
+user / consumer
+-> problem / job
+-> desired outcome
+-> material product risks: value / usability / feasibility / viability
+-> assumptions + evidence
+-> smallest sufficient solution
+-> product quality constraints
+-> UX + engineering shape
+-> acceptance / outcome / product-impact evidence
+-> release / rollout
+-> post-release question / learning when material
+```
+
+Do not force this sequence onto implementation-only work. `PRODUCT_NONE` bypasses it; `PRODUCT_LOCAL` uses only enough context to preserve settled behavior.
+
+Treat important uncertain beliefs as assumptions. Choose the cheapest useful, least invasive evidence that can change the decision. A complete implementation is not the default experiment for a question a prototype, technical spike, existing evidence or bounded test can answer.
+
+Product quality attributes are part of product intent when they materially shape value. Examples include privacy/data locality, reliability, performance, compatibility, resource budgets, accessibility, developer experience and cost constraints. Engineering owners translate them into explicit invariants/budgets/evidence.
+
+Distinguish success at three levels:
+
+- **acceptance** — the intended supported contract was implemented;
+- **outcome** — the user/consumer can achieve the intended result better;
+- **product impact** — a meaningful real-use signal improved when such evidence is material.
+
+`SHIPPED` is not equivalent to `PRODUCT_SUCCESS_CONFIRMED`.
+
+Product discovery may conclude that a requested feature should not be built, should be narrowed or should use a different solution. Durable learning updates the owning product/feature/architecture/test truth rather than accumulating a research diary.
+
+Detailed semantics live in `PRODUCT-DEVELOPMENT-CONTRACT.md`.
+
+## 13. Product experience
 
 When `product-ui` is adopted, meaningful product-experience work follows at proportional depth:
 
@@ -244,13 +296,17 @@ Structure precedes polish. Motion has a product purpose. The canonical design sy
 
 Accessibility, adaptive behavior, recovery and usability are separate claims from visual appearance.
 
-## 13. Documentation and agent context
+Product experience receives product intent/outcome/constraints from product shaping when they are material; it does not need to rediscover settled product strategy for every UI change.
+
+## 14. Documentation and agent context
 
 Git is implementation history. Durable docs describe the system that exists now.
 
 - `AGENTS.md` — bounded routing/invariants;
+- `.engineering/product.json` — product-development applicability/routing;
 - `.engineering/commands.json` — operation/development-velocity/execution routing;
 - `.engineering/e2e.json` — E2E environment/evidence routing;
+- `docs/product.md` — concise durable product mission/users/problems/outcomes/principles when applicable;
 - architecture/feature/ADR docs — durable current truth;
 - `docs/current-state.md` — integrated/blocked/next repository truth;
 - `docs/workstreams/` — active bounded coordination only;
@@ -267,11 +323,11 @@ Machines should enforce what machines can check. Avoid spending agent context re
 
 Context is loaded by task and stage. Measure representative reading routes including applicable guide chains, required Skills and configuration, not just individual file size. Routes are accounting aids; relevant source/consumers and applicable instructions remain required. Summaries are derived views with source identity, never new policy or evidence authority. Prefer bounded tool results and on-demand logs.
 
-For meaningful implementation state the observable outcome, owner, preserved invariants and proof in the existing task/PR. Multi-session work may keep a compact checkpoint in its active workstream: confirmed/excluded/unresolved facts, evidence and next action. Refresh source identity on resume. Do not maintain duplicate progress documents.
+For meaningful implementation state the observable outcome, owner, preserved invariants and proof in the existing task/PR. For `PRODUCT_FEATURE`/`PRODUCT_STRATEGIC`, the existing workstream may prepend only the compact current product intent/risks/success needed for execution. Multi-session work may keep a compact checkpoint in its active workstream: confirmed/excluded/unresolved facts, evidence and next action. Refresh source identity on resume. Do not maintain duplicate PRD/progress/status documents.
 
 After two failed repairs with the same failure signature, change diagnostic strategy and gather new evidence before another repair. This does not imply a user approval step; diagnosis remains autonomous within the authorized task.
 
-## 14. Validation economics
+## 15. Validation economics
 
 Where practical, observe validation gates for:
 
@@ -288,16 +344,17 @@ Real-environment validation is intentionally concentrated at release when it pro
 
 If `FULL` runs frequently for contained changes, improve scope/risk selection. If narrow validation repeatedly misses affected regressions, strengthen the risk-to-gate mapping.
 
-## 15. Maturity levels
+## 16. Maturity levels
 
-### L0 — Healthy repository
+### L0 — Healthy product-engineering repository
 
 At minimum:
 
 - clear purpose and architecture/ownership;
+- when product development applies, explicit primary users/consumers, core problems/outcomes/non-goals and material product-quality promises;
 - bounded agent routing/context;
 - reproducible setup and pinned/locked dependencies where applicable;
-- machine-readable project operating/development-velocity contract;
+- machine-readable product routing and project operating/development-velocity contract;
 - deterministic formatting/static/test/build validation appropriate to the stack;
 - explicit risk-based validation routing and no-human-runner semantics;
 - explicit E2E applicability/environment contract;
@@ -311,6 +368,7 @@ At minimum:
 
 L0 plus:
 
+- `PRODUCT_FEATURE`/`PRODUCT_STRATEGIC` changes are outcome-driven, assess material product risks/assumptions and define success evidence before substantial implementation;
 - integration/contract tests for critical boundaries;
 - bounded high-value automated E2E where full workflow evidence is needed;
 - target/fidelity gaps declared and residual real-environment confirmation identified for release;
@@ -326,12 +384,16 @@ L0 plus:
 
 L1 plus:
 
+- significant released product changes identify useful post-release questions/evidence where pre-release validation cannot establish real-use impact;
+- contradictory product evidence updates priorities/behavior instead of preserving assumptions;
+- relevant adoption/task-success/product-quality signals are understood without requiring invasive telemetry;
+- compatibility/deprecation decisions are deliberate;
 - architecture fitness functions for critical ownership/dependency invariants;
 - resource/memory/performance regression gates where stable measurement is possible;
 - fault/pressure coverage for important lifecycle boundaries;
 - high-value critical journeys at the highest practical automated fidelity before residual release target testing;
 - representative hardware/device evidence when hardware materially changes release behavior;
-- machine-enforced docs/context/operating/E2E/product-experience health;
+- machine-enforced docs/context/operating/E2E/product-development/product-experience health;
 - periodic validation-economics review so avoidable cost/flake/overlap is reduced;
 - explicit complexity/dependency review for meaningful additions;
 - active control of stale/duplicate documentation and design-system drift.
@@ -340,15 +402,17 @@ L2 is a target, not an excuse to add machinery the project does not need.
 
 ## Completion rule
 
-A change is not “done” because every possible test ran.
+A change is not “done” because every possible test ran or because a requested feature shipped.
 
-It is done at the relevant stage when:
+It is done at the relevant product/delivery stage when:
 
 - the intended observable outcome is correct;
+- material product intent/risks/assumptions are resolved to the depth justified by the change;
 - changed owners/contracts/failure/resource semantics agree;
 - the narrowest sufficient required evidence for that stage is satisfied;
 - affected durable documentation is current before integration/release;
 - at `INTEGRATION`, all required automated evidence passes and residual real-environment requirements are explicitly deferred;
-- at `RELEASE`, every applicable blocking real-environment requirement passes.
+- at `RELEASE`, every applicable blocking real-environment requirement passes;
+- when material product impact remains unknowable before release, the post-release question/evidence path is explicit rather than silently assuming success.
 
-The engineering objective is **high-confidence incremental delivery without validation waterfall**.
+The objective is **high-confidence, outcome-driven product delivery without validation or process waterfall**.

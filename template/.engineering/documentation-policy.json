@@ -10,6 +10,10 @@
       "max_lines": 150,
       "max_estimated_tokens": 2000
     },
+    "product": {
+      "max_lines": 220,
+      "max_estimated_tokens": 3000
+    },
     "current_state": {
       "max_lines": 120,
       "max_estimated_tokens": 1500
@@ -64,6 +68,18 @@
         ".engineering/commands.json",
         "skills/structured-change/SKILL.md",
         "skills/validate-change/SKILL.md"
+      ],
+      "include_scoped_guides": true,
+      "include_workstream": false,
+      "max_estimated_tokens": 6500
+    },
+    "product": {
+      "read_when": "Material product behavior, capability or strategy shaping before substantial implementation.",
+      "files": [
+        "AGENTS.md",
+        ".engineering/product.json",
+        "docs/product.md",
+        "skills/shape-product-change/SKILL.md"
       ],
       "include_scoped_guides": true,
       "include_workstream": false,
