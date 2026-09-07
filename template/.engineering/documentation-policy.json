@@ -10,6 +10,10 @@
       "max_lines": 150,
       "max_estimated_tokens": 2000
     },
+    "product": {
+      "max_lines": 220,
+      "max_estimated_tokens": 3000
+    },
     "current_state": {
       "max_lines": 120,
       "max_estimated_tokens": 1500
