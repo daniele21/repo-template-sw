@@ -10,6 +10,7 @@ import sys
 
 CORE_SKILLS = (
     "plan-workstream",
+    "shape-product-change",
     "structured-change",
     "design-product-experience",
     "validate-change",
@@ -30,9 +31,11 @@ REQUIRED = (
     ".engineering/documentation-policy.json",
     ".engineering/commands.json",
     ".engineering/e2e.json",
+    ".engineering/product.json",
     ".github/pull_request_template.md",
     ".github/workflows/repository-health.yml",
     "docs/README.md",
+    "docs/product.md",
     "docs/architecture.md",
     "docs/current-state.md",
     "docs/features/README.md",
@@ -41,6 +44,7 @@ REQUIRED = (
     "scripts/verify_operations.py",
     "scripts/verify_e2e.py",
     "scripts/verify_stage_environment_policy.py",
+    "scripts/verify_product_development.py",
     "scripts/verify_product_experience.py",
 )
 
@@ -90,8 +94,8 @@ def main() -> int:
             standard = baseline.get("standard", {})
             if standard.get("source") != "daniele21/repo-template-sw":
                 errors.append("baseline standard.source must identify daniele21/repo-template-sw")
-            if standard.get("version") != "0.10.0":
-                errors.append("baseline standard.version must be 0.10.0")
+            if standard.get("version") != "0.11.0":
+                errors.append("baseline standard.version must be 0.11.0")
             if baseline.get("target_level") not in {"L0", "L1", "L2"}:
                 errors.append("target_level must be L0, L1 or L2")
             profiles = baseline.get("profiles")
@@ -111,6 +115,7 @@ def main() -> int:
     candidate_files = [
         root / "README.md",
         root / "AGENTS.md",
+        root / "docs/product.md",
         root / "docs/architecture.md",
         root / "SECURITY.md",
     ]
