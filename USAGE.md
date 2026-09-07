@@ -1,16 +1,17 @@
 # Using `repo-template-sw`
 
-This guide explains how to bootstrap, operate and migrate repositories with `repo-template-sw` 0.10.0.
+This guide explains how to bootstrap, operate and migrate repositories with `repo-template-sw` 0.11.0.
 
 `repo-template-sw` is a **bootstrap, audit and migration source**. After adoption, ordinary work is driven by the target repository itself.
 
-The governing model is **same semantics, native implementation**: preserve Gradle/Xcode/Python/Node/native E2E/design tooling and map it to common engineering behavior rather than replacing it for uniformity.
+The governing model is **same semantics, native implementation**: preserve existing product/discovery practices when stronger, plus Gradle/Xcode/Python/Node/native E2E/design tooling, and map them to common product-engineering behavior rather than replacing them for uniformity.
 
 ## Mental model
 
 ```text
 repo-template-sw
-  -> STANDARD.md                      core invariants/maturity
+  -> STANDARD.md                      core product-engineering invariants/maturity
+  -> PRODUCT-DEVELOPMENT-CONTRACT.md product intent + risks + evidence + learning
   -> OPERATING-CONTRACT.md            commands/build/artifact/runtime
   -> EXECUTION-CAPABILITY-CONTRACT.md stages + risk gates + executor + evidence reuse
   -> E2E-ENVIRONMENT-CONTRACT.md      environment fidelity + stage policy + UI evidence modes
@@ -24,6 +25,8 @@ After adoption:
 ```text
 project repository
   -> AGENTS.md                    routing/invariants
+  -> docs/product.md              durable product mission/users/problems/outcomes
+  -> .engineering/product.json   product-development applicability/routing
   -> .engineering/commands.json  commands + development velocity + validation/preflight
   -> .engineering/e2e.json       E2E environments/stage/journeys/evidence policy
   -> local Skills                recurring workflows
@@ -31,7 +34,78 @@ project repository
   -> scripts / CI                deterministic enforcement/execution
 ```
 
-## 1. Ordinary development in 0.9.x
+## 1. Product depth in 0.11.x
+
+Do not treat every code change as product discovery, and do not treat every requested feature as a settled solution.
+
+Product impact depth is independent from engineering delivery stage and technical validation depth:
+
+```text
+PRODUCT_NONE | PRODUCT_LOCAL | PRODUCT_FEATURE | PRODUCT_STRATEGIC
+ITERATION -> INTEGRATION -> RELEASE
+LEAN | SCOPED | STRONG | FULL
+```
+
+### PRODUCT_NONE
+
+Use for implementation-only work with no material supported behavior/product-promise change: refactors, tests, CI, formatting, equivalent maintenance.
+
+No product process is required.
+
+### PRODUCT_LOCAL
+
+Use for a small already-settled behavior change. State only:
+
+- affected user/consumer;
+- expected outcome;
+- observable acceptance.
+
+Do not expand it into feature discovery.
+
+### PRODUCT_FEATURE
+
+Use for a new capability or meaningful supported workflow/public behavior change.
+
+Before substantial implementation establish:
+
+```text
+user / consumer
+-> problem / job
+-> desired outcome
+-> value / usability / feasibility / viability risks
+-> material assumptions + evidence
+-> smallest sufficient solution
+-> product-quality constraints
+-> acceptance / outcome / product-impact evidence
+```
+
+Use `skills/shape-product-change/SKILL.md`. Discovery may validly conclude `BUILD`, `NARROW_SCOPE`, `CHOOSE_ALTERNATIVE` or `DO_NOT_BUILD`.
+
+### PRODUCT_STRATEGIC
+
+Use when the change materially affects target user, product boundary, value proposition, trust model, platform, distribution/business model or another broad product decision. Use stronger evidence, alternatives, rollout/compatibility reasoning and a useful post-release learning question when real use is needed to reduce uncertainty.
+
+Do not classify product depth by code size. Use impact, uncertainty and reversibility.
+
+## 2. Product source of truth and workstreams
+
+When product development applies, keep `docs/product.md` concise and durable. It owns product mission, primary users/consumers, core problems/jobs, value proposition, meaningful differentiation, core outcomes, non-goals, product principles, material quality attributes and useful success signals.
+
+It is not a backlog, roadmap dump or historical PRD.
+
+For `PRODUCT_FEATURE`/`PRODUCT_STRATEGIC`, the existing workstream may prepend a compact Product Intent section before the engineering DAG. Do **not** create separate PRD/plan/progress/status files for the same change unless the repository already has a stronger deliberate system.
+
+Product quality attributes such as privacy, reliability, latency, compatibility, memory/battery/thermal budgets, accessibility or developer experience become engineering invariants/budgets only when they materially shape product value.
+
+Distinguish:
+
+- **acceptance** — did we build the supported behavior correctly?
+- **outcome** — can the user/consumer achieve the desired result better?
+- **product impact** — did meaningful real-use value improve when that evidence matters?
+
+`SHIPPED` is not equivalent to `PRODUCT_SUCCESS_CONFIRMED`.
+
+## 3. Ordinary engineering development
 
 Do not treat every change as a release candidate.
 
@@ -62,7 +136,7 @@ Now:
 
 1. refresh exact source head and intended target/base;
 2. inspect the complete diff;
-3. make affected durable docs current;
+3. make affected durable docs current, including product truth if it materially changed;
 4. resolve risk dimensions and concrete required gates;
 5. classify each gate as `AGENT_LOCAL`, `REMOTE_AUTOMATED` or `REAL_ENVIRONMENT`;
 6. reuse equivalent successful evidence;
@@ -81,7 +155,8 @@ For stable promotion/release/reference checkpoints:
 - run release-critical build/package/artifact gates;
 - run release-critical automated E2E at sufficient fidelity;
 - close every residual real-environment confirmation required by the release claim;
-- declare `RELEASE_READY` only when those required residual gates pass.
+- declare `RELEASE_READY` only when those required residual gates pass;
+- for material product changes, preserve applicable rollout/compatibility/rollback/support obligations and the bounded post-release question if real use is needed to judge impact.
 
 The practical stage boundary is:
 
@@ -93,7 +168,7 @@ dev / integration -> main / stable
   = release confidence + required real environment
 ```
 
-## 2. Validation depth
+## 4. Validation depth
 
 Delivery stage and validation depth are separate.
 
@@ -112,7 +187,7 @@ PROFILE: SCOPED
 
 rather than using file paths to select a giant suite mechanically.
 
-## 3. Remote validation without duplicate CI
+## 5. Remote validation without duplicate CI
 
 When the current agent lacks an SDK/toolchain, deterministic gates are `REMOTE_AUTOMATED`, not user tasks.
 
@@ -131,7 +206,7 @@ required automated gates
 -> integrate
 ```
 
-### 0.9.1 post-merge reuse
+### Post-merge reuse
 
 A squash/rebase may create a new commit SHA even when the validated source content is unchanged. Repository CI may skip a second heavy integration validation only when all of these are true:
 
@@ -144,7 +219,7 @@ Call this `tree-equivalent` reuse, not exact-head reuse. The previous run did no
 
 A moved base, changed tree, broader gates, expired/missing evidence or direct push without matching proof must validate normally. `RELEASE` remains exact-candidate/reference-grade by default.
 
-## 4. E2E environment fidelity
+## 6. E2E environment fidelity
 
 Do not confuse who runs a test with what environment the test represents.
 
@@ -164,9 +239,9 @@ Residual physical/manual/target testing belongs to release acceptance by default
 
 An earlier real-device run remains valid for diagnosis of an explicitly hardware-specific issue. It does not become a standard branch/PR integration gate.
 
-## 5. UI E2E evidence
+## 7. UI E2E evidence
 
-UI evidence remains risk-based, with one important 0.9.2 stage rule: when UI/UX is materially part of a critical outcome entering the shared development branch, use `FULL_MEDIA` so the integrated experience is directly inspectable.
+UI evidence remains risk-based: when UI/UX is materially part of a critical outcome entering the shared development branch, use `FULL_MEDIA` so the integrated experience is directly inspectable.
 
 ### ASSERTIONS
 
@@ -184,7 +259,7 @@ Use for a material UI/UX integration journey and whenever sequence over time mat
 
 Do not downgrade the selected evidence mode after execution to hide missing artifacts. Missing required evidence is `E2E_EVIDENCE_INCOMPLETE`.
 
-## 6. Parallel work and workstreams
+## 8. Parallel work and workstreams
 
 Use `plan-workstream` only when persistent dependency/parallel coordination adds value.
 
@@ -207,38 +282,39 @@ A small technical layer is not automatically a vertical slice. Ask what observab
 
 Stacked PRs are useful only when each level is independently mergeable/reviewable/value-bearing or separate ownership genuinely requires it. Sync-only PRs indicate avoidable coordination tax.
 
-## 7. Documentation timing
+## 9. Documentation timing
 
 During `ITERATION`, durable docs may remain pending while behavior is unsettled.
 
 At `INTEGRATION`, every affected canonical owner must be current with the exact candidate behavior.
 
-`docs/current-state.md` should describe **integrated / blocked / next** repository truth. Do not update it for every agent commit, branch replay or stack sync.
+`docs/product.md` owns durable product mission/users/problems/outcomes/principles/quality promises. `docs/current-state.md` should describe **integrated / blocked / next** repository truth. Do not update either for every agent commit, branch replay or stack sync.
 
 Completed implementation plans are deleted by default after durable truth is transferred; Git keeps history.
 
-## 8. New repository adoption
+## 10. New repository adoption
 
 1. Read `STANDARD.md` plus only applicable focused contracts/profiles.
 2. Copy/specialize `template/`.
 3. Replace project placeholders from actual repository evidence.
-4. Map canonical command intents to native tooling in `.engineering/commands.json`.
-5. Specialize `development_velocity`, risk/gate selector, execution classes and remote-preflight trigger/reuse semantics.
-6. Decide E2E applicability and specialize `.engineering/e2e.json` with target environments, execution environments, stage policy, critical journeys, residual gaps and minimum UI evidence mode.
-7. If the product has material UI, adopt `product-ui` and point to the real design-system/brand owner.
-8. Preserve stronger existing tooling rather than introducing parallel frameworks.
-9. Run repository/operations/E2E/stage-policy/product-experience/docs/context verifiers.
-10. Record the adopted baseline version only when behavior really matches it.
+4. Specialize `docs/product.md` and `.engineering/product.json`; preserve stronger existing product strategy/discovery sources rather than duplicating them.
+5. Map canonical command intents to native tooling in `.engineering/commands.json`.
+6. Specialize `development_velocity`, risk/gate selector, execution classes and remote-preflight trigger/reuse semantics.
+7. Decide E2E applicability and specialize `.engineering/e2e.json` with target environments, execution environments, stage policy, critical journeys, residual gaps and minimum UI evidence mode.
+8. If the product has material UI, adopt `product-ui` and point to the real design-system/brand owner.
+9. Preserve stronger existing tooling rather than introducing parallel frameworks.
+10. Run repository/operations/E2E/stage-policy/product-development/product-experience/docs/context verifiers.
+11. Record the adopted baseline version only when behavior really matches it.
 
 Useful prompt:
 
 ```text
-Adopt repo-template-sw 0.10.0 in <REPOSITORY>.
+Adopt repo-template-sw 0.11.0 in <REPOSITORY>.
 Use adopt-engineering-standard.
-Preserve stronger existing engineering/build/E2E/design mechanisms and specialize the template from repository evidence rather than copying placeholders blindly.
+Preserve stronger existing product/engineering/build/E2E/design mechanisms and specialize the template from repository evidence rather than copying placeholders blindly.
 ```
 
-## 9. Existing repository adoption
+## 11. Existing repository adoption
 
 Treat adoption as a gap analysis, not wholesale template replacement.
 
@@ -249,9 +325,9 @@ Classify current mechanisms as:
 - `ADD` — missing capability genuinely needed;
 - `N/A` — concern does not apply.
 
-Preserve project-native commands, CI, test framework, device/provider infrastructure, build/release mechanisms and design sources of truth when they are stronger than the baseline.
+Preserve project-native product strategy/discovery sources, commands, CI, test framework, device/provider infrastructure, build/release mechanisms and design sources of truth when they are stronger than the baseline.
 
-## 10. Baseline migration
+## 12. Baseline migration
 
 Use `skills/update-engineering-standard/SKILL.md`.
 
@@ -309,4 +385,17 @@ This is a delivery-stage simplification with stronger automated integration sema
 
 Use the explicit delta procedure in `skills/update-engineering-standard/SKILL.md`. Merge local guidance/commands/reporting and schema-2 context routes; preserve project customizations and required evidence. Measure paths with `python3 scripts/verify_agent_context.py --route bug --path <affected-path> --format json`; add `--workstream <plan>` when resuming. Without path selection the report uses the largest applicable guide chain, not unrelated scoped guides added together. It reports estimates and file pointers, not a validation decision.
 
-For significant template behavior changes, use `evals/README.md` and its five scenarios. Character estimates and static health PASS do not demonstrate lower runtime token cost or better fixes.
+### Migrating 0.10.0 -> 0.11.0
+
+This is a product-engineering expansion that should remain low-cost for implementation-only work:
+
+1. add `PRODUCT-DEVELOPMENT-CONTRACT.md` semantics and `.engineering/product.json` routing;
+2. create or map the canonical durable product source (`docs/product.md` by default) from actual product evidence;
+3. add `shape-product-change` and register it in baseline metadata;
+4. route only material product changes through the `product` context route;
+5. keep `PRODUCT_NONE`/`PRODUCT_LOCAL` lightweight and use `PRODUCT_FEATURE`/`PRODUCT_STRATEGIC` for stronger shaping;
+6. connect material product intent to existing UX/engineering workstreams instead of adding parallel PRD/progress documents;
+7. add `verify_product_development.py` to repository health;
+8. preserve stronger incumbent product-discovery/strategy systems and map them as canonical owners rather than duplicating them.
+
+For significant template behavior changes, use `evals/README.md`. Character estimates and static health PASS do not demonstrate lower runtime token cost, better fixes or confirmed product impact.
