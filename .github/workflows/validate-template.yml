@@ -20,10 +20,14 @@ jobs:
         run: python3 template/scripts/verify_repository.py --root template --template-mode
       - name: Verify template operating contract
         run: python3 template/scripts/verify_operations.py --root template --template-mode
+      - name: Verify template validation cadence
+        run: python3 template/scripts/verify_validation_cadence.py --root template --template-mode
       - name: Verify template E2E environment contract
         run: python3 template/scripts/verify_e2e.py --root template --template-mode
       - name: Verify integration/release environment policy
         run: python3 template/scripts/verify_stage_environment_policy.py --root template --template-mode
+      - name: Verify template infrastructure contract
+        run: python3 template/scripts/verify_infrastructure.py --root template --template-mode
       - name: Verify template product development contract
         run: python3 template/scripts/verify_product_development.py --root template --template-mode
       - name: Verify template product experience contract
