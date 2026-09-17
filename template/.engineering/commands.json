@@ -47,6 +47,28 @@
     "parallel_development_prefers_early_convergence": true,
     "stacked_publication_exception_only": true
   },
+  "ci_cadence": {
+    "principle": "feature_candidate_not_commit",
+    "iteration": {
+      "draft_pull_request": true,
+      "remote_full_suite": false,
+      "automatic_e2e": false,
+      "validation": "targeted_only"
+    },
+    "integration": {
+      "trigger_events": ["ready_for_review", "synchronize_when_ready", "manual"],
+      "exact_head_required": true,
+      "validation": "risk_selected",
+      "e2e": "affected_only",
+      "cancel_superseded_runs": true,
+      "rerun_only_missing_stale_or_affected_evidence": true
+    },
+    "release": {
+      "validation": "full",
+      "e2e": "release_critical"
+    },
+    "heavy_jobs_separate_from_repository_health": true
+  },
   "publication_gate": {
     "applies_from_stage": "integration",
     "agent_preflight_required": true,
