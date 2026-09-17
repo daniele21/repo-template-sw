@@ -11,6 +11,7 @@ Core set:
 - `validate-change` — choose the narrowest sufficient validation while iterating and diagnose failures at their owning invariant;
 - `preflight-change` — establish exact-head/base automated-validation readiness and classify required gates as agent-local, remote-automated or real-environment;
 - `remote-preflight` — trigger, inspect and iterate repository-owned remote deterministic validation when the current agent lacks equivalent local execution capability, without delegating automatable tests to the user;
+- `provision-infrastructure` — design and implement persistent/shared infrastructure through the declared IaC mechanism, using plan/apply and environment authority proportional to stage and blast radius;
 - `finalize-workstream` — transfer durable knowledge and delete completed plans by default;
 - `review-reference-quality` — perform an L0/L1/L2 gap review before important milestones.
 
@@ -20,6 +21,8 @@ Projects may specialize local copies. Record customization in `.engineering/base
 
 `design-product-experience` is conditional in use: headless repositories keep the Skill dormant, while repositories adopting `product-ui` use it for meaningful structural UX, interaction or motion/visual-system changes. Local visual-only token/style edits should stay proportional rather than expanding into unnecessary design process.
 
-`preflight-change` is a publication boundary, not a replacement for the fast edit-test loop. It first determines what the current agent can execute. If required deterministic gates are `REMOTE_AUTOMATED`, hand off to `remote-preflight`; do not ask the user to become the test runner merely because the current agent lacks a shell/SDK/toolchain.
+`preflight-change` is a publication boundary, not a replacement for the fast edit-test loop. Keep a feature PR draft while substantial implementation is still changing. Moving the coherent candidate to ready-for-review is the default transition into `INTEGRATION`; expensive remote validation must not be attached mechanically to each iteration commit.
+
+`provision-infrastructure` is conditional in use: `.engineering/infrastructure.json` may remain `n/a` for projects without shared infrastructure. Cloud repositories use it to keep infrastructure reproducible, avoid console drift and route Terraform/other IaC planning and apply authority by stage.
 
 Do not create a Skill for one-off instructions. A Skill is justified when a procedure recurs, is conditional, has non-obvious ordering/hazards, or saves substantial repeated agent context.
