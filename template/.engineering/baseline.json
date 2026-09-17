@@ -14,6 +14,7 @@
     "validate-change": {"source_version": "0.10.0", "customized": false},
     "preflight-change": {"source_version": "0.10.0", "customized": false},
     "remote-preflight": {"source_version": "0.10.0", "customized": false},
+    "provision-infrastructure": {"source_version": "0.1.0", "customized": false},
     "finalize-workstream": {"source_version": "0.10.0", "customized": false},
     "review-reference-quality": {"source_version": "0.4.0", "customized": false}
   },
