@@ -37,6 +37,18 @@ The same file declares delivery stages separately from validation depth:
 
 `LEAN`, `SCOPED`, `STRONG` and `FULL` summarize validation depth; they are not delivery stages.
 
+### CI cadence
+
+A commit is not the default validation boundary; a coherent feature candidate is.
+
+- keep a feature PR **draft** while substantial implementation is changing;
+- during draft/`ITERATION`, use targeted local checks and focused tests only when useful; do not run the remote full suite or E2E mechanically on each commit;
+- moving the PR to **ready for review** is the default transition into `INTEGRATION` and triggers the repository-owned integration preflight;
+- while ready, a later source change may trigger a new preflight because the candidate changed, but superseded runs are cancelled and only missing/stale/affected evidence should rerun;
+- release/stable promotion uses full release validation.
+
+The reference workflow is [`.github/workflows/integration-preflight.yml`](.github/workflows/integration-preflight.yml). Keep heavy application suites/E2E separate from the lightweight repository-health workflow.
+
 E2E applicability, target environments, execution environments, fidelity gaps and critical journeys live in [`.engineering/e2e.json`](.engineering/e2e.json).
 
 For UI-bearing journeys, evidence is risk-based:
@@ -48,6 +60,21 @@ For UI-bearing journeys, evidence is risk-based:
 UI presence alone does not force video. Missing evidence required by the selected mode means incomplete E2E evidence.
 
 Do not add a second undocumented command or E2E-environment truth for the same intent.
+
+## Infrastructure as Code
+
+Infrastructure applicability and policy live in [`.engineering/infrastructure.json`](.engineering/infrastructure.json). Projects without shared/persistent infrastructure keep it `n/a`.
+
+For cloud/shared infrastructure:
+
+- persistent resources are normally owned by versioned IaC, not console-only setup;
+- preserve a healthy existing CDK/CloudFormation/OpenTofu/Pulumi/other mechanism;
+- for a new cloud project with no established IaC mechanism, Terraform is the preferred default;
+- plan before apply, make environment/account/project/region explicit, isolate shared state and keep production apply authority out of feature branches;
+- reconcile emergency/manual drift back into code;
+- implement infrastructure and application changes as one vertical outcome when the feature requires both.
+
+Use `skills/provision-infrastructure/SKILL.md` for infrastructure work and the applicable cloud/IaC profiles. Terraform projects should keep `.terraform.lock.hcl` but never commit `.terraform/`, state or plan files.
 
 ## Product experience
 
@@ -92,19 +119,21 @@ Start with repository health checks when engineering-governance files change:
 ```bash
 python3 scripts/verify_repository.py
 python3 scripts/verify_operations.py
+python3 scripts/verify_validation_cadence.py
 python3 scripts/verify_e2e.py
 python3 scripts/verify_stage_environment_policy.py
+python3 scripts/verify_infrastructure.py
 python3 scripts/verify_product_development.py
 python3 scripts/verify_product_experience.py
 python3 scripts/verify_docs.py
 python3 scripts/verify_agent_context.py
 ```
 
-`verify_product_development.py` validates product routing/source structure without pretending CI can prove product-market value. `verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted.
+`verify_product_development.py` validates product routing/source structure without pretending CI can prove product-market value. `verify_product_experience.py` passes as `N/A` unless `product-ui` is adopted. `verify_infrastructure.py` passes with infrastructure `n/a` unless an adopted cloud profile requires managed IaC.
 
-During `ITERATION`, use the cheapest `check`/focused test/compile gates that can falsify the current edit. Do not run full repository/release validation mechanically.
+During `ITERATION`, use the cheapest `check`/focused test/compile gates that can falsify the current edit. Do not run full repository/release validation mechanically and do not run E2E solely because another commit was pushed.
 
-At `INTEGRATION`, select concrete risk gates, make affected durable docs current, reuse equivalent successful validation evidence where valid, and run the smallest necessary E2E journey/environment/evidence mode.
+At `INTEGRATION`, select concrete risk gates, make affected durable docs current, reuse equivalent successful validation evidence where valid, and run the smallest necessary E2E journey/environment/evidence mode. The expensive integration preflight belongs on the final coherent candidate, not every intermediate commit.
 
 At `RELEASE`, run full release-critical validation and artifact/E2E evidence.
 

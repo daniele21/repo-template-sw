@@ -7,6 +7,8 @@ description: Establish integration or release readiness for a coherent outcome u
 
 Use when a coherent observable outcome is ready for the shared development branch or stable/release promotion. Draft pushes and ordinary edits remain `ITERATION`; use `../validate-change/SKILL.md` there.
 
+The default CI boundary is the **feature candidate, not each commit**. Keep a feature PR draft while substantial implementation is still changing. Moving it to ready-for-review is the normal transition into `INTEGRATION` and may trigger the repository's expensive remote preflight. Subsequent source changes while ready invalidate only evidence that becomes stale/affected; superseded remote runs should be cancelled rather than allowed to finish pointlessly.
+
 ## Establish the candidate
 
 1. State `INTEGRATION` or `RELEASE` and the observable outcome. Resolve material ambiguity using owners/ADRs/consumers/acceptance; ask only if alternatives still materially change the product or contract.
@@ -21,6 +23,8 @@ Use `.engineering/commands.json` and its native selector: risks and concrete gat
 For each gate record reason, executor (`AGENT_LOCAL`, `REMOTE_AUTOMATED`, `REAL_ENVIRONMENT`) and evidence status. Lack of local tooling does not turn automatable work into a user task. A selector summary is a derived view, not a substitute for source identity or unresolved-risk review.
 
 If a complete workflow is affected, consult `.engineering/e2e.json`: smallest critical journey, sufficient automated environment/fidelity, required UI evidence. At integration, material UI/UX journeys require screenshots plus continuous video (`FULL_MEDIA`); incidental UI may use assertions. Missing required media is `E2E_EVIDENCE_INCOMPLETE`, never a reason to downgrade the mode. Emulator/simulator proof does not establish physical behavior.
+
+If shared infrastructure is affected, consult `.engineering/infrastructure.json` and `../provision-infrastructure/SKILL.md`: include IaC validation/plan evidence appropriate to blast radius, without turning every iteration commit into a remote cloud plan/apply.
 
 ## Reuse, then execute
 

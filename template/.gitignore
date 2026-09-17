@@ -23,6 +23,15 @@ node_modules/
 __pycache__/
 *.pyc
 
+# Terraform/OpenTofu generated state and plans
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+# Keep .terraform.lock.hcl committed when providers are used.
+
 # Local evidence/artifacts
 artifacts/
 evidence/local/
